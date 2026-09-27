@@ -40,6 +40,23 @@
 
 .sn-admin-nav a:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 .sn-admin-nav a.active { background: #00b3a4; color: #fff; font-weight: 600; }
+.sn-admin-logout-form { margin: 0; }
+.sn-admin-nav-button {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 100%;
+    color: #c9d6dc;
+    background: transparent;
+    border: 0;
+    padding: .6rem .8rem;
+    border-radius: 10px;
+    font: inherit;
+    font-size: .9rem;
+    text-align: right;
+    cursor: pointer;
+}
+.sn-admin-nav-button:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 
 .sn-admin-nav-group {
     color: #64798a;

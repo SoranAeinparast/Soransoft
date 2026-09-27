@@ -64,7 +64,7 @@
         <meta name="twitter:image" content="@ogImage" />
     }
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" asp-append-version="true" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
@@ -131,7 +131,12 @@
                 <li><a href="/Partner/Account/Login" class="sn-mobile-link"><i class="bi bi-briefcase me-2"></i>پرتال همکاران</a></li>
                 @if (isSiteUser)
                 {
-                    <li><a href="/Account/Logout" class="sn-mobile-link">خروج از حساب</a></li>
+                    <li>
+                        <form method="post" action="/Account/Logout">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="sn-mobile-link btn btn-link p-0 border-0">خروج از حساب</button>
+                        </form>
+                    </li>
                 }
             </ul>
             @if (isSiteUser)
@@ -202,6 +207,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/persian-ui.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

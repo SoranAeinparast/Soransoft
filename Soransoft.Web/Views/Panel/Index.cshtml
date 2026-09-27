@@ -26,7 +26,12 @@
                         <li><a href="/Panel/Profile"><i class="bi bi-person me-2"></i>پروفایل</a></li>
                         <li><a href="/Panel/ChangePassword"><i class="bi bi-shield-lock me-2"></i>تغییر رمز عبور</a></li>
                         <li><a href="/OrderProject"><i class="bi bi-plus-circle me-2"></i>ثبت سفارش جدید</a></li>
-                        <li><a href="/Account/Logout"><i class="bi bi-box-arrow-right me-2"></i>خروج</a></li>
+                        <li>
+                            <form method="post" action="/Account/Logout">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-link p-0 border-0"><i class="bi bi-box-arrow-right me-2"></i>خروج</button>
+                            </form>
+                        </li>
                     </ul>
                 </aside>
             </div>
@@ -71,7 +76,7 @@
                                                     @PanelDisplay.StatusTitle(order.Status)
                                                 </span>
                                             </td>
-                                            <td class="small">@order.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                            <td class="small">@PersianDisplay.Date(order.CreatedAt)</td>
                                             <td>
                                                 <a href="/Panel/OrderDetails/@order.Id" class="btn btn-sm sn-btn-outline">جزئیات</a>
                                             </td>
