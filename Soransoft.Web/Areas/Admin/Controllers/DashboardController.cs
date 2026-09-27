@@ -5,6 +5,7 @@ using Soransoft.Application.Interfaces;
 using Soransoft.Domain.Enums;
 using Soransoft.Infrastructure.Persistence;
 using Soransoft.Web.Models.Admin;
+using Soransoft.Web.Models;
 using EntityTaskStatus = Soransoft.Domain.Entities.TaskStatus;
 
 namespace Soransoft.Web.Areas.Admin.Controllers
@@ -73,7 +74,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
             foreach (var day in days)
             {
-                model.Last30DaysLabels.Add(day.ToString("MM/dd"));
+                model.Last30DaysLabels.Add(PersianDisplay.Date(day));
                 model.OrdersPerDay.Add(ordersByDay.FirstOrDefault(x => x.Day == day)?.Count ?? 0);
                 model.MessagesPerDay.Add(messagesByDay.FirstOrDefault(x => x.Day == day)?.Count ?? 0);
                 model.ConsultationsPerDay.Add(consultationsByDay.FirstOrDefault(x => x.Day == day)?.Count ?? 0);

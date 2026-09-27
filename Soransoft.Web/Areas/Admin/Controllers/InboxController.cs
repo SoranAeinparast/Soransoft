@@ -140,15 +140,23 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Save(List<Soransoft.Domain.Entities.SiteSetting> settings, CancellationToken ct)
         {
+            var rejected = false;
             foreach (var input in settings)
             {
                 var entity = await _db.SiteSettings.FirstOrDefaultAsync(s => s.Id == input.Id, ct);
                 if (entity is null) continue;
-                entity.Value = input.Value ?? string.Empty;
+                var value = input.Value?.Trim() ?? string.Empty;
+                if (entity.Key.EndsWith("Url", StringComparison.OrdinalIgnoreCase) && !IsSafeLink(value))
+                {
+                    rejected = true;
+                    TempData["Error"] = $"مقدار تنظیم «{entity.Title}» باید یک لینک امن http/https یا مسیر داخلی باشد.";
+                    continue;
+                }
+                entity.Value = value;
                 entity.UpdatedAt = DateTime.Now;
             }
             await _db.SaveChangesAsync(ct);
-            TempData["Success"] = "تنظیمات ذخیره شد";
+            if (!rejected) TempData["Success"] = "تنظیمات ذخیره شد";
             return RedirectToAction(nameof(Index));
         }
 
@@ -168,12 +176,18 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 TempData["Error"] = $"تنظیمی با کلید «{key}» از قبل وجود دارد";
                 return RedirectToAction(nameof(Index));
             }
+            value = value?.Trim() ?? string.Empty;
+            if (key.EndsWith("Url", StringComparison.OrdinalIgnoreCase) && !IsSafeLink(value))
+            {
+                TempData["Error"] = "لینک تنظیم باید http/https یا مسیر داخلی باشد.";
+                return RedirectToAction(nameof(Index));
+            }
             var order = await _db.SiteSettings.Where(s => s.Group == group).MaxAsync(s => (int?)s.DisplayOrder, ct) ?? 0;
             _db.SiteSettings.Add(new Soransoft.Domain.Entities.SiteSetting
             {
                 Key = key,
                 Title = title.Trim(),
-                Value = value ?? string.Empty,
+                Value = value,
                 Group = string.IsNullOrWhiteSpace(group) ? "General" : group.Trim(),
                 Type = string.IsNullOrWhiteSpace(type) ? "text" : type.Trim(),
                 DisplayOrder = order + 1,
@@ -197,6 +211,14 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+
+        private static bool IsSafeLink(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return true;
+            if (value.StartsWith('/', StringComparison.Ordinal) && !value.StartsWith("//", StringComparison.Ordinal)) return true;
+            return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        }
     }
 
     /// <summary>مدیریت منوها</summary>
@@ -212,6 +234,12 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Soransoft.Domain.Entities.MenuItem model, CancellationToken ct)
         {
+            model.Url = model.Url?.Trim() ?? string.Empty;
+            if (!IsSafeLink(model.Url))
+            {
+                TempData["Error"] = "آدرس منو باید http/https یا مسیر داخلی باشد.";
+                return RedirectToAction(nameof(Index));
+            }
             if (ModelState.IsValid)
             {
                 _db.MenuItems.Add(model);
@@ -229,6 +257,12 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Soransoft.Domain.Entities.MenuItem model, CancellationToken ct)
         {
+            model.Url = model.Url?.Trim() ?? string.Empty;
+            if (!IsSafeLink(model.Url))
+            {
+                TempData["Error"] = "آدرس منو باید http/https یا مسیر داخلی باشد.";
+                return RedirectToAction(nameof(Index));
+            }
             if (ModelState.IsValid)
             {
                 var item = await _db.MenuItems.FirstOrDefaultAsync(m => m.Id == model.Id, ct);
@@ -248,6 +282,15 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        private static bool IsSafeLink(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+            value = value.Trim();
+            if (value.StartsWith('/', StringComparison.Ordinal) && !value.StartsWith("//", StringComparison.Ordinal)) return true;
+            return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
 
         /// <summary>فعال/غیرفعال کردن سریع آیتم منو</summary>
