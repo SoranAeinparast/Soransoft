@@ -92,7 +92,7 @@
                         <strong>@r.Amount.ToString("N0") تومان</strong>
                         <span class="badge @StatusBadge(r.Status)">@StatusTitle(r.Status)</span>
                     </div>
-                    <div class="text-muted mt-1">@r.CreatedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                    <div class="text-muted mt-1">@PersianDisplay.DateTimeText(r.CreatedAt)</div>
                     @if (!string.IsNullOrWhiteSpace(r.AdminResponse))
                     {
                         <div class="mt-1 text-muted">پاسخ مدیر: @r.AdminResponse</div>
@@ -118,7 +118,7 @@
                             @foreach (var t in Model)
                             {
                                 <tr>
-                                    <td class="small">@t.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                    <td class="small">@PersianDisplay.Date(t.CreatedAt)</td>
                                     <td><span class="badge @TypeBadge(t.Type)">@TypeTitle(t.Type)</span></td>
                                     <td class="fw-bold @(t.Amount >= 0 ? "text-success" : "text-danger")">@t.Amount.ToString("N0")</td>
                                     <td class="small">@t.BalanceAfter.ToString("N0")</td>

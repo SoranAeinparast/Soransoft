@@ -91,7 +91,8 @@ namespace Soransoft.Web.Controllers
             return RedirectToAction(nameof(PanelController.Index), "Panel");
         }
 
-        // GET /Account/Logout
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(Scheme);

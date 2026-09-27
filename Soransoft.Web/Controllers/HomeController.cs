@@ -249,6 +249,7 @@ namespace Soransoft.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ContactUs(ContactUsViewModel model, CancellationToken ct)
         {
+            ViewBag.Settings = await _settings.GetAllAsync(ct);
             if (!ModelState.IsValid)
                 return View(model);
 

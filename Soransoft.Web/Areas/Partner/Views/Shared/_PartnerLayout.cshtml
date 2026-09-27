@@ -24,7 +24,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} | پرتال همکاران" : "پرتال همکاران سوران سافت")</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" asp-append-version="true" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
 </head>
 <body class="sn-admin sn-portal">
@@ -62,7 +62,10 @@
                 <a href="/Partner/Dev/Notifications" class="@(controller == "Dev" && action == "Notifications" ? "active" : "")"><i class="bi bi-megaphone"></i> اطلاعیه‌ها</a>
 
                 <div class="sn-admin-nav-group">حساب</div>
-                <a href="/Partner/Account/Logout"><i class="bi bi-box-arrow-right"></i> خروج (@partnerName)</a>
+                <form method="post" action="/Partner/Account/Logout" class="sn-admin-logout-form">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="sn-admin-nav-button"><i class="bi bi-box-arrow-right"></i> خروج (@partnerName)</button>
+                </form>
             </nav>
         </aside>
 
@@ -90,6 +93,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/persian-ui.js" asp-append-version="true"></script>
     <script src="~/js/admin.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
