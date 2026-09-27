@@ -76,6 +76,42 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             return View(leads);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeStage(int id, LeadStage stage, string? note, CancellationToken ct)
+        {
+            if (!Enum.IsDefined(stage) || stage == LeadStage.Contracted)
+            {
+                TempData["Error"] = "مرحله انتخاب‌شده معتبر نیست؛ تبدیل به قرارداد از فرم اختصاصی انجام می‌شود.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var lead = await _db.Leads.FirstOrDefaultAsync(l => l.Id == id && !l.IsDeleted, ct);
+            if (lead is null) { TempData["Error"] = "لید یافت نشد."; return RedirectToAction(nameof(Index)); }
+            var result = await _portal.UpdateLeadStageAsync(id, stage, note, ct);
+            TempData[result.Success ? "Success" : "Error"] = result.Message;
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id, CancellationToken ct)
+        {
+            var lead = await _db.Leads.FirstOrDefaultAsync(l => l.Id == id && !l.IsDeleted, ct);
+            if (lead is null) { TempData["Error"] = "لید یافت نشد."; return RedirectToAction(nameof(Index)); }
+            if (lead.Stage == LeadStage.Contracted)
+            {
+                TempData["Error"] = "لید تبدیل‌شده به قرارداد قابل حذف نیست.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            lead.IsDeleted = true;
+            lead.DeletedAt = DateTime.Now;
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "لید حذف شد.";
+            return RedirectToAction(nameof(Index));
+        }
+
         /// <summary>تایید لید و تبدیل به قرارداد + نرخ پورسانت + مراحل پرداخت استاندارد</summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -194,6 +230,28 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Contracts));
             }
 
+            if (!await _db.PartnerContracts.AnyAsync(c => c.Id == model.ContractId && !c.IsDeleted, ct))
+            {
+                TempData["Error"] = "قرارداد انتخاب‌شده یافت نشد.";
+                return RedirectToAction(nameof(Contracts));
+            }
+
+            ContractPaymentStage? existingStage = null;
+            if (model.Id > 0)
+            {
+                existingStage = await _db.ContractPaymentStages.FirstOrDefaultAsync(s => s.Id == model.Id && s.ContractId == model.ContractId, ct);
+                if (existingStage is null)
+                {
+                    TempData["Error"] = "مرحله پرداخت با قرارداد انتخاب‌شده همخوانی ندارد.";
+                    return RedirectToAction(nameof(Contracts));
+                }
+                if (existingStage.Status == PaymentStageStatus.Paid)
+                {
+                    TempData["Error"] = "مرحله پرداخت‌شده قابل ویرایش نیست؛ ابتدا وضعیت آن را برگردانید.";
+                    return RedirectToAction(nameof(Contracts));
+                }
+            }
+
             var stage = new ContractPaymentStage
             {
                 Id = model.Id,
@@ -218,7 +276,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 stage.DocumentFile = path;
             }
 
+            var previousDocument = existingStage?.DocumentFile;
             var result = await _portal.SavePaymentStageAsync(stage, model.Id == 0, ct);
+            if (result.Success && !string.IsNullOrWhiteSpace(previousDocument) &&
+                !string.Equals(previousDocument, stage.DocumentFile, StringComparison.Ordinal))
+                await docs.DeleteFileAsync(previousDocument, ct);
             TempData[result.Success ? "Success" : "Error"] = result.Message;
             return RedirectToAction(nameof(Contracts));
         }
@@ -249,13 +311,18 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         {
             var stage = await _db.ContractPaymentStages.FirstOrDefaultAsync(s => s.Id == id, ct);
             if (stage is null) { TempData["Error"] = "مرحله پرداخت یافت نشد."; return RedirectToAction(nameof(Contracts)); }
+            if (file is null || file.Length == 0) { TempData["Error"] = "فایلی انتخاب نشده است."; return RedirectToAction(nameof(Contracts)); }
+            if (kind is not ("receipt" or "document")) { TempData["Error"] = "نوع سند معتبر نیست."; return RedirectToAction(nameof(Contracts)); }
 
-            var path = await docs.SaveStageDocumentAsync(file!, ct);
+            var path = await docs.SaveStageDocumentAsync(file, ct);
             if (path is null) { TempData["Error"] = "فایل نامعتبر است (PDF یا تصویر تا ۲۰ مگابایت)."; return RedirectToAction(nameof(Contracts)); }
 
+            var previousPath = kind == "receipt" ? stage.ReceiptFile : stage.DocumentFile;
             if (kind == "receipt") stage.ReceiptFile = path;
             else stage.DocumentFile = path;
             await _db.SaveChangesAsync(ct);
+            if (!string.IsNullOrWhiteSpace(previousPath) && !string.Equals(previousPath, path, StringComparison.Ordinal))
+                await docs.DeleteFileAsync(previousPath, ct);
 
             TempData["Success"] = "سند مرحله بارگذاری شد.";
             return RedirectToAction(nameof(Contracts));
