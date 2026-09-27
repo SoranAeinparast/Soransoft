@@ -11,7 +11,7 @@
             </div>
             <dl class="row">
                 <dt class="col-3">تاریخ</dt>
-                <dd class="col-9">@Model.CreatedAt.ToString("yyyy/MM/dd HH:mm:ss")</dd>
+                <dd class="col-9">@PersianDisplay.DateTimeText(Model.CreatedAt, true)</dd>
                 <dt class="col-3">مسیر</dt>
                 <dd class="col-9" dir="ltr">@Model.Path (@Model.HttpMethod)</dd>
                 <dt class="col-3">کاربر</dt>

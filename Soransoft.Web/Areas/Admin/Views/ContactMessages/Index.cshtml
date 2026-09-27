@@ -23,7 +23,7 @@
                                 @item.Status.ToString()
                             </span>
                         </td>
-                        <td class="small">@item.CreatedAt.ToString("yyyy/MM/dd")</td>
+                        <td class="small">@PersianDisplay.Date(item.CreatedAt)</td>
                         <td class="text-nowrap">
                             <a href="/Admin/ContactMessages/Details/@item.Id" class="btn btn-sm btn-outline-primary">مشاهده</a>
                             <form method="post" action="/Admin/ContactMessages/Delete/@item.Id" class="d-inline"

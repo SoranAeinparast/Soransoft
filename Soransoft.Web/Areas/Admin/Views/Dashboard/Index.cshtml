@@ -224,7 +224,7 @@
                                 <td>@order.FullName</td>
                                 <td>@order.ProjectType.ToString()</td>
                                 <td><span class="badge bg-secondary">@order.Status.ToString()</span></td>
-                                <td class="small">@order.CreatedAt.ToString("MM/dd")</td>
+                                <td class="small">@PersianDisplay.Date(order.CreatedAt)</td>
                             </tr>
                         }
                     </tbody>
@@ -252,7 +252,7 @@
                                 <td>@msg.FullName</td>
                                 <td>@msg.Subject</td>
                                 <td><span class="badge bg-secondary">@msg.Status.ToString()</span></td>
-                                <td class="small">@msg.CreatedAt.ToString("MM/dd")</td>
+                                <td class="small">@PersianDisplay.Date(msg.CreatedAt)</td>
                             </tr>
                         }
                     </tbody>
@@ -263,7 +263,7 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="~/js/chart-lite.js" asp-append-version="true"></script>
     <script>
         (function () {
             'use strict';
