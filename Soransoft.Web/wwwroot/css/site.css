@@ -713,6 +713,14 @@ body.dark_mode .sn-theme-toggle .bi-moon-stars { display: inline-block; }
 
 .sn-cat-list li a:hover { background: #fff; color: var(--sn-primary-dark); }
 .sn-cat-list li.active a { background: var(--sn-primary); color: #fff; font-weight: 700; }
+.sn-cat-list li form button {
+    display: block;
+    width: 100%;
+    color: inherit;
+    text-align: right;
+    font: inherit;
+}
+.sn-cat-list li form button:hover { color: var(--sn-primary-dark); text-decoration: none; }
 
 /* =====================================================================
    Team
