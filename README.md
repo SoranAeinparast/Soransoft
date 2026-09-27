@@ -85,9 +85,9 @@ Soransoft.sln
 
 SQLEXPRESS` یا…).
 2. فایل **`docs/SoransoftDb_Create.sql`** را باز کرده و کل آن را Execute کنید (F5).
-   - دیتابیس `SoransoftDb` با کل اسکیمای EF + داده‌های اولیه ساخته می‌شود.
+   - اسکیمای پایه و داده‌های عمومی ساخته می‌شود؛ برنامه در اولین اجرا migrationهای پرتال را تکمیل می‌کند.
    - اجرای مجدد بی‌خطر است (idempotent) — داده‌ها تکرار نمی‌شوند.
-   - جدول `__SoransoftMigrationsHistory` از قبل پر می‌شود، بنابراین برنامه هنگام اجرا مایگریشن اضافه اجرا نمی‌کند.
+   - جدول `__SoransoftMigrationsHistory` فقط تا migration پایه پر می‌شود؛ برنامه هنگام اجرا migrationهای باقی‌مانده را اعمال می‌کند.
 3. `ConnectionStrings:DefaultConnection` در `Soransoft.Web/appsettings.json` را به سرور خودتان اشاره دهید:
    ```json
    "DefaultConnection": "Server=localhost;Database=SoransoftDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
@@ -106,11 +106,9 @@ dotnet run --project Soransoft.Web
 
 در اولین اجرا مایگریشن‌ها خودکار اعمال و داده‌های اولیه (Seeder) درج می‌شوند.
 
-**ورود ادمین پیش‌فرض:**
-- نام کاربری: `admin`
-- رمز عبور: `Admin@123`
-
-> ⚠️ پس از استقرار، رمز ادمین را حتماً تغییر دهید.
+**ساخت حساب مدیر اولیه:**
+- `Security:InitialAdmin:Username` و `Security:InitialAdmin:Password` را با Secret Manager یا متغیر محیطی تنظیم کنید.
+- رمز اولیه باید حداقل ۱۲ کاراکتر باشد و پس از اولین ورود تغییر داده شود.
 
 ## حساب کاربری کاربران عادی
 

@@ -5,6 +5,7 @@ using Soransoft.Application.ViewModels;
 using Soransoft.Domain.Entities;
 using Soransoft.Domain.Enums;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace Soransoft.Infrastructure.Persistence
 {
@@ -13,11 +14,13 @@ namespace Soransoft.Infrastructure.Persistence
     {
         private readonly SoransoftDbContext _db;
         private readonly IHttpContextAccessor _http;
+        private readonly ILogger<FormService> _logger;
 
-        public FormService(SoransoftDbContext db, IHttpContextAccessor http)
+        public FormService(SoransoftDbContext db, IHttpContextAccessor http, ILogger<FormService> logger)
         {
             _db = db;
             _http = http;
+            _logger = logger;
         }
 
         /// <summary>شناسه کاربر عضو سایت در صورت لاگین بودن (از کوکی UserAuth)</summary>
@@ -63,7 +66,8 @@ namespace Soransoft.Infrastructure.Persistence
             }
             catch (Exception ex)
             {
-                return OperationResult.Fail("ثبت سفارش با خطا مواجه شد: " + ex.Message);
+                _logger.LogError(ex, "خطا در ثبت سفارش پروژه");
+                return OperationResult.Fail("ثبت سفارش با خطا مواجه شد. دوباره تلاش کنید.");
             }
         }
 
@@ -89,7 +93,8 @@ namespace Soransoft.Infrastructure.Persistence
             }
             catch (Exception ex)
             {
-                return OperationResult.Fail("ارسال پیام با خطا مواجه شد: " + ex.Message);
+                _logger.LogError(ex, "خطا در ثبت پیام تماس");
+                return OperationResult.Fail("ارسال پیام با خطا مواجه شد. دوباره تلاش کنید.");
             }
         }
 
@@ -113,7 +118,8 @@ namespace Soransoft.Infrastructure.Persistence
             }
             catch (Exception ex)
             {
-                return OperationResult.Fail("ثبت درخواست با خطا مواجه شد: " + ex.Message);
+                _logger.LogError(ex, "خطا در ثبت درخواست مشاوره");
+                return OperationResult.Fail("ثبت درخواست مشاوره با خطا مواجه شد. دوباره تلاش کنید.");
             }
         }
     }

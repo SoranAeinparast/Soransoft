@@ -75,7 +75,7 @@ namespace Soransoft.Application.ViewModels
     }
 
     /// <summary>فرم درخواست مشاوره رایگان</summary>
-    public class ConsultationRequestViewModel
+    public class ConsultationRequestViewModel : IValidatableObject
     {
         [Required(ErrorMessage = "نام و نام خانوادگی الزامی است")]
         [StringLength(150)]
@@ -93,6 +93,14 @@ namespace Soransoft.Application.ViewModels
         [StringLength(1000)]
         [Display(Name = "توضیحات")]
         public string? Description { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(Mobile ?? string.Empty, @"^09\d{9}$"))
+                yield return new ValidationResult("شماره موبایل باید با 09 شروع شود و 11 رقم باشد", new[] { nameof(Mobile) });
+            if (!Enum.IsDefined(typeof(ServiceKind), ServiceKind))
+                yield return new ValidationResult("انتخاب سرویس الزامی است", new[] { nameof(ServiceKind) });
+        }
     }
 
     /// <summary>نتیجه‌ی عمومی AJAX</summary>

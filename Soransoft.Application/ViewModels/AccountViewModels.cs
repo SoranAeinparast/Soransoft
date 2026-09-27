@@ -21,7 +21,7 @@ namespace Soransoft.Application.ViewModels
         public string? Email { get; set; }
 
         [Required(ErrorMessage = "رمز عبور الزامی است")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "رمز عبور باید حداقل 6 کاراکتر باشد")]
+        [StringLength(100, MinimumLength = 12, ErrorMessage = "رمز عبور باید حداقل ۱۲ کاراکتر باشد")]
         [DataType(DataType.Password)]
         [Display(Name = "رمز عبور")]
         public string Password { get; set; } = string.Empty;
@@ -79,7 +79,7 @@ namespace Soransoft.Application.ViewModels
         public string CurrentPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "رمز عبور جدید الزامی است")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "رمز عبور باید حداقل 6 کاراکتر باشد")]
+        [StringLength(100, MinimumLength = 12, ErrorMessage = "رمز عبور باید حداقل ۱۲ کاراکتر باشد")]
         [DataType(DataType.Password)]
         [Display(Name = "رمز عبور جدید")]
         public string NewPassword { get; set; } = string.Empty;

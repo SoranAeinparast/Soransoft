@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Soransoft.Domain.Entities;
 using Soransoft.Domain.Enums;
 using Soransoft.Application.Interfaces;
@@ -7,10 +8,19 @@ using TaskStatus = Soransoft.Domain.Entities.TaskStatus;
 
 namespace Soransoft.Infrastructure.Persistence
 {
+    public sealed class RequiredSetupException : InvalidOperationException
+    {
+        public RequiredSetupException(string message) : base(message) { }
+    }
+
     /// <summary>بذرگذاری دیتابیس با داده‌های اولیه مشابه سایت مرجع</summary>
     public static class DbSeeder
     {
-        public static async Task SeedAsync(SoransoftDbContext db, IPasswordHasher hasher, CancellationToken ct = default)
+        public static async Task SeedAsync(
+            SoransoftDbContext db,
+            IPasswordHasher hasher,
+            IConfiguration configuration,
+            CancellationToken ct = default)
         {
             await SeedSettingsAsync(db, ct);
             await SeedMenusAsync(db, ct);
@@ -19,42 +29,79 @@ namespace Soransoft.Infrastructure.Persistence
             await SeedCategoriesAsync(db, ct);
             await SeedArticlesAsync(db, ct);
             await SeedTeamAsync(db, ct);
-            await SeedAdminAsync(db, hasher, ct);
+            await SeedAdminAsync(db, hasher, configuration, ct);
             await SeedSlidersAsync(db, ct);
-            await SeedPartnerPortalAsync(db, hasher, ct);
+            await SeedPartnerPortalAsync(db, hasher, configuration, ct);
             await db.SaveChangesAsync(ct);
         }
 
         /// <summary>بذر داده‌های نمونه پرتال همکاران (اکانت‌ها فقط اگر جدول خالی باشد)</summary>
-        private static async Task SeedPartnerPortalAsync(SoransoftDbContext db, IPasswordHasher hasher, CancellationToken ct)
+        private static async Task SeedPartnerPortalAsync(
+            SoransoftDbContext db,
+            IPasswordHasher hasher,
+            IConfiguration configuration,
+            CancellationToken ct)
         {
             if (await db.Partners.AnyAsync(ct)) return;
 
-            // ---------- اکانت‌های نمونه (رمزها توسط مدیر قابل بازنشانی است) ----------
-            var sales = new Partner
+            // Partner accounts are optional setup data; never create built-in credentials.
+            var configuredPartners = configuration.GetSection("Security:InitialPartners").GetChildren().ToList();
+            if (configuredPartners.Count == 0) return;
+
+            static PartnerRole? ReadRole(IConfigurationSection section)
             {
-                Username = "sales", PasswordHash = hasher.Hash("Sales@123"),
-                FullName = "رضا احمدی", Mobile = "09121110000", Email = "sales@soransoft.ir",
-                Role = PartnerRole.Sales, IsActive = true,
-            };
-            var salesManager = new Partner
+                if (Enum.TryParse<PartnerRole>(section["Role"], true, out var role)) return role;
+                if (int.TryParse(section["Role"], out var numericRole) && Enum.IsDefined(typeof(PartnerRole), numericRole))
+                    return (PartnerRole)numericRole;
+                return null;
+            }
+
+            var salesSection = configuredPartners.FirstOrDefault(s => ReadRole(s) == PartnerRole.Sales);
+            var salesManagerSection = configuredPartners.FirstOrDefault(s => ReadRole(s) == PartnerRole.SalesManager);
+            var devSection = configuredPartners.FirstOrDefault(s => ReadRole(s) == PartnerRole.Developer);
+            var techManagerSection = configuredPartners.FirstOrDefault(s => ReadRole(s) == PartnerRole.TechManager);
+            if (salesSection is null || salesManagerSection is null || devSection is null || techManagerSection is null)
+                return;
+
+            static string Required(IConfigurationSection section, string key)
             {
-                Username = "salesmanager", PasswordHash = hasher.Hash("Sales@123"),
-                FullName = "مریم حسینی", Mobile = "09121110001",
-                Role = PartnerRole.SalesManager, CanSeeAllSalesData = true, IsActive = true,
-            };
-            var dev = new Partner
+                var value = section[key];
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new RequiredSetupException($"Security:InitialPartners requires {key} for every configured partner.");
+                return value.Trim();
+            }
+
+            Partner BuildPartner(IConfigurationSection section, PartnerRole role)
             {
-                Username = "dev", PasswordHash = hasher.Hash("Dev@123"),
-                FullName = "محمد کریمی", Mobile = "09121110002",
-                Role = PartnerRole.Developer, TechLevel = "Senior", Skills = "ASP.NET Core, C#, SQL Server, React", IsActive = true,
-            };
-            var techManager = new Partner
-            {
-                Username = "techmanager", PasswordHash = hasher.Hash("Dev@123"),
-                FullName = "علی رضایی", Mobile = "09121110003",
-                Role = PartnerRole.TechManager, TechLevel = "Senior", Skills = "Architecture, Azure, Docker", IsActive = true,
-            };
+                var password = Required(section, "Password");
+                if (password.Length < 12)
+                    throw new RequiredSetupException("Security:InitialPartners passwords must be at least 12 characters.");
+
+                return new Partner
+                {
+                    Username = Required(section, "Username"),
+                    PasswordHash = hasher.Hash(password),
+                    FullName = Required(section, "FullName"),
+                    Mobile = section["Mobile"]?.Trim(),
+                    Email = section["Email"]?.Trim(),
+                    Role = role,
+                    CanSeeAllSalesData = bool.TryParse(section["CanSeeAllSalesData"], out var canSeeAll) && canSeeAll,
+                    TechLevel = section["TechLevel"]?.Trim(),
+                    Skills = section["Skills"]?.Trim(),
+                    IsActive = true,
+                };
+            }
+
+            // The four optional setup entries are required only when sample portal data is requested.
+            var sales = BuildPartner(salesSection, PartnerRole.Sales);
+            var salesManager = BuildPartner(salesManagerSection, PartnerRole.SalesManager);
+            var dev = BuildPartner(devSection, PartnerRole.Developer);
+            var techManager = BuildPartner(techManagerSection, PartnerRole.TechManager);
+            if (!salesManager.CanSeeAllSalesData)
+                salesManager.CanSeeAllSalesData = true;
+            if (!techManager.CanSeeAllSalesData)
+                techManager.CanSeeAllSalesData = true;
+
             db.Partners.AddRange(sales, salesManager, dev, techManager);
             await db.SaveChangesAsync(ct);
 
@@ -166,16 +213,28 @@ namespace Soransoft.Infrastructure.Persistence
             await db.SaveChangesAsync(ct);
         }
 
-        /// <summary>ایجاد ادمین پیش‌فرض: admin / Admin@123</summary>
-        private static async Task SeedAdminAsync(SoransoftDbContext db, IPasswordHasher hasher, CancellationToken ct)
+        /// <summary>ایجاد ادمین اولیه فقط با تنظیمات خارج از کد</summary>
+        private static async Task SeedAdminAsync(
+            SoransoftDbContext db,
+            IPasswordHasher hasher,
+            IConfiguration configuration,
+            CancellationToken ct)
         {
             if (await db.Admins.AnyAsync(ct)) return;
+
+            var username = configuration["Security:InitialAdmin:Username"]?.Trim();
+            var password = configuration["Security:InitialAdmin:Password"];
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                throw new RequiredSetupException("Security:InitialAdmin:Username and Security:InitialAdmin:Password are required for first run.");
+            if (password.Length < 12)
+                throw new RequiredSetupException("Security:InitialAdmin:Password must be at least 12 characters.");
+
             db.Admins.Add(new Admin
             {
-                Username = "admin",
-                PasswordHash = hasher.Hash("Admin@123"),
+                Username = username,
+                PasswordHash = hasher.Hash(password),
                 FullName = "مدیر سایت",
-                Email = "admin@soransoft.ir",
+                Email = null,
                 IsActive = true,
             });
             await db.SaveChangesAsync(ct);

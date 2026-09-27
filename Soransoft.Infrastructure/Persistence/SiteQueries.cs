@@ -30,6 +30,7 @@ namespace Soransoft.Infrastructure.Persistence
         public async Task<List<PortfolioCardViewModel>> GetPortfoliosAsync(CancellationToken ct = default)
         {
             return await _db.Portfolios.AsNoTracking()
+                .Where(p => p.IsActive)
                 .OrderBy(p => p.DisplayOrder)
                 .Select(p => new PortfolioCardViewModel
                 {
@@ -79,8 +80,6 @@ namespace Soransoft.Infrastructure.Persistence
                 .Include(a => a.ArticleCategory)
                 .FirstOrDefaultAsync(a => a.Id == id && a.Status == PublishStatus.Published, ct);
             if (article is null) return null;
-            article.VisitCount++;
-            await _db.SaveChangesAsync(ct);
             return article;
         }
 
@@ -118,8 +117,8 @@ namespace Soransoft.Infrastructure.Persistence
                 .FirstOrDefaultAsync(s => s.Slug == slug && s.IsActive, ct);
         }
 
-        public Task<List<ArticleCategory>> GetArticleCategoriesAsync(CancellationToken ct = default) =>
-            _db.ArticleCategories.AsNoTracking().OrderBy(c => c.DisplayOrder).ToListAsync(ct);
+    public Task<List<ArticleCategory>> GetArticleCategoriesAsync(CancellationToken ct = default) =>
+            _db.ArticleCategories.AsNoTracking().Where(c => c.IsActive).OrderBy(c => c.DisplayOrder).ToListAsync(ct);
 
         public Task<List<TeamMember>> GetTeamMembersAsync(CancellationToken ct = default) =>
             _db.TeamMembers.AsNoTracking().Where(t => t.IsActive).OrderBy(t => t.DisplayOrder).ToListAsync(ct);
