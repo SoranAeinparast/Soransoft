@@ -8,7 +8,7 @@
         <h1 class="sn-hero-title mt-3">@Model.Title</h1>
         <div class="sn-article-meta justify-content-center mt-3">
             <span><i class="bi bi-person me-1"></i>@Model.AuthorName</span>
-            <span><i class="bi bi-calendar3 me-1"></i>@Model.PublishedAt.ToString("yyyy/MM/dd")</span>
+            <span><i class="bi bi-calendar3 me-1"></i>@PersianDisplay.Date(Model.PublishedAt)</span>
             <span><i class="bi bi-eye me-1"></i>@Model.VisitCount بازدید</span>
         </div>
     </div>
@@ -23,7 +23,7 @@
                     <img src="@Model.Image" alt="@Model.Title" class="img-fluid rounded mb-4 w-100" />
                 }
                 <div class="sn-article-body-content">
-                    @Html.Raw(Model.Body)
+                    @Html.Raw(SafeHtml.Sanitize(Model.Body))
                 </div>
                 <div class="text-center mt-5">
                     <a href="/Articles" class="btn sn-btn-outline">همه مقالات</a>

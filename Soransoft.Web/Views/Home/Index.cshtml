@@ -14,6 +14,13 @@
         ServiceKind.Application => "طراحــی اپلیکیشن",
         _ => "تولید محتوا",
     };
+    static string ServiceUrl(string slug) => slug.ToLowerInvariant() switch
+    {
+        "site-project" => "/SiteProject",
+        "seo" => "/SeoProject",
+        "content" => "/ContentProject",
+        _ => "/OurServices",
+    };
     var sliders = await Site.GetSlidersAsync();
     var hasSlider = sliders.Any();
 }
@@ -92,7 +99,7 @@ else
         <div class="clearfix">
             @foreach (var service in Model.Services)
             {
-                <a href="@(service.ComingSoon ? "#" : "/" + service.Slug)" class="sn-btn-item d-block">
+                <a href="@(service.ComingSoon ? "#services" : ServiceUrl(service.Slug))" class="sn-btn-item d-block">
                     <i class="bi @service.Icon"></i>@service.Title
                 </a>
             }
@@ -117,7 +124,7 @@ else
                         }
                         else
                         {
-                            <a href="/@service.Slug" class="btn sn-btn-outline">بیشتر بدانید</a>
+                            <a href="@ServiceUrl(service.Slug)" class="btn sn-btn-outline">بیشتر بدانید</a>
                         }
                     </div>
                 </div>
@@ -275,7 +282,7 @@ else
                             <p>@(article.Summary.Length > 180 ? article.Summary[..180] + "…" : article.Summary)</p>
                             <div class="sn-article-meta">
                                 <span><i class="bi bi-person me-1"></i>@article.AuthorName</span>
-                                <span><i class="bi bi-calendar3 me-1"></i>@article.PublishedAt.ToString("yyyy/MM/dd")</span>
+                                <span><i class="bi bi-calendar3 me-1"></i>@PersianDisplay.Date(article.PublishedAt)</span>
                             </div>
                             <a href="/Article/@article.Slug" class="sn-readmore">مطالعه <i class="bi bi-arrow-left"></i></a>
                         </div>

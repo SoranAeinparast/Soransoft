@@ -1,6 +1,13 @@
 @model Soransoft.Web.Models.OurServicesViewModel
 @{
     ViewData["Title"] = "خدمات ما";
+    static string ServiceUrl(string slug) => slug.ToLowerInvariant() switch
+    {
+        "site-project" => "/SiteProject",
+        "seo" => "/SeoProject",
+        "content" => "/ContentProject",
+        _ => "/OurServices",
+    };
 }
 <section class="sn-page-hero">
     <div class="container text-center">
@@ -26,7 +33,7 @@
                         }
                         else
                         {
-                            <a href="/@service.Slug" class="btn sn-btn-primary">بیشتر بدانید</a>
+                            <a href="@ServiceUrl(service.Slug)" class="btn sn-btn-primary">بیشتر بدانید</a>
                         }
                     </div>
                 </div>

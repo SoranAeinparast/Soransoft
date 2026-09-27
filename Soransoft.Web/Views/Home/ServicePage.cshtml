@@ -9,7 +9,6 @@
         {
             <p class="sn-hero-subtitle">@Model.Slogan</p>
         }
-        <p class="alert alert-success d-inline-block">درخواست شما با موفقیت ارسال شد. از تماس سریع ما شگفت زده خواهید شد آماده باشید :)</p>
     </div>
 </section>
 
@@ -17,7 +16,7 @@
     <div class="container">
         <h2 class="sn-section-title">خدمات @Model.Title</h2>
         <div class="sn-article-body-content">
-            @Html.Raw(Model.FullDescription)
+            @Html.Raw(SafeHtml.Sanitize(Model.FullDescription))
         </div>
 
         @if (Model.Features.Any())

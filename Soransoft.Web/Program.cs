@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Soransoft.Application.DependencyInjection;
 using Soransoft.Application.Interfaces;
@@ -9,8 +10,87 @@ using Soransoft.Infrastructure.DependencyInjection;
 using Soransoft.Web.Infrastructure;
 using Soransoft.Web.Middleware;
 using System.Globalization;
+using System.Net;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var allowedHosts = builder.Configuration["AllowedHosts"];
+if (!builder.Environment.IsDevelopment() &&
+    (string.IsNullOrWhiteSpace(allowedHosts) || allowedHosts.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+        .Any(host => host.Trim() == "*")))
+    throw new InvalidOperationException("AllowedHosts must contain explicit trusted hosts outside Development.");
+
+builder.Services.AddHostFiltering();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+
+    var configuredProxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").GetChildren()
+        .Select(section => section.Value)
+        .Concat((builder.Configuration["ForwardedHeaders:KnownProxies"] ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+
+    foreach (var value in configuredProxies.Distinct(StringComparer.OrdinalIgnoreCase))
+    {
+        if (IPAddress.TryParse(value, out var address))
+            options.KnownProxies.Add(address);
+    }
+});
+
+async Task ValidateActiveCookieAsync(CookieValidatePrincipalContext context)
+{
+    if (!int.TryParse(context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var accountId))
+    {
+        context.RejectPrincipal();
+        return;
+    }
+
+    try
+    {
+        var db = context.HttpContext.RequestServices.GetRequiredService<SoransoftDbContext>();
+        var isActive = context.Scheme.Name switch
+        {
+            "PartnerAuth" => await db.Partners.AsNoTracking()
+                .AnyAsync(p => p.Id == accountId && p.IsActive && !p.IsDeleted, context.HttpContext.RequestAborted),
+            "UserAuth" => await db.SiteUsers.AsNoTracking()
+                .AnyAsync(u => u.Id == accountId && u.IsActive && !u.IsDeleted, context.HttpContext.RequestAborted),
+            _ => await db.Admins.AsNoTracking()
+                .AnyAsync(a => a.Id == accountId && a.IsActive && !a.IsDeleted, context.HttpContext.RequestAborted),
+        };
+
+        if (!isActive)
+            context.RejectPrincipal();
+    }
+    catch (OperationCanceledException) when (context.HttpContext.RequestAborted.IsCancellationRequested)
+    {
+        throw;
+    }
+    catch (Exception ex)
+    {
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Soransoft.Authentication");
+        logger.LogWarning(ex, "Unable to validate the authenticated account cookie.");
+        context.RejectPrincipal();
+    }
+}
+
+void ConfigureCookie(CookieAuthenticationOptions options, string loginPath, string accessDeniedPath, TimeSpan lifetime, string cookieName)
+{
+    options.LoginPath = loginPath;
+    options.AccessDeniedPath = accessDeniedPath;
+    options.ExpireTimeSpan = lifetime;
+    options.SlidingExpiration = true;
+    options.Cookie.Name = cookieName;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+    options.Events.OnValidatePrincipal = ValidateActiveCookieAsync;
+}
 
 // ---------- Services ----------
 // غیرفعال‌سازی Required ضمنی برای خاصیت‌های non-nullable موجودیت‌ها؛
@@ -37,38 +117,35 @@ builder.Services.AddAuthentication(options =>
 .AddPolicyScheme("Smart", "Smart", options =>
 {
     options.ForwardDefaultSelector = context =>
-        context.Request.Cookies.ContainsKey("Soransoft.Partner") ? "PartnerAuth"
+        context.Request.Path.StartsWithSegments("/Admin") ? CookieAuthenticationDefaults.AuthenticationScheme
+        : context.Request.Path.StartsWithSegments("/Partner") ? "PartnerAuth"
+        : context.Request.Path.StartsWithSegments("/Account") || context.Request.Path.StartsWithSegments("/Panel") ? "UserAuth"
+        : context.Request.Cookies.ContainsKey("Soransoft.Partner") ? "PartnerAuth"
         : context.Request.Cookies.ContainsKey("Soransoft.User") ? "UserAuth"
         : CookieAuthenticationDefaults.AuthenticationScheme;
 })
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
-    options.LoginPath = "/Admin/Account/Login";
-    options.AccessDeniedPath = "/Admin/Account/Login";
-    options.ExpireTimeSpan = TimeSpan.FromHours(8);
-    options.SlidingExpiration = true;
+    ConfigureCookie(options, "/Admin/Account/Login", "/Admin/Account/ChangePassword", TimeSpan.FromHours(8), "Soransoft.Admin");
 })
 .AddCookie("UserAuth", options =>
 {
-    options.LoginPath = "/Account/Login";
-    options.AccessDeniedPath = "/Account/Login";
-    options.ExpireTimeSpan = TimeSpan.FromDays(14);
-    options.SlidingExpiration = true;
-    options.Cookie.Name = "Soransoft.User";
+    ConfigureCookie(options, "/Account/Login", "/Account/Login", TimeSpan.FromDays(14), "Soransoft.User");
 })
 .AddCookie("PartnerAuth", options =>
 {
-    options.LoginPath = "/Partner/Account/Login";
-    options.AccessDeniedPath = "/Partner/Account/Login";
-    options.ExpireTimeSpan = TimeSpan.FromHours(12);
-    options.SlidingExpiration = true;
-    options.Cookie.Name = "Soransoft.Partner";
+    ConfigureCookie(options, "/Partner/Account/Login", "/Partner/Account/Login", TimeSpan.FromHours(12), "Soransoft.Partner");
 });
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
     options.AddPolicy("PartnerOnly", policy => policy.RequireClaim("UserType", "Partner"));
+    options.AddPolicy("AdminOnly", policy => policy
+        .RequireRole("Admin")
+        .RequireAssertion(context => !context.User.HasClaim("MustChangePassword", "1")));
+    options.AddPolicy("AdminPasswordSetup", policy => policy
+        .RequireRole("Admin")
+        .RequireClaim("MustChangePassword", "1"));
 });
 
 // ---------- Culture (fa-IR, RTL) ----------
@@ -90,19 +167,29 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<SoransoftDbContext>();
     var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var startupLogger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Soransoft.Startup");
     try
     {
         await db.Database.MigrateAsync();
-        await DbSeeder.SeedAsync(db, hasher);
+        await PrivateDocumentMigration.RunAsync(
+            db,
+            app.Environment.ContentRootPath,
+            app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"),
+            startupLogger);
+        await DbSeeder.SeedAsync(db, hasher, builder.Configuration);
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "خطا در اجرای Migration/Seed دیتابیس");
+        startupLogger.LogError(ex, "خطا در اجرای Migration/Seed دیتابیس");
+        if (ex is RequiredSetupException)
+            throw;
     }
 }
 
 // ---------- Pipeline ----------
+app.UseForwardedHeaders();
+app.UseHostFiltering();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -112,7 +199,16 @@ if (!app.Environment.IsDevelopment())
 app.UseErrorLogging();
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+var legacyPrivateDocumentPaths = new[]
+{
+    "/uploads/partners/contracts",
+    "/uploads/partners/agreements",
+    "/uploads/partners/wallet-docs",
+    "/uploads/partners/contract-stages",
+};
+app.UseWhen(
+    context => !legacyPrivateDocumentPaths.Any(path => context.Request.Path.StartsWithSegments(path)),
+    branch => branch.UseStaticFiles());
 
 app.UseRouting();
 
@@ -120,6 +216,8 @@ app.UseRequestLocalization();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "areas",

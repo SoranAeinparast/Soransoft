@@ -54,7 +54,7 @@
                                     <p>@(article.Summary.Length > 150 ? article.Summary[..150] + "…" : article.Summary)</p>
                                     <div class="sn-article-meta">
                                         <span><i class="bi bi-person me-1"></i>@article.AuthorName</span>
-                                        <span><i class="bi bi-calendar3 me-1"></i>@article.PublishedAt.ToString("yyyy/MM/dd")</span>
+                                        <span><i class="bi bi-calendar3 me-1"></i>@PersianDisplay.Date(article.PublishedAt)</span>
                                         <span><i class="bi bi-eye me-1"></i>@article.VisitCount</span>
                                     </div>
                                     <a href="/Article/@article.Slug" class="sn-readmore">مطالعه <i class="bi bi-arrow-left"></i></a>
