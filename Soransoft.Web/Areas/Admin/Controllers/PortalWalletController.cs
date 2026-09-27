@@ -26,7 +26,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
     /// <summary>کیف پول همکاران در پنل مدیر</summary>
     [Area("Admin")]
-    [Route("Admin/PortalWallet/{action=Index}/{id?}")]
+    [Route("Admin/PortalWallet/{action=Index}/{partnerId?}")]
     [Authorize(Policy = "AdminOnly")]
     public class PortalWalletController : Controller
     {

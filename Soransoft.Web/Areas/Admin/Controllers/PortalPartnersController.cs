@@ -5,6 +5,7 @@ using Soransoft.Application.Interfaces;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace Soransoft.Web.Areas.Admin.Controllers
 {
@@ -16,12 +17,13 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public string Username { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "رمز عبور الزامی است")]
-        [MinLength(8, ErrorMessage = "رمز عبور حداقل ۸ کاراکتر باشد")]
+        [MinLength(12, ErrorMessage = "رمز عبور حداقل ۱۲ کاراکتر باشد")]
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "نام کامل الزامی است")]
         public string FullName { get; set; } = string.Empty;
         public string? Mobile { get; set; }
+        [EmailAddress(ErrorMessage = "ایمیل معتبر نیست")]
         public string? Email { get; set; }
         public PartnerRole Role { get; set; } = PartnerRole.Sales;
         /// <summary>سطح ارشدی: دیدن داده‌های همه همکاران فروش</summary>
@@ -29,6 +31,31 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public string? TechLevel { get; set; }
         public string? Skills { get; set; }
         public string? AdminNote { get; set; }
+    }
+
+    /// <summary>فرم ویرایش حساب همکار؛ رمز عبور از مسیر بازنشانی جداگانه تغییر می‌کند</summary>
+    public class PartnerEditModel
+    {
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "نام کاربری الزامی است")]
+        [RegularExpression(@"^[a-zA-Z0-9._-]{3,30}$", ErrorMessage = "نام کاربری فقط حروف انگلیسی، عدد و . _ - (۳ تا ۳۰ کاراکتر)")]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "نام کامل الزامی است")]
+        public string FullName { get; set; } = string.Empty;
+
+        public string? Mobile { get; set; }
+
+        [EmailAddress(ErrorMessage = "ایمیل معتبر نیست")]
+        public string? Email { get; set; }
+
+        public PartnerRole Role { get; set; } = PartnerRole.Sales;
+        public bool CanSeeAllSalesData { get; set; }
+        public string? TechLevel { get; set; }
+        public string? Skills { get; set; }
+        public string? AdminNote { get; set; }
+        public bool IsActive { get; set; }
     }
 
     /// <summary>مدیریت اکانت‌های پرتال همکاران توسط مدیر</summary>
@@ -45,6 +72,9 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             _db = db;
             _hasher = hasher;
         }
+
+        private int? CurrentAdminId =>
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
 
         public async Task<IActionResult> Index(CancellationToken ct)
         {
@@ -75,14 +105,73 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             return View(items);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id, CancellationToken ct)
+        {
+            var partner = await _db.Partners.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
+            if (partner is null) return NotFound();
+
+            return View(new PartnerEditModel
+            {
+                Id = partner.Id,
+                Username = partner.Username,
+                FullName = partner.FullName,
+                Mobile = partner.Mobile,
+                Email = partner.Email,
+                Role = partner.Role,
+                CanSeeAllSalesData = partner.CanSeeAllSalesData,
+                TechLevel = partner.TechLevel,
+                Skills = partner.Skills,
+                AdminNote = partner.AdminNote,
+                IsActive = partner.IsActive,
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(PartnerEditModel model, CancellationToken ct)
+        {
+            if (!ModelState.IsValid) return View(model);
+            if (!Enum.IsDefined(model.Role))
+            {
+                ModelState.AddModelError(nameof(model.Role), "نقش همکار معتبر نیست.");
+                return View(model);
+            }
+
+            var username = model.Username.Trim().ToLowerInvariant();
+            if (await _db.Partners.AnyAsync(p => p.Id != model.Id && p.Username == username, ct))
+            {
+                ModelState.AddModelError(nameof(model.Username), "این نام کاربری قبلاً استفاده شده است.");
+                return View(model);
+            }
+
+            var partner = await _db.Partners.FirstOrDefaultAsync(p => p.Id == model.Id, ct);
+            if (partner is null) return NotFound();
+
+            partner.Username = username;
+            partner.FullName = model.FullName.Trim();
+            partner.Mobile = string.IsNullOrWhiteSpace(model.Mobile) ? null : model.Mobile.Trim();
+            partner.Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim();
+            partner.Role = model.Role;
+            partner.CanSeeAllSalesData = model.CanSeeAllSalesData;
+            partner.TechLevel = string.IsNullOrWhiteSpace(model.TechLevel) ? null : model.TechLevel.Trim();
+            partner.Skills = string.IsNullOrWhiteSpace(model.Skills) ? null : model.Skills.Trim();
+            partner.AdminNote = string.IsNullOrWhiteSpace(model.AdminNote) ? null : model.AdminNote.Trim();
+            partner.IsActive = model.IsActive;
+
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = $"حساب همکار «{partner.FullName}» به‌روزرسانی شد.";
+            return RedirectToAction(nameof(Index));
+        }
+
         /// <summary>تایید درخواست و تعیین رمز جدید (تکمیل خودکار درخواست)</summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveReset(int id, string password, string? response, CancellationToken ct)
         {
-            if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 12)
             {
-                TempData["Error"] = "رمز جدید حداقل ۸ کاراکتر باشد.";
+                TempData["Error"] = "رمز جدید حداقل ۱۲ کاراکتر باشد.";
                 return RedirectToAction(nameof(ResetRequests));
             }
 
@@ -99,7 +188,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             req.Status = PasswordResetStatus.Approved;
             req.AdminResponse = string.IsNullOrWhiteSpace(response) ? null : response.Trim();
             req.DecidedAt = DateTime.Now;
-            req.DecidedByAdminId = 1;
+            req.DecidedByAdminId = CurrentAdminId;
 
             // سایر درخواست‌های باز همان همکار هم بسته شوند
             var otherOpen = await _db.PasswordResetRequests
@@ -110,7 +199,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 o.Status = PasswordResetStatus.Approved;
                 o.AdminResponse = "در همین راستا با تایید یک درخواست بسته شد";
                 o.DecidedAt = DateTime.Now;
-                o.DecidedByAdminId = 1;
+                o.DecidedByAdminId = CurrentAdminId;
             }
 
             await _db.SaveChangesAsync(ct);
@@ -125,6 +214,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return RedirectToAction(nameof(Index));
+            }
+            if (!Enum.IsDefined(model.Role))
+            {
+                TempData["Error"] = "نقش همکار معتبر نیست.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -174,9 +268,9 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(int id, string password, CancellationToken ct)
         {
-            if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 12)
             {
-                TempData["Error"] = "رمز جدید حداقل ۸ کاراکتر باشد.";
+                TempData["Error"] = "رمز جدید حداقل ۱۲ کاراکتر باشد.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -194,7 +288,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 req.Status = PasswordResetStatus.Approved;
                 req.AdminResponse = "بازنشانی مستقیم توسط مدیر از صفحه همکاران";
                 req.DecidedAt = DateTime.Now;
-                req.DecidedByAdminId = 1;
+                req.DecidedByAdminId = CurrentAdminId;
             }
 
             await _db.SaveChangesAsync(ct);
@@ -217,7 +311,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             req.Status = PasswordResetStatus.Rejected;
             req.AdminResponse = string.IsNullOrWhiteSpace(response) ? null : response.Trim();
             req.DecidedAt = DateTime.Now;
-            req.DecidedByAdminId = 1;
+            req.DecidedByAdminId = CurrentAdminId;
             await _db.SaveChangesAsync(ct);
 
             TempData["Success"] = "درخواست رد شد.";

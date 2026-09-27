@@ -36,7 +36,7 @@
                             </span>
                         </td>
                         <td>@item.VisitCount</td>
-                        <td class="small">@item.PublishedAt.ToString("yyyy/MM/dd")</td>
+                        <td class="small">@PersianDisplay.Date(item.PublishedAt)</td>
                         <td class="text-nowrap">
                             <a href="/Admin/Articles/Edit/@item.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
                             <form method="post" action="/Admin/Articles/Delete/@item.Id" class="d-inline"
