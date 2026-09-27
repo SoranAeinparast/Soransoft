@@ -8,6 +8,7 @@
 
 <div class="sn-admin-card mb-3">
     <form asp-action="CreateProject" method="post" class="row g-2 align-items-end">
+        @Html.AntiForgeryToken()
         <div class="col-12 col-md-4">
             <label class="form-label small">عنوان پروژه *</label>
             <input name="title" class="form-control form-control-sm" required placeholder="مثلاً: SugarShop" />
@@ -38,10 +39,16 @@
                         <h6 class="mb-1">@p.Title</h6>
                         <div class="small text-muted">@p.Description</div>
                     </div>
-                    <form asp-action="UpdateProjectStatus" method="post" class="d-inline-flex gap-1">
-                        <input type="hidden" name="id" value="@p.Id" />
-                        <input name="statusText" class="form-control form-control-sm" value="@p.StatusText" placeholder="وضعیت" style="width:140px" />
-                        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-save"></i></button>
+                    <form asp-action="EditProject" method="post" class="row g-1 align-items-center">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" value="@p.Id" />
+                        <div class="col-12 col-md-auto"><input name="Title" class="form-control form-control-sm" value="@p.Title" required placeholder="عنوان" style="width:150px" /></div>
+                        <div class="col-12 col-md-auto"><input name="Description" class="form-control form-control-sm" value="@p.Description" placeholder="توضیح" style="width:150px" /></div>
+                        <div class="col-12 col-md-auto"><input name="StatusText" class="form-control form-control-sm" value="@p.StatusText" placeholder="وضعیت" style="width:130px" /></div>
+                        <input type="hidden" name="IsActive" value="false" />
+                        <label class="form-check form-check-inline small mb-0"><input type="checkbox" name="IsActive" value="true" class="form-check-input" @(p.IsActive ? "checked" : "") /> فعال</label>
+                        <button class="btn btn-sm btn-outline-primary" title="ذخیره پروژه"><i class="bi bi-save"></i></button>
+                        <button type="submit" formaction="/Admin/PortalDev/DeleteProject" name="id" value="@p.Id" formmethod="post" class="btn btn-sm btn-outline-danger" onclick="return confirm('پروژه حذف شود؟ سابقه تسک‌ها حفظ می‌شود.')"><i class="bi bi-trash"></i></button>
                     </form>
                 </div>
                 @if (total > 0)
@@ -59,7 +66,18 @@
                     {
                         @foreach (var m in p.Members)
                         {
-                            <span class="badge bg-light text-dark border ms-1">@m.Partner.FullName @(string.IsNullOrWhiteSpace(m.RoleInProject) ? "" : $"({m.RoleInProject})")</span>
+                            <form asp-action="EditMember" method="post" class="d-inline-flex gap-1 align-items-center ms-1">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@m.Id" />
+                                <span class="badge bg-light text-dark border">@m.Partner.FullName</span>
+                                <input name="roleInProject" value="@m.RoleInProject" class="form-control form-control-sm" placeholder="نقش" style="width:110px" />
+                                <button class="btn btn-sm btn-link p-0" title="ذخیره نقش"><i class="bi bi-check2"></i></button>
+                            </form>
+                            <form asp-action="DeleteMember" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@m.Id" />
+                                <button class="btn btn-sm btn-link p-0 text-danger" title="حذف عضو" onclick="return confirm('این عضو از پروژه حذف شود؟')"><i class="bi bi-x"></i></button>
+                            </form>
                         }
                     }
                     else
@@ -68,6 +86,7 @@
                     }
                 </div>
                 <form asp-action="AddMember" method="post" class="d-flex gap-1 align-items-center">
+                    @Html.AntiForgeryToken()
                     <input type="hidden" name="projectId" value="@p.Id" />
                     <select name="partnerId" class="form-select form-select-sm" required style="max-width:180px">
                         <option value="">افزودن عضو...</option>
@@ -82,4 +101,8 @@
             </div>
         </div>
     }
+</div>
+
+<div class="d-flex justify-content-end mt-3">
+    <a asp-action="Sprints" class="btn btn-sm btn-outline-primary"><i class="bi bi-calendar3 me-1"></i>مدیریت اسپرینت‌ها</a>
 </div>

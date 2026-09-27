@@ -31,7 +31,7 @@
                 <div>
                     <strong>@t.Subject</strong>
                     <div class="small text-muted">
-                        ثبت‌کننده: @t.Partner?.FullName · قرارداد: @t.Contract.Title · @t.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                                ثبت‌کننده: @t.Partner?.FullName · قرارداد: @t.Contract.Title · @PersianDisplay.DateTimeText(t.CreatedAt)
                     </div>
                 </div>
                 <span class="badge @StatusBadge(t.Status)">@StatusTitle(t.Status)</span>
@@ -44,6 +44,7 @@
                 </div>
             }
             <form asp-action="AnswerTicket" method="post" class="d-flex gap-1 flex-wrap">
+                @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@t.Id" />
                 <input name="response" class="form-control form-control-sm" placeholder="پاسخ / اقدام انجام‌شده..." style="max-width:420px" />
                 <select name="status" class="form-select form-select-sm" style="width:auto">
