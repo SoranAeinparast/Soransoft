@@ -23,7 +23,7 @@
                         <td dir="ltr">@item.Mobile</td>
                         <td dir="ltr" class="small">@item.Email</td>
                         <td>@item.ProjectOrders.Count</td>
-                        <td class="small">@(item.LastLoginAt?.ToString("yyyy/MM/dd HH:mm") ?? "—")</td>
+                        <td class="small">@(PersianDisplay.DateTimeText(item.LastLoginAt) ?? "—")</td>
                         <td>
                             @if (item.IsDeleted)
                             {

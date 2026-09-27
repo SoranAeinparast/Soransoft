@@ -79,11 +79,8 @@
                 </div>
                 <div class="row mb-2">
                     <div class="col-12 text-end">
-                        <form method="post" action="/Admin/SiteSettings/Delete/@setting.Id" class="d-inline"
-                              onsubmit="return confirm('این تنظیم برای همیشه حذف شود؟')">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-sm btn-link text-danger p-0">حذف تنظیم</button>
-                        </form>
+                        <button type="submit" form="delete-setting-@setting.Id" class="btn btn-sm btn-link text-danger p-0"
+                                onclick="return confirm('این تنظیم برای همیشه حذف شود؟')">حذف تنظیم</button>
                     </div>
                 </div>
             }
@@ -91,3 +88,10 @@
     }
     <button type="submit" class="btn sn-btn-primary px-5">ذخیره تنظیمات</button>
 </form>
+
+@foreach (var setting in Model)
+{
+    <form id="delete-setting-@setting.Id" method="post" action="/Admin/SiteSettings/Delete/@setting.Id">
+        @Html.AntiForgeryToken()
+    </form>
+}

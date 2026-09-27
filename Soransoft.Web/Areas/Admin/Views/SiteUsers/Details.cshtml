@@ -10,8 +10,8 @@
                 <dt class="col-4">نام</dt><dd class="col-8">@Model.FullName</dd>
                 <dt class="col-4">موبایل</dt><dd class="col-8" dir="ltr">@Model.Mobile</dd>
                 <dt class="col-4">ایمیل</dt><dd class="col-8" dir="ltr">@Model.Email</dd>
-                <dt class="col-4">تاریخ عضویت</dt><dd class="col-8">@Model.CreatedAt.ToString("yyyy/MM/dd HH:mm")</dd>
-                <dt class="col-4">آخرین ورود</dt><dd class="col-8">@(Model.LastLoginAt?.ToString("yyyy/MM/dd HH:mm") ?? "—")</dd>
+                <dt class="col-4">تاریخ عضویت</dt><dd class="col-8">@PersianDisplay.DateTimeText(Model.CreatedAt)</dd>
+                <dt class="col-4">آخرین ورود</dt><dd class="col-8">@(PersianDisplay.DateTimeText(Model.LastLoginAt) ?? "—")</dd>
                 <dt class="col-4">وضعیت</dt>
                 <dd class="col-8">
                     <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">@(Model.IsActive ? "فعال" : "غیرفعال")</span>
@@ -42,7 +42,7 @@
                                     <td>@o.ProjectType.ToString()</td>
                                     <td>@(o.Budget?.ToString("N0") ?? "—")</td>
                                     <td><span class="badge @(o.Status == ProjectOrderStatus.New ? "bg-primary" : o.Status == ProjectOrderStatus.Delivered ? "bg-success" : o.Status == ProjectOrderStatus.Cancelled ? "bg-danger" : "bg-secondary")">@o.Status.ToString()</span></td>
-                                    <td class="small">@o.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                    <td class="small">@PersianDisplay.Date(o.CreatedAt)</td>
                                     <td><a href="/Admin/ProjectOrders/Details/@o.Id" class="btn btn-sm btn-outline-primary">مشاهده</a></td>
                                 </tr>
                             }

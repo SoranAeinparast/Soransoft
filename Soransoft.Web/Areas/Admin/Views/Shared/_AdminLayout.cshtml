@@ -79,7 +79,10 @@
                 <a href="/Admin/SiteSettings" class="@(controller == "SiteSettings" ? "active" : "")"><i class="bi bi-sliders"></i> تنظیمات سایت</a>
                 <a href="/Admin/ErrorLogs" class="@(controller == "ErrorLogs" ? "active" : "")"><i class="bi bi-bug"></i> لاگ خطاها</a>
                 <a href="/" target="_blank"><i class="bi bi-box-arrow-up-left"></i> مشاهده سایت</a>
-                <a href="/Admin/Account/Logout"><i class="bi bi-box-arrow-right"></i> خروج (@userName)</a>
+                <form method="post" action="/Admin/Account/Logout" class="sn-admin-logout-form">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="sn-admin-nav-button"><i class="bi bi-box-arrow-right"></i> خروج (@userName)</button>
+                </form>
             </nav>
         </aside>
 
@@ -107,6 +110,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/persian-ui.js" asp-append-version="true"></script>
     @if (loadTinyMce)
     {
         <script src="~/lib/tinymce/tinymce.min.js" asp-append-version="true"></script>
