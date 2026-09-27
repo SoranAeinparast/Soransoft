@@ -56,7 +56,7 @@
                 {
                     var days = (exp - DateTime.Now).Days;
                     <div class="small @(days < 30 ? "text-danger" : "text-muted")">
-                        <i class="bi bi-shield-check me-1"></i>انقضای لایسنس: @exp.ToString("yyyy/MM/dd") @(days < 30 ? $"({days} روز مانده)" : "")
+                        <i class="bi bi-shield-check me-1"></i>انقضای لایسنس: @PersianDisplay.Date(exp) @(days < 30 ? $"({PersianDisplay.Number(days)} روز مانده)" : "")
                     </div>
                 }
             </div>
@@ -97,7 +97,7 @@
                                 </td>
                                 <td>@(i.PercentOfTotal is decimal p ? $"{p:0.##}%" : "—")</td>
                                 <td>@i.Amount.ToString("N0")</td>
-                                <td>@(i.DueDate?.ToString("yyyy/MM/dd") ?? "—")</td>
+                                <td>@(PersianDisplay.Date(i.DueDate) ?? "—")</td>
                                 <td><span class="badge @StageBadge(i.Status)">@StageTitle(i.Status)</span></td>
                                 <td class="small">
                                     @if (!string.IsNullOrWhiteSpace(i.ReceiptFile))

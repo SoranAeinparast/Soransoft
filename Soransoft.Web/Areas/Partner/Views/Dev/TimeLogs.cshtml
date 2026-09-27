@@ -38,7 +38,7 @@
                     </div>
                     <div class="col-6">
                         <label class="form-label small">تاریخ</label>
-                        <input name="WorkDate" type="date" class="form-control" required />
+                        <input name="WorkDate" type="text" data-persian-date class="form-control" required />
                     </div>
                 </div>
                 <div class="my-3">
@@ -73,7 +73,7 @@
                             @foreach (var t in Model)
                             {
                                 <tr>
-                                    <td class="small">@t.WorkDate.ToString("yyyy/MM/dd")</td>
+                                    <td class="small">@PersianDisplay.Date(t.WorkDate)</td>
                                     <td class="small">@t.Task?.Title @(t.Task == null ? t.Project?.Title : "")</td>
                                     <td>@t.Minutes دقیقه</td>
                                     <td class="small text-muted">@t.Note</td>

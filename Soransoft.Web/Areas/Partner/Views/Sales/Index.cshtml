@@ -52,7 +52,7 @@
                             <td class="small" style="max-width:260px">@l.Requirement</td>
                             <td>@(l.EstimatedAmount?.ToString("N0") ?? "—")</td>
                             <td><span class="badge @StageBadge(l.Stage)">@StageTitle(l.Stage)</span></td>
-                            <td class="small">@l.CreatedAt.ToString("yyyy/MM/dd")</td>
+                            <td class="small">@PersianDisplay.Date(l.CreatedAt)</td>
                             <td class="text-end">
                                 @if (l.Stage != Soransoft.Domain.Entities.LeadStage.Contracted && l.Stage != Soransoft.Domain.Entities.LeadStage.Lost)
                                 {

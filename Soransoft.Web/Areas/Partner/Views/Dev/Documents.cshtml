@@ -51,7 +51,7 @@
                     </h2>
                     <div id="doc-@d.Id" class="accordion-collapse collapse @(d == p.Documents.OrderBy(x => x.DisplayOrder).First() ? "show" : "")" data-bs-parent="#docs-@p.Id">
                         <div class="accordion-body small">
-                            @Html.Raw(d.Body)
+                            @Html.Raw(SafeHtml.Sanitize(d.Body))
                         </div>
                     </div>
                 </div>

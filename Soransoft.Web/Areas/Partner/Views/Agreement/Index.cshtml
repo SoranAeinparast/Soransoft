@@ -33,7 +33,7 @@
             <span class="badge @StatusBadge(a.Status)">@StatusTitle(a.Status)</span>
         </div>
         <dl class="row small mt-3 mb-0">
-            <dt class="col-4">مدت:</dt><dd class="col-8">@a.StartDate.ToString("yyyy/MM/dd") تا @(a.EndDate?.ToString("yyyy/MM/dd") ?? "بدون پایان")</dd>
+            <dt class="col-4">مدت:</dt><dd class="col-8">@PersianDisplay.Date(a.StartDate) تا @(PersianDisplay.Date(a.EndDate) ?? "بدون پایان")</dd>
             <dt class="col-4">مبلغ کل/سقف:</dt><dd class="col-8">@(a.IsUnlimitedAmount ? "نامحدود (بدون سقف — تعداد قرارداد با مشتری محدود نیست)" : (a.TotalAmount?.ToString("N0") ?? "—") + " تومان")</dd>
             @if (a.Kind == Soransoft.Domain.Entities.AgreementKind.Sales)
             {
@@ -55,7 +55,7 @@
         {
             <hr />
             <h6 class="small">مفاد و تعهدات</h6>
-            <div class="small">@Html.Raw(a.Terms)</div>
+            <div class="small">@Html.Raw(SafeHtml.Sanitize(a.Terms))</div>
         }
         @if (!string.IsNullOrWhiteSpace(a.ContractFile))
         {

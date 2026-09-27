@@ -38,7 +38,7 @@ namespace Soransoft.Web.Areas.Partner.Controllers
 
     /// <summary>ورود/خروج همکاران — کاملاً جدا از «ورود/عضویت» کاربران عادی سایت</summary>
     [Area("Partner")]
-    [AllowAnonymous]
+    [Authorize(Policy = "PartnerOnly", AuthenticationSchemes = "PartnerAuth")]
     public class AccountController : Controller
     {
         private const string Scheme = "PartnerAuth";
@@ -53,6 +53,7 @@ namespace Soransoft.Web.Areas.Partner.Controllers
 
         // GET /Partner/Account/Login
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
         {
             if (IsPartnerSignedIn())
@@ -64,6 +65,7 @@ namespace Soransoft.Web.Areas.Partner.Controllers
 
         // POST /Partner/Account/Login
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(PartnerLoginViewModel model, string? returnUrl = null, CancellationToken ct = default)
         {
@@ -71,16 +73,11 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             if (!ModelState.IsValid) return View(model);
 
             var username = model.Username.Trim();
-            var partner = await _db.Partners.FirstOrDefaultAsync(p => p.Username == username, ct);
+            var partner = await _db.Partners.FirstOrDefaultAsync(p => p.Username == username && !p.IsDeleted, ct);
 
-            if (partner is null || !_hasher.Verify(model.Password, partner.PasswordHash))
+            if (partner is null || !partner.IsActive || !_hasher.Verify(model.Password, partner.PasswordHash))
             {
                 ModelState.AddModelError(string.Empty, "نام کاربری یا رمز عبور اشتباه است.");
-                return View(model);
-            }
-            if (!partner.IsActive)
-            {
-                ModelState.AddModelError(string.Empty, "حساب شما توسط مدیر غیرفعال شده است. با مدیر تماس بگیرید.");
                 return View(model);
             }
 
@@ -111,10 +108,12 @@ namespace Soransoft.Web.Areas.Partner.Controllers
 
         // GET /Partner/Account/ForgotPassword
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult ForgotPassword() => View(new ForgotPasswordViewModel());
 
         // POST /Partner/Account/ForgotPassword
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model, CancellationToken ct = default)
         {
@@ -124,7 +123,7 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             var partner = await _db.Partners.FirstOrDefaultAsync(p => p.Username == username, ct);
 
             // پاسخ عمومی: افشای وجود/نبودن نام کاربری ممنوع
-            if (partner is null || partner.IsDeleted)
+            if (partner is null || partner.IsDeleted || !partner.IsActive)
             {
                 TempData["Success"] = "درخواست شما ثبت شد. نتیجه توسط مدیر اطلاع داده می‌شود.";
                 return RedirectToAction(nameof(Login));
@@ -135,11 +134,10 @@ namespace Soransoft.Web.Areas.Partner.Controllers
                 .AnyAsync(r => r.PartnerId == partner.Id && r.Status == PasswordResetStatus.Pending, ct);
             if (hasOpen)
             {
-                TempData["Success"] = "درخواست شما قبلاً ثبت شده و در انتظار بررسی مدیر است.";
+                TempData["Success"] = "درخواست شما ثبت شد. نتیجه توسط مدیر اطلاع داده می‌شود.";
                 return RedirectToAction(nameof(Login));
             }
 
-            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
             _db.PasswordResetRequests.Add(new PasswordResetRequest
             {
                 PartnerId = partner.Id,
@@ -151,7 +149,8 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             return RedirectToAction(nameof(Login));
         }
 
-        // GET /Partner/Account/Logout
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(Scheme);

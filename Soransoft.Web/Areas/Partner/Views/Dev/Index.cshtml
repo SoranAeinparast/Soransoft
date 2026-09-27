@@ -55,7 +55,7 @@
                         @if (t.DueDate is DateTime d)
                         {
                             <div class="small @(d < DateTime.Now && t.Status != Soransoft.Domain.Entities.TaskStatus.Done ? "text-danger fw-bold" : "text-muted")">
-                                <i class="bi bi-calendar-event me-1"></i>@d.ToString("yyyy/MM/dd")
+                                <i class="bi bi-calendar-event me-1"></i>@PersianDisplay.Date(d)
                             </div>
                         }
                         @if (next.TryGetValue(col.St, out var n))
