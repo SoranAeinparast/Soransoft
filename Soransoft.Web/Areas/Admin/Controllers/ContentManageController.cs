@@ -13,7 +13,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public ServicesController(SoransoftDbContext db) => _db = db;
 
         public async Task<IActionResult> Index(CancellationToken ct) =>
-            View(await _db.Services.OrderBy(s => s.DisplayOrder).ToListAsync(ct));
+            View(await _db.Services
+                .Include(service => service.Features.OrderBy(feature => feature.DisplayOrder))
+                .Include(service => service.Steps.OrderBy(step => step.DisplayOrder))
+                .OrderBy(service => service.DisplayOrder)
+                .ToListAsync(ct));
 
         public IActionResult Create() => View(new Soransoft.Domain.Entities.Service());
 
@@ -82,6 +86,100 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 await _db.SaveChangesAsync(ct);
                 TempData["Success"] = "سرویس حذف شد";
             }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddFeature(int serviceId, string title, string? description, int displayOrder, CancellationToken ct)
+        {
+            var service = await _db.Services.FirstOrDefaultAsync(s => s.Id == serviceId && !s.IsDeleted, ct);
+            if (service is null) { TempData["Error"] = "سرویس یافت نشد."; return RedirectToAction(nameof(Index)); }
+            if (string.IsNullOrWhiteSpace(title)) { TempData["Error"] = "عنوان ویژگی الزامی است."; return RedirectToAction(nameof(Index)); }
+
+            _db.ServiceFeatures.Add(new Soransoft.Domain.Entities.ServiceFeature
+            {
+                ServiceId = serviceId,
+                Title = title.Trim(),
+                Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+                DisplayOrder = Math.Max(0, displayOrder),
+            });
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "ویژگی سرویس اضافه شد.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditFeature(int id, string title, string? description, int displayOrder, CancellationToken ct)
+        {
+            var feature = await _db.ServiceFeatures.FirstOrDefaultAsync(f => f.Id == id && !f.Service.IsDeleted, ct);
+            if (feature is null) { TempData["Error"] = "ویژگی سرویس یافت نشد."; return RedirectToAction(nameof(Index)); }
+            if (string.IsNullOrWhiteSpace(title)) { TempData["Error"] = "عنوان ویژگی الزامی است."; return RedirectToAction(nameof(Index)); }
+
+            feature.Title = title.Trim();
+            feature.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+            feature.DisplayOrder = Math.Max(0, displayOrder);
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "ویژگی سرویس به‌روزرسانی شد.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFeature(int id, CancellationToken ct)
+        {
+            var feature = await _db.ServiceFeatures.FirstOrDefaultAsync(f => f.Id == id && !f.Service.IsDeleted, ct);
+            if (feature is null) { TempData["Error"] = "ویژگی سرویس یافت نشد."; return RedirectToAction(nameof(Index)); }
+            _db.ServiceFeatures.Remove(feature);
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "ویژگی سرویس حذف شد.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddStep(int serviceId, string title, int displayOrder, CancellationToken ct)
+        {
+            var service = await _db.Services.FirstOrDefaultAsync(s => s.Id == serviceId && !s.IsDeleted, ct);
+            if (service is null) { TempData["Error"] = "سرویس یافت نشد."; return RedirectToAction(nameof(Index)); }
+            if (string.IsNullOrWhiteSpace(title)) { TempData["Error"] = "عنوان مرحله الزامی است."; return RedirectToAction(nameof(Index)); }
+
+            _db.ServiceSteps.Add(new Soransoft.Domain.Entities.ServiceStep
+            {
+                ServiceId = serviceId,
+                Title = title.Trim(),
+                DisplayOrder = Math.Max(0, displayOrder),
+            });
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "مرحله سرویس اضافه شد.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditStep(int id, string title, int displayOrder, CancellationToken ct)
+        {
+            var step = await _db.ServiceSteps.FirstOrDefaultAsync(s => s.Id == id && !s.Service.IsDeleted, ct);
+            if (step is null) { TempData["Error"] = "مرحله سرویس یافت نشد."; return RedirectToAction(nameof(Index)); }
+            if (string.IsNullOrWhiteSpace(title)) { TempData["Error"] = "عنوان مرحله الزامی است."; return RedirectToAction(nameof(Index)); }
+
+            step.Title = title.Trim();
+            step.DisplayOrder = Math.Max(0, displayOrder);
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "مرحله سرویس به‌روزرسانی شد.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteStep(int id, CancellationToken ct)
+        {
+            var step = await _db.ServiceSteps.FirstOrDefaultAsync(s => s.Id == id && !s.Service.IsDeleted, ct);
+            if (step is null) { TempData["Error"] = "مرحله سرویس یافت نشد."; return RedirectToAction(nameof(Index)); }
+            _db.ServiceSteps.Remove(step);
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "مرحله سرویس حذف شد.";
             return RedirectToAction(nameof(Index));
         }
     }
@@ -610,6 +708,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Soransoft.Domain.Entities.TeamMember model, IFormFile? imageFile, CancellationToken ct)
         {
+            if (!IsSafeExternalUrl(model.LinkedinUrl))
+            {
+                TempData["Error"] = "لینک لینکدین باید http/https باشد.";
+                return RedirectToAction(nameof(Index));
+            }
             if (ModelState.IsValid)
             {
                 if (imageFile is not null && imageFile.Length > 0)
@@ -629,6 +732,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Soransoft.Domain.Entities.TeamMember model, IFormFile? imageFile, CancellationToken ct)
         {
+            if (!IsSafeExternalUrl(model.LinkedinUrl))
+            {
+                TempData["Error"] = "لینک لینکدین باید http/https باشد.";
+                return RedirectToAction(nameof(Index));
+            }
             if (ModelState.IsValid)
             {
                 var item = await _db.TeamMembers.FirstOrDefaultAsync(t => t.Id == model.Id, ct);
@@ -654,6 +762,13 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        private static bool IsSafeExternalUrl(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return true;
+            return Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
 
         /// <summary>فعال/غیرفعال کردن سریع عضو تیم</summary>
