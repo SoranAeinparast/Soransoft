@@ -1,7 +1,7 @@
 -- ============================================================================
---  SoransoftDb — اسکریپت کامل ساخت دیتابیس برای SQL Server (SSMS)
---  منبع: dotnet ef migrations script (InitialCreate → AddErrorLogTable)
---  + داده‌های اولیه مطابق DbSeeder (ادمین، تنظیمات، منوها، سرویس‌ها، تعرفه‌ها…)
+--  SoransoftDb — اسکریپت پایه ساخت دیتابیس برای SQL Server (SSMS)
+--  اسکیمای پایه تا AddErrorLogTable + داده‌های عمومی اولیه.
+--  Migrationهای پرتال همکاران پس از اجرای برنامه با Database.MigrateAsync اعمال می‌شوند.
 --
 --  نحوه استفاده:
 --    1) SSMS را باز کنید و به instance سرور وصل شوید (مثلاً localhost یا .\SQLEXPRESS)
@@ -12,8 +12,8 @@
 --
 --  نکات:
 --   • ران‌های بعدی بی‌خطر است (idempotent): INSERT ها با NOT EXISTS محافظت شده‌اند.
---   • جدول __SoransoftMigrationsHistory از قبل پر می‌شود تا برنامه EF Migration اجرا نکند.
---   • هش رمز ادمین با ASP.NET Core Identity V3 (PBKDF2) است و همان است که برنامه Verify می‌کند.
+--   • تاریخچه migration فقط تا AddErrorLogTable ثبت می‌شود؛ اجرای برنامه migrationهای جدید را اعمال می‌کند.
+--   • حساب مدیر عمداً در این فایل ساخته نمی‌شود؛ Security:InitialAdmin باید خارج از کد تنظیم شود.
 -- ============================================================================
 
 IF DB_ID(N'SoransoftDb') IS NULL
@@ -379,16 +379,11 @@ GO
       مقادیر CreatedAt با GETDATE() پر می‌شوند (برنامه WHERE history ندارد)
    ============================================================================ */
 
-/* ---------- ادمین پیش‌فرض: admin / Admin@123 ---------- */
-IF NOT EXISTS (SELECT 1 FROM [Admins] WHERE [Username] = N'admin')
-    INSERT INTO [Admins] ([Username], [PasswordHash], [FullName], [Email], [LastLoginAt], [IsActive], [CreatedAt], [UpdatedAt], [IsDeleted], [DeletedAt])
-    VALUES (
-        N'admin',
-        N'AQAAAAIAAYagAAAAEB/WCH2At77PdI8ETmSyC+hVnv2vnKuC28oDMs7YsMoOGf2mXMC2pSsA6LdpCRlYXA==',
-        N'مدیر سایت',
-        N'admin@soransoft.ir',
-        NULL, 1, GETDATE(), NULL, 0, NULL);
-GO
+/* ---------- حساب مدیر ----------
+   عمداً در اسکریپت ساخته نمی‌شود. برنامه فقط با تنظیمات امن زیر آن را seed می‌کند:
+   Security:InitialAdmin:Username
+   Security:InitialAdmin:Password (حداقل ۱۲ کاراکتر)
+*/
 
 /* ---------- تنظیمات سایت ---------- */
 IF NOT EXISTS (SELECT 1 FROM [SiteSettings])
@@ -667,5 +662,5 @@ BEGIN
 END
 GO
 
-PRINT N'✅ SoransoftDb با موفقیت ساخته شد — اسکیمای کامل + داده‌های اولیه (ادمین: admin / Admin@123)';
+PRINT N'✅ SoransoftDb با موفقیت ساخته شد — اجرای برنامه migrationهای پرتال و حساب مدیر اولیه را تکمیل می‌کند.';
 GO
