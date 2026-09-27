@@ -2,16 +2,18 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Soransoft.Application.Interfaces;
 using Soransoft.Infrastructure.Imaging;
+using System.Security;
 
 namespace Soransoft.Infrastructure.Storage
 {
-    /// <summary>ذخیره‌سازی فایل روی دیسک (wwwroot/uploads) — تصاویر به‌صورت خودکار بهینه می‌شوند</summary>
+    /// <summary>ذخیره‌سازی تصاویر عمومی و اسناد خصوصی روی دیسک</summary>
     public class LocalFileStorage : IFileStorage
     {
         private readonly IWebHostEnvironment _env;
         private readonly IImageOptimizer _optimizer;
         private readonly string[] _allowedImageExt = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp" };
-        private readonly string[] _allowedDocExt = { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg" };
+        private readonly string[] _allowedDocExt = { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".webp" };
+        private readonly string _privateDocumentsRoot;
         private const long MaxImageSize = 20 * 1024 * 1024; // 20MB قبل از بهینه‌سازی
         private const long MaxDocSize = 20 * 1024 * 1024;   // 20MB
 
@@ -19,6 +21,7 @@ namespace Soransoft.Infrastructure.Storage
         {
             _env = env;
             _optimizer = optimizer;
+            _privateDocumentsRoot = Path.GetFullPath(Path.Combine(_env.ContentRootPath, "App_Data", "PrivateDocuments"));
         }
 
         public async Task<string> SaveImageAsync(IFormFile file, string folder, CancellationToken ct = default)
@@ -27,10 +30,11 @@ namespace Soransoft.Infrastructure.Storage
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!_allowedImageExt.Contains(ext)) throw new InvalidOperationException("فرمت تصویر مجاز نیست.");
             if (file.Length > MaxImageSize) throw new InvalidOperationException("حجم تصویر نباید بیشتر از ۲۰ مگابایت باشد.");
+            var safeFolder = NormalizeFolder(folder);
 
             // بهینه‌سازی: کوچک‌سازی تا ۱۹۲۰px + تبدیل به WebP (SVG/GIF دست‌نخورده)
             await using var source = file.OpenReadStream();
-            var result = await _optimizer.SaveOptimizedAsync(source, file.FileName, folder, ct);
+            var result = await _optimizer.SaveOptimizedAsync(source, file.FileName, safeFolder, ct);
             return result.RelativePath;
         }
 
@@ -42,8 +46,8 @@ namespace Soransoft.Infrastructure.Storage
             if (!_allowedDocExt.Contains(ext)) throw new InvalidOperationException("فرمت فایل مجاز نیست (PDF/Word/Excel/تصویر).");
             if (file.Length > MaxDocSize) throw new InvalidOperationException("حجم فایل نباید بیشتر از ۲۰ مگابایت باشد.");
 
-            var safeFolder = string.Join('/', folder.Split('/', '\\').Where(p => !string.IsNullOrWhiteSpace(p) && p != "." && p != ".."));
-            var dir = Path.Combine(_env.WebRootPath, "uploads", safeFolder);
+            var safeFolder = NormalizeFolder(folder);
+            var dir = ResolveUnderRoot(_privateDocumentsRoot, safeFolder);
             Directory.CreateDirectory(dir);
 
             var fileName = $"{Guid.NewGuid():N}{ext}";
@@ -51,15 +55,92 @@ namespace Soransoft.Infrastructure.Storage
             await using var stream = new FileStream(fullPath, FileMode.Create);
             await file.CopyToAsync(stream, ct);
 
-            return $"/uploads/{safeFolder}/{fileName}";
+            return $"/documents/download?path={Uri.EscapeDataString($"{safeFolder}/{fileName}")}";
         }
 
         public Task DeleteAsync(string? relativePath, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(relativePath)) return Task.CompletedTask;
-            var full = Path.Combine(_env.WebRootPath, relativePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-            if (File.Exists(full)) File.Delete(full);
+
+            var privateRelativePath = ExtractPrivateDocumentPath(relativePath);
+            string? full = null;
+            try
+            {
+                full = privateRelativePath is not null
+                    ? ResolveUnderRoot(_privateDocumentsRoot, privateRelativePath)
+                    : ResolvePublicUploadPath(relativePath);
+            }
+            catch (SecurityException)
+            {
+                // Invalid persisted paths must not escape their storage root.
+            }
+            catch (ArgumentException)
+            {
+                // Invalid persisted paths must not escape their storage root.
+            }
+
+            if (full is not null && File.Exists(full)) File.Delete(full);
             return Task.CompletedTask;
+        }
+
+        private string NormalizeFolder(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder))
+                throw new ArgumentException("مسیر ذخیره‌سازی معتبر نیست.");
+
+            var segments = folder.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length == 0 || segments.Any(segment =>
+                    segment is "." or ".." ||
+                    segment.Contains(':') ||
+                    segment.IndexOfAny(Path.GetInvalidPathChars()) >= 0))
+                throw new ArgumentException("مسیر ذخیره‌سازی معتبر نیست.");
+
+            var normalized = string.Join('/', segments);
+            _ = ResolveUnderRoot(
+                Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "uploads"),
+                normalized);
+            return normalized;
+        }
+
+        private static string ResolveUnderRoot(string root, string relativePath)
+        {
+            var fullRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                + Path.DirectorySeparatorChar;
+            var fullPath = Path.GetFullPath(Path.Combine(fullRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+            if (!fullPath.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase))
+                throw new SecurityException("مسیر فایل مجاز نیست.");
+            return fullPath;
+        }
+
+        private string? ResolvePublicUploadPath(string relativePath)
+        {
+            var normalized = relativePath.TrimStart('/').Replace('\\', '/');
+            if (!normalized.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase)) return null;
+
+            try
+            {
+                return ResolveUnderRoot(
+                    Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "uploads"),
+                    normalized["uploads/".Length..]);
+            }
+            catch (SecurityException)
+            {
+                return null;
+            }
+        }
+
+        private static string? ExtractPrivateDocumentPath(string value)
+        {
+            const string marker = "?path=";
+            var markerIndex = value.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+            if (markerIndex < 0 || !value[..markerIndex].TrimEnd('/').EndsWith("/documents/download", StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            var encodedPath = value[(markerIndex + marker.Length)..].Split('&', 2)[0];
+            var path = Uri.UnescapeDataString(encodedPath).Replace('\\', '/').Trim('/');
+            if (string.IsNullOrWhiteSpace(path) || path.Split('/').Any(segment => segment is "." or ".."))
+                return null;
+            return path;
         }
     }
 }
