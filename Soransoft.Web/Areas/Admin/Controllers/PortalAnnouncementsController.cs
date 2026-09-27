@@ -11,6 +11,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
     /// <summary>فرم ارسال اطلاعیه</summary>
     public class AnnouncementCreateModel
     {
+        public int Id { get; set; }
         [Required(ErrorMessage = "عنوان الزامی است")]
         public string Title { get; set; } = string.Empty;
         [Required(ErrorMessage = "متن اطلاعیه الزامی است")]
@@ -60,6 +61,9 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            if (!await ValidateAudienceAsync(model.Audience, model.PartnerId, ct))
+                return RedirectToAction(nameof(Index));
+
             var announcement = new Announcement
             {
                 Title = model.Title.Trim(),
@@ -76,6 +80,31 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(AnnouncementCreateModel model, CancellationToken ct)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return RedirectToAction(nameof(Index));
+            }
+            if (!await ValidateAudienceAsync(model.Audience, model.PartnerId, ct))
+                return RedirectToAction(nameof(Index));
+
+            var announcement = await _db.Announcements.FirstOrDefaultAsync(a => a.Id == model.Id && !a.IsDeleted, ct);
+            if (announcement is null) { TempData["Error"] = "اطلاعیه یافت نشد."; return RedirectToAction(nameof(Index)); }
+
+            announcement.Title = model.Title.Trim();
+            announcement.Body = model.Body.Trim();
+            announcement.Audience = model.PartnerId is null ? model.Audience : "All";
+            announcement.PartnerId = model.PartnerId;
+            announcement.IsImportant = model.IsImportant;
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "اطلاعیه به‌روزرسانی شد.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id, CancellationToken ct)
         {
             var a = await _db.Announcements.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
@@ -84,6 +113,26 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "اطلاعیه حذف شد.";
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task<bool> ValidateAudienceAsync(string audience, int? partnerId, CancellationToken ct)
+        {
+            if (partnerId is not null)
+            {
+                if (!await _db.Partners.AnyAsync(p => p.Id == partnerId && !p.IsDeleted && p.IsActive, ct))
+                {
+                    TempData["Error"] = "همکار انتخاب‌شده معتبر نیست.";
+                    return false;
+                }
+                return true;
+            }
+
+            if (audience is not ("All" or "Sales" or "Dev"))
+            {
+                TempData["Error"] = "مخاطب اطلاعیه معتبر نیست.";
+                return false;
+            }
+            return true;
         }
     }
 }

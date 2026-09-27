@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Soransoft.Application.Interfaces;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
+using Soransoft.Web.Models;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace Soransoft.Web.Areas.Admin.Controllers
 {
     /// <summary>فرم ثبت/ویرایش قرارداد همکاری</summary>
-    public class AgreementFormModel
+    public class AgreementFormModel : IValidatableObject
     {
         public int Id { get; set; }
         [Required(ErrorMessage = "انتخاب همکار الزامی است")]
@@ -32,7 +34,6 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
         // مفاد مالی
         public CommissionMethod CommissionMethod { get; set; } = CommissionMethod.FixedPercent;
-        [Range(0, 100, ErrorMessage = "درصد پورسانت بین ۰ تا ۱۰۰")]
         public decimal CommissionValue { get; set; }
         public bool BasedOnPaidStages { get; set; } = true;
         public long? MonthlySalary { get; set; }
@@ -44,6 +45,20 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public string? BankAccountHolder { get; set; }
 
         public string? AdminNote { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!Enum.IsDefined(Kind))
+                yield return new ValidationResult("نوع قرارداد معتبر نیست.", new[] { nameof(Kind) });
+            if (!Enum.IsDefined(CommissionMethod))
+                yield return new ValidationResult("روش پورسانت معتبر نیست.", new[] { nameof(CommissionMethod) });
+            if (EndDate is DateTime end && end < StartDate)
+                yield return new ValidationResult("تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.", new[] { nameof(EndDate) });
+            if (!IsUnlimitedAmount && (!TotalAmount.HasValue || TotalAmount.Value <= 0))
+                yield return new ValidationResult("مبلغ قرارداد باید بزرگ‌تر از صفر باشد یا سقف نامحدود انتخاب شود.", new[] { nameof(TotalAmount) });
+            if (CommissionValue < 0 || (CommissionMethod == CommissionMethod.FixedPercent && CommissionValue > 100))
+                yield return new ValidationResult("مقدار پورسانت معتبر نیست.", new[] { nameof(CommissionValue) });
+        }
     }
 
     /// <summary>قراردادهای همکاری فی‌مابین — ملاک طرفین</summary>
@@ -68,11 +83,45 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 .OrderBy(a => a.Status).ThenByDescending(a => a.CreatedAt)
                 .ToListAsync(ct);
 
-            ViewBag.Partners = await _db.Partners.AsNoTracking()
-                .Where(p => !p.IsDeleted && p.IsActive)
-                .Select(p => new { p.Id, p.FullName, p.Role })
-                .ToListAsync(ct);
+            await FillPartnersAsync(ct);
             return View(items);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id, CancellationToken ct)
+        {
+            var agreement = await _db.CooperationAgreements.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id, ct);
+            if (agreement is null) return NotFound();
+            if (agreement.Status != AgreementStatus.Draft)
+            {
+                TempData["Error"] = "فقط پیش‌نویس قرارداد قابل ویرایش است.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            await FillPartnersAsync(ct);
+            return View(new AgreementFormModel
+            {
+                Id = agreement.Id,
+                PartnerId = agreement.PartnerId,
+                Kind = agreement.Kind,
+                AgreementNo = agreement.AgreementNo,
+                Title = agreement.Title,
+                Subject = agreement.Subject,
+                Terms = agreement.Terms,
+                StartDate = agreement.StartDate,
+                EndDate = agreement.EndDate,
+                TotalAmount = agreement.TotalAmount,
+                IsUnlimitedAmount = agreement.IsUnlimitedAmount,
+                CommissionMethod = agreement.CommissionMethod,
+                CommissionValue = agreement.CommissionValue,
+                BasedOnPaidStages = agreement.BasedOnPaidStages,
+                MonthlySalary = agreement.MonthlySalary,
+                SettlementTerms = agreement.SettlementTerms,
+                BankName = agreement.BankName,
+                BankAccountIban = agreement.BankAccountIban,
+                BankAccountHolder = agreement.BankAccountHolder,
+                AdminNote = agreement.AdminNote,
+            });
         }
 
         /// <summary>ذخیره (ایجاد/ویرایش) قرارداد — ویرایش فقط در وضعیت Draft</summary>
@@ -154,10 +203,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             var path = await _docs.SaveAgreementFileAsync(file, ct);
             if (path is null) { TempData["Error"] = "فقط فایل PDF تا ۲۰ مگابایت مجاز است."; return RedirectToAction(nameof(Details), new { id }); }
 
-            if (!string.IsNullOrWhiteSpace(agreement.ContractFile))
-                await _docs.DeleteFileAsync(agreement.ContractFile, ct);
+            var previousPath = agreement.ContractFile;
             agreement.ContractFile = path;
             await _db.SaveChangesAsync(ct);
+            if (!string.IsNullOrWhiteSpace(previousPath) && !string.Equals(previousPath, path, StringComparison.Ordinal))
+                await _docs.DeleteFileAsync(previousPath, ct);
             TempData["Success"] = "PDF قرارداد بارگذاری شد.";
             return RedirectToAction(nameof(Details), new { id });
         }
@@ -194,7 +244,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             agreement.Status = AgreementStatus.Terminated;
             agreement.AdminNote = string.IsNullOrWhiteSpace(note)
                 ? agreement.AdminNote
-                : (agreement.AdminNote is null ? "" : agreement.AdminNote + "\n") + $"[فسخ {DateTime.Now:yyyy/MM/dd}] " + note.Trim();
+                : (agreement.AdminNote is null ? "" : agreement.AdminNote + "\n") + $"[فسخ {PersianDisplay.Date(DateTime.Now)}] " + note.Trim();
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "قرارداد فسخ شد.";
             return RedirectToAction(nameof(Details), new { id });
@@ -223,10 +273,18 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         /// <summary>تولید شماره قرارداد یکتا: SA/TA-1404-001</summary>
         private async Task<string> NextAgreementNoAsync(AgreementKind kind, CancellationToken ct)
         {
-            var year = DateTime.Now.Year - 621; // تقریب سال شمسی برای شماره‌گذاری
+            var year = new PersianCalendar().GetYear(DateTime.Now);
             var prefix = (kind == AgreementKind.Sales ? "SA" : "TA") + "-" + year + "-";
             var count = await _db.CooperationAgreements.CountAsync(a => a.AgreementNo.StartsWith(prefix), ct);
             return prefix + (count + 1).ToString("000");
+        }
+
+        private async Task FillPartnersAsync(CancellationToken ct)
+        {
+            ViewBag.Partners = await _db.Partners.AsNoTracking()
+                .Where(p => !p.IsDeleted && p.IsActive)
+                .Select(p => new { p.Id, p.FullName, p.Role })
+                .ToListAsync(ct);
         }
     }
 }
