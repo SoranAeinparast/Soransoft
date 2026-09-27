@@ -1,0 +1,102 @@
+@using Soransoft.Domain.Entities
+@model List<Soransoft.Domain.Entities.PasswordResetRequest>
+@{
+    ViewData["Title"] = "درخواست‌های بازنشانی رمز";
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-4">
+        <div class="sn-stat-card sn-stat-warning"><i class="bi bi-hourglass-split"></i>
+            <div><span class="sn-stat-value">@Model.Count(r => r.Status == PasswordResetStatus.Pending)</span><span class="sn-stat-label">در انتظار بررسی</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="sn-stat-card sn-stat-success"><i class="bi bi-check2-circle"></i>
+            <div><span class="sn-stat-value">@Model.Count(r => r.Status == PasswordResetStatus.Approved)</span><span class="sn-stat-label">تاییدشده</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="sn-stat-card sn-stat-danger"><i class="bi bi-x-circle"></i>
+            <div><span class="sn-stat-value">@Model.Count(r => r.Status == PasswordResetStatus.Rejected)</span><span class="sn-stat-label">ردشده</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="sn-admin-card">
+    <h6 class="mb-3"><i class="bi bi-inbox me-2"></i>صندوق درخواست‌های فراموشی رمز همکاران</h6>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted small mb-0">هنوز درخواستی ثبت نشده است.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>همکار</th>
+                        <th>نقش</th>
+                        <th>پیام همکار</th>
+                        <th>تاریخ درخواست</th>
+                        <th>وضعیت</th>
+                        <th style="width:34%">اقدام</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@r.Partner.FullName</strong>
+                            <div class="small text-muted" dir="ltr">@r.Partner.Username</div>
+                        </td>
+                        <td><span class="badge bg-secondary">@r.Partner.Role</span></td>
+                        <td class="small">@(!string.IsNullOrWhiteSpace(r.Message) ? r.Message : "—")</td>
+                        <td class="small">@r.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                        <td>
+                            @switch (r.Status)
+                            {
+                                case PasswordResetStatus.Pending:
+                                    <span class="badge bg-warning text-dark">در انتظار</span>
+                                    break;
+                                case PasswordResetStatus.Approved:
+                                    <span class="badge bg-success">تاییدشده</span>
+                                    break;
+                                case PasswordResetStatus.Rejected:
+                                    <span class="badge bg-danger">ردشده</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            @if (r.Status == PasswordResetStatus.Pending)
+                            {
+                                <form asp-action="ApproveReset" method="post" class="d-flex gap-1 align-items-center flex-wrap mb-1">
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <input name="password" type="text" class="form-control form-control-sm" dir="ltr"
+                                           placeholder="رمز جدید (min ۸)" minlength="8" required style="width:150px" />
+                                    <input name="response" class="form-control form-control-sm" placeholder="یادداشت (اختیاری)" style="width:130px" />
+                                    <button class="btn btn-sm btn-success"><i class="bi bi-key me-1"></i>تایید و بازنشانی</button>
+                                </form>
+                                <form asp-action="RejectReset" method="post" class="d-flex gap-1 align-items-center">
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <input name="response" class="form-control form-control-sm" placeholder="دلیل رد" style="width:150px" />
+                                    <button class="btn btn-sm btn-outline-danger">رد</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="small text-muted">تاریخ تصمیم: @(r.DecidedAt?.ToString("yyyy/MM/dd HH:mm") ?? "—")</span>
+                                @if (!string.IsNullOrWhiteSpace(r.AdminResponse))
+                                {
+                                    <div class="small text-muted">یادداشت: @r.AdminResponse</div>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

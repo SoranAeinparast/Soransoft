@@ -1,0 +1,49 @@
+@model List<Service>
+@{
+    ViewData["Title"] = "مدیریت سرویس‌ها";
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0">سرویس‌ها</h5>
+    <a href="/Admin/Services/Create" class="btn sn-btn-primary"><i class="bi bi-plus-lg me-1"></i> سرویس جدید</a>
+</div>
+
+<div class="sn-admin-card">
+    <div class="table-responsive">
+        <table class="table sn-admin-table align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>عنوان</th>
+                    <th>نوع</th>
+                    <th>اسلاگ</th>
+                    <th>به‌زودی</th>
+                    <th>فعال</th>
+                    <th>ترتیب</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Title</td>
+                        <td>@item.Kind.ToString()</td>
+                        <td dir="ltr">@item.Slug</td>
+                        <td>@(item.ComingSoon ? "بله" : "خیر")</td>
+                        <td>@(item.IsActive ? "بله" : "خیر")</td>
+                        <td>@item.DisplayOrder</td>
+                        <td class="text-nowrap">
+                            <a href="/Admin/Services/Edit/@item.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                            <form method="post" action="/Admin/Services/Delete/@item.Id" class="d-inline"
+                                  onsubmit="return confirm('حذف شود؟')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

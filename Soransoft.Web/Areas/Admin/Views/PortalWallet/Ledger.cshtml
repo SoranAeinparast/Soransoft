@@ -1,0 +1,96 @@
+@model List<Soransoft.Domain.Entities.WalletTransaction>
+@{
+    ViewData["Title"] = $"کیف پول — {ViewBag.Partner.FullName}";
+    var partner = (Soransoft.Domain.Entities.Partner)ViewBag.Partner;
+    var balance = (decimal)ViewBag.Balance;
+    var available = (decimal)ViewBag.Available;
+    string TypeBadge(Soransoft.Domain.Entities.WalletTxType t) => t switch
+    {
+        Soransoft.Domain.Entities.WalletTxType.Deposit => "bg-success",
+        Soransoft.Domain.Entities.WalletTxType.Withdrawal => "bg-primary",
+        _ => "bg-secondary"
+    };
+    string TypeTitle(Soransoft.Domain.Entities.WalletTxType t) => t switch
+    {
+        Soransoft.Domain.Entities.WalletTxType.Deposit => "واریز",
+        Soransoft.Domain.Entities.WalletTxType.Withdrawal => "برداشت",
+        _ => "اصلاحیه"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>دفتر کل کیف پول — @partner.FullName</h5>
+    <a href="/Admin/PortalWallet" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="sn-stat-card sn-stat-success"><i class="bi bi-wallet2"></i>
+            <div><span class="sn-stat-value">@balance.ToString("N0")</span><span class="sn-stat-label">موجودی قطعی</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sn-stat-card sn-stat-info"><i class="bi bi-unlock"></i>
+            <div><span class="sn-stat-value">@available.ToString("N0")</span><span class="sn-stat-label">قابل‌برداشت</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="sn-admin-card mb-3">
+    <h6 class="mb-2"><i class="bi bi-arrow-left-right me-2"></i>اصلاحیه دستی (فقط با توضیح — در دفتر ثبت می‌شود)</h6>
+    <form asp-action="Adjust" method="post" class="row g-2 align-items-end">
+        <input type="hidden" name="partnerId" value="@partner.Id" />
+        <div class="col-6 col-md-3">
+            <label class="form-label small">مبلغ امضادار (+ واریز / − کسر)</label>
+            <input name="amount" type="number" class="form-control form-control-sm" step="1000" required />
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label small">توضیح *</label>
+            <input name="description" class="form-control form-control-sm" required placeholder="مثلاً: اصلاح محاسبه پورسانت قسط ۲ قرارداد ..." />
+        </div>
+        <div class="col-6 col-md-3">
+            <button class="btn btn-outline-warning btn-sm w-100"><i class="bi bi-pencil-square me-1"></i>ثبت اصلاحیه</button>
+        </div>
+    </form>
+</div>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted mb-0">هنوز تراکنشی ثبت نشده است.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr><th>#</th><th>تاریخ</th><th>نوع</th><th>مبلغ</th><th>موجودی پس از تراکنش</th><th>توضیح</th><th>پیگیری</th><th>مستند</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model)
+                    {
+                        <tr>
+                            <td class="small text-muted">@t.Id</td>
+                            <td class="small">@t.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td><span class="badge @TypeBadge(t.Type)">@TypeTitle(t.Type)</span></td>
+                            <td class="fw-bold @(t.Amount >= 0 ? "text-success" : "text-danger")">@t.Amount.ToString("N0")</td>
+                            <td class="small">@t.BalanceAfter.ToString("N0")</td>
+                            <td class="small">@t.Description @(string.IsNullOrWhiteSpace(t.Reference) ? "" : $"— مرجع: {t.Reference}")</td>
+                            <td class="small" dir="ltr">@t.BankTrackingNo</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(t.DocumentFile))
+                                {
+                                    <a href="@t.DocumentFile" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-paperclip"></i></a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-muted mb-0 mt-2">
+            <i class="bi bi-shield-lock me-1"></i>
+            دفتر فقط-الحاقی است؛ ردیف‌ها قابل ویرایش/حذف نیستند و هر اصلاح با تراکنش جدید ثبت می‌شود. موجودی = مجموع تراکنش‌های نهایی.
+        </p>
+    }
+</div>

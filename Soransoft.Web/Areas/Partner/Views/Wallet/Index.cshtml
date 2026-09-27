@@ -1,0 +1,140 @@
+@model List<Soransoft.Domain.Entities.WalletTransaction>
+@{
+    ViewData["Title"] = "کیف پول من";
+    var available = (decimal)ViewBag.Available;
+    var balance = (decimal)ViewBag.Balance;
+    var requests = ViewBag.Requests as List<Soransoft.Domain.Entities.WithdrawalRequest>;
+    var bank = ViewBag.AgreementBank as dynamic;
+    string TypeBadge(Soransoft.Domain.Entities.WalletTxType t) => t switch
+    {
+        Soransoft.Domain.Entities.WalletTxType.Deposit => "bg-success",
+        Soransoft.Domain.Entities.WalletTxType.Withdrawal => "bg-primary",
+        _ => "bg-secondary"
+    };
+    string TypeTitle(Soransoft.Domain.Entities.WalletTxType t) => t switch
+    {
+        Soransoft.Domain.Entities.WalletTxType.Deposit => "واریز سهم من",
+        Soransoft.Domain.Entities.WalletTxType.Withdrawal => "برداشت (واریز به حسابم)",
+        _ => "اصلاحیه"
+    };
+    string StatusBadge(Soransoft.Domain.Entities.WalletTxStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.WalletTxStatus.Pending => "bg-warning text-dark",
+        Soransoft.Domain.Entities.WalletTxStatus.Confirmed => "bg-success",
+        _ => "bg-danger"
+    };
+    string StatusTitle(Soransoft.Domain.Entities.WalletTxStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.WalletTxStatus.Pending => "در انتظار تایید",
+        Soransoft.Domain.Entities.WalletTxStatus.Confirmed => "تایید/نهایی",
+        _ => "رد شده"
+    };
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="sn-stat-card sn-stat-success"><i class="bi bi-wallet2"></i>
+            <div><span class="sn-stat-value">@balance.ToString("N0")</span><span class="sn-stat-label">موجودی کیف پول (تومان)</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sn-stat-card sn-stat-info"><i class="bi bi-unlock"></i>
+            <div><span class="sn-stat-value">@available.ToString("N0")</span><span class="sn-stat-label">قابل درخواست برداشت</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-5">
+        <div class="sn-admin-card mb-3">
+            <h6 class="mb-3"><i class="bi bi-cash-stack me-2"></i>درخواست واریز به حسابم</h6>
+            @if (bank is null)
+            {
+                <p class="small text-muted mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    هنوز قرارداد همکاری فعال با حساب بانکی برای شما ثبت نشده است؛ پس از ثبت توسط مدیر، امکان درخواست برداشت فعال می‌شود.
+                </p>
+            }
+            else if (available <= 0)
+            {
+                <p class="small text-muted mb-0">موجودی قابل‌برداشتی وجود ندارد.</p>
+            }
+            else
+            {
+                <div class="alert alert-light border small py-2">
+                    واریز به: <strong>@bank.BankAccountHolder</strong> — @bank.BankName — <span dir="ltr">@bank.BankAccountIban</span>
+                    <div class="text-muted mt-1">حساب از قرارداد همکاری فعال شما استخراج می‌شود و قابل تغییر از اینجا نیست.</div>
+                </div>
+                <form asp-action="RequestWithdrawal" method="post">
+                    <div class="mb-2">
+                        <label class="form-label small">مبلغ (تومان) — حداکثر @available.ToString("N0")</label>
+                        <input name="amount" type="number" class="form-control form-control-sm" min="1" max="@available" step="1000" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">یادداشت (اختیاری)</label>
+                        <input name="note" class="form-control form-control-sm" placeholder="مثلاً: تسویه کامل" />
+                    </div>
+                    <button class="btn btn-primary btn-sm w-100"><i class="bi bi-send me-1"></i>ثبت درخواست برداشت</button>
+                </form>
+            }
+        </div>
+
+        <div class="sn-admin-card">
+            <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i>درخواست‌های من</h6>
+            @if (requests is null || !requests.Any())
+            {
+                <p class="text-muted mb-0">درخواستی ثبت نشده است.</p>
+            }
+            @foreach (var r in requests!)
+            {
+                <div class="border rounded-3 p-2 mb-2 small">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>@r.Amount.ToString("N0") تومان</strong>
+                        <span class="badge @StatusBadge(r.Status)">@StatusTitle(r.Status)</span>
+                    </div>
+                    <div class="text-muted mt-1">@r.CreatedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                    @if (!string.IsNullOrWhiteSpace(r.AdminResponse))
+                    {
+                        <div class="mt-1 text-muted">پاسخ مدیر: @r.AdminResponse</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+        <div class="sn-admin-card">
+            <h6 class="mb-3"><i class="bi bi-journal-text me-2"></i>گردش حساب من</h6>
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">هنوز تراکنشی ثبت نشده است.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead><tr><th>تاریخ</th><th>نوع</th><th>مبلغ</th><th>موجودی</th><th>توضیح</th><th>مستند</th></tr></thead>
+                        <tbody>
+                            @foreach (var t in Model)
+                            {
+                                <tr>
+                                    <td class="small">@t.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                    <td><span class="badge @TypeBadge(t.Type)">@TypeTitle(t.Type)</span></td>
+                                    <td class="fw-bold @(t.Amount >= 0 ? "text-success" : "text-danger")">@t.Amount.ToString("N0")</td>
+                                    <td class="small">@t.BalanceAfter.ToString("N0")</td>
+                                    <td class="small text-muted">@t.Description</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(t.DocumentFile))
+                                        {
+                                            <a href="@t.DocumentFile" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-paperclip"></i></a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

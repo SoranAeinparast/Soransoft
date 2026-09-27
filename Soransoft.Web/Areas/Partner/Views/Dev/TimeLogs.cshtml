@@ -1,0 +1,88 @@
+@model List<Soransoft.Domain.Entities.TimeLog>
+@{
+    ViewData["Title"] = "ثبت زمان کار";
+    var myTasks = ViewBag.MyTasks as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var myProjects = ViewBag.MyProjects as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var total = (int)ViewBag.TotalMinutes;
+}
+
+<div class="row g-3">
+    <div class="col-12 col-lg-4">
+        <div class="sn-admin-card">
+            <h6 class="mb-3"><i class="bi bi-stopwatch me-2"></i>ثبت زمان جدید</h6>
+            <form asp-action="AddTimeLog" method="post">
+                <div class="mb-3">
+                    <label class="form-label small">تسک (اختیاری)</label>
+                    <select name="TaskId" class="form-select">
+                        <option value="">— بدون تسک —</option>
+                        @foreach (var t in myTasks)
+                        {
+                            <option value="@t.Id">@t.Title</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">پروژه (اگر تسک انتخاب نشده)</label>
+                    <select name="ProjectId" class="form-select">
+                        <option value="">— انتخاب پروژه —</option>
+                        @foreach (var p in myProjects)
+                        {
+                            <option value="@p.Id">@p.Title</option>
+                        }
+                    </select>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label small">مدت (دقیقه)</label>
+                        <input name="Minutes" type="number" class="form-control" min="1" max="1440" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">تاریخ</label>
+                        <input name="WorkDate" type="date" class="form-control" required />
+                    </div>
+                </div>
+                <div class="my-3">
+                    <label class="form-label small">یادداشت</label>
+                    <textarea name="Note" class="form-control" rows="2" placeholder="چه کاری انجام شد؟"></textarea>
+                </div>
+                <button class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>ثبت</button>
+            </form>
+            <hr />
+            <div class="text-center">
+                <div class="sn-stat-value">@total / 60</div>
+                <div class="small text-muted">مجموع ساعت ثبت‌شده کل</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+        <div class="sn-admin-card">
+            <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i>آخرین ثبت‌ها (@Model.Count)</h6>
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">هنوز زمانی ثبت نکرده‌اید.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr><th>تاریخ</th><th>تسک / پروژه</th><th>مدت</th><th>یادداشت</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model)
+                            {
+                                <tr>
+                                    <td class="small">@t.WorkDate.ToString("yyyy/MM/dd")</td>
+                                    <td class="small">@t.Task?.Title @(t.Task == null ? t.Project?.Title : "")</td>
+                                    <td>@t.Minutes دقیقه</td>
+                                    <td class="small text-muted">@t.Note</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

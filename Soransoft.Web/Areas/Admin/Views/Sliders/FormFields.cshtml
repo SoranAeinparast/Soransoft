@@ -1,0 +1,34 @@
+@model Slider
+<div class="mb-3">
+    <label class="form-label">عنوان</label>
+    <input asp-for="Title" class="form-control" />
+    <span asp-validation-for="Title" class="text-danger small"></span>
+</div>
+<div class="mb-3">
+    <label class="form-label">زیرعنوان</label>
+    <input asp-for="SubTitle" class="form-control" />
+</div>
+<div class="mb-3">
+    <label class="form-label">لینک (اختیاری)</label>
+    <input asp-for="Link" class="form-control" dir="ltr" placeholder="/OrderProject" />
+</div>
+<div class="mb-3">
+    <label class="form-label">تصویر پس‌زمینه</label>
+    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+    @if (!string.IsNullOrWhiteSpace(Model.Image))
+    {
+        <img src="@Model.Image" alt="" class="mt-2 rounded" style="max-height:90px;" />
+    }
+</div>
+<div class="row g-3">
+    <div class="col-md-4 mb-3">
+        <div class="form-check form-switch">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label"></label>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label">ترتیب نمایش</label>
+        <input asp-for="DisplayOrder" class="form-control" type="number" />
+    </div>
+</div>

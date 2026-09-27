@@ -1,0 +1,56 @@
+@model Portfolio
+<div class="mb-3">
+    <label class="form-label">عنوان</label>
+    <input asp-for="Title" class="form-control" />
+    <span asp-validation-for="Title" class="text-danger small"></span>
+</div>
+<div class="mb-3">
+    <label class="form-label">توضیحات</label>
+    <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+    <span asp-validation-for="Description" class="text-danger small"></span>
+</div>
+<div class="row g-3">
+    <div class="col-md-6 mb-3">
+        <label class="form-label">سرویس مرتبط</label>
+        <select asp-for="ServiceId" class="form-select">
+            <option value="">— بدون سرویس —</option>
+            @if (ViewBag.Services is List<Service> services)
+            {
+                @foreach (var s in services)
+                {
+                    <option value="@s.Id">@s.Title</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label">آدرس سایت (URL)</label>
+        <input asp-for="Url" class="form-control" dir="ltr" />
+    </div>
+</div>
+<div class="mb-3">
+    <label class="form-label">تصویر</label>
+    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+    @if (!string.IsNullOrWhiteSpace(Model.Image))
+    {
+        <img src="@Model.Image" alt="" class="mt-2 rounded" style="max-height:80px;" />
+    }
+</div>
+<div class="row g-3">
+    <div class="col-md-4 mb-3">
+        <div class="form-check form-switch">
+            <input asp-for="ComingSoon" class="form-check-input" />
+            <label asp-for="ComingSoon" class="form-check-label"></label>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="form-check form-switch">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label"></label>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label">ترتیب نمایش</label>
+        <input asp-for="DisplayOrder" class="form-control" type="number" />
+    </div>
+</div>

@@ -1,0 +1,47 @@
+@model Soransoft.Web.Areas.Admin.Controllers.LoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ورود به پنل مدیریت | سوران سافت</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/admin.css" />
+</head>
+<body class="sn-admin-login">
+    <div class="sn-admin-login-card">
+        <div class="text-center mb-4">
+            <span class="sn-logo" style="font-size:1.6rem;">SORANSOFT</span>
+            <p class="text-muted mt-2 mb-0">ورود به پنل مدیریت</p>
+        </div>
+        <form asp-area="Admin" asp-controller="Account" asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+            <div class="mb-3">
+                <label class="form-label">نام کاربری</label>
+                <input asp-for="Username" class="form-control" autofocus />
+                <span asp-validation-for="Username" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">رمز عبور</label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label"></label>
+            </div>
+            <div asp-validation-summary="All" class="text-danger small mb-2"></div>
+            <button type="submit" class="btn sn-btn-primary w-100">ورود</button>
+        </form>
+        <p class="text-center text-muted small mt-3 mb-0">ادمین پیش‌فرض: admin / Admin@123</p>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

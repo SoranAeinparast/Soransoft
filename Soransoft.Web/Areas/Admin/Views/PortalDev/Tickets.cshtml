@@ -1,0 +1,58 @@
+@model List<Soransoft.Domain.Entities.SupportTicket>
+@{
+    ViewData["Title"] = "درخواست‌های بررسی فنی";
+    string StatusBadge(Soransoft.Domain.Entities.TicketStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.TicketStatus.New => "bg-info text-dark",
+        Soransoft.Domain.Entities.TicketStatus.InProgress => "bg-warning text-dark",
+        Soransoft.Domain.Entities.TicketStatus.Answered => "bg-success",
+        _ => "bg-secondary"
+    };
+    string StatusTitle(Soransoft.Domain.Entities.TicketStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.TicketStatus.New => "جدید",
+        Soransoft.Domain.Entities.TicketStatus.InProgress => "در حال بررسی",
+        Soransoft.Domain.Entities.TicketStatus.Answered => "پاسخ داده شد",
+        _ => "بسته شده"
+    };
+}
+
+<h5 class="mb-3"><i class="bi bi-life-preserver me-2"></i>درخواست‌های بررسی فنی (@Model.Count(t => t.Status != Soransoft.Domain.Entities.TicketStatus.Closed) باز)</h5>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted mb-0">تیکتی ثبت نشده است.</p>
+    }
+    @foreach (var t in Model)
+    {
+        <div class="border rounded-3 p-3 mb-2">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                    <strong>@t.Subject</strong>
+                    <div class="small text-muted">
+                        ثبت‌کننده: @t.Partner?.FullName · قرارداد: @t.Contract.Title · @t.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                    </div>
+                </div>
+                <span class="badge @StatusBadge(t.Status)">@StatusTitle(t.Status)</span>
+            </div>
+            <p class="small mb-2 mt-2">@t.Description</p>
+            @if (!string.IsNullOrWhiteSpace(t.Response))
+            {
+                <div class="bg-light border rounded-3 p-2 small mb-2">
+                    <strong class="text-success">پاسخ قبلی:</strong> @t.Response
+                </div>
+            }
+            <form asp-action="AnswerTicket" method="post" class="d-flex gap-1 flex-wrap">
+                <input type="hidden" name="id" value="@t.Id" />
+                <input name="response" class="form-control form-control-sm" placeholder="پاسخ / اقدام انجام‌شده..." style="max-width:420px" />
+                <select name="status" class="form-select form-select-sm" style="width:auto">
+                    <option value="2">در حال بررسی</option>
+                    <option value="3" selected>پاسخ داده شد</option>
+                    <option value="4">بسته شده</option>
+                </select>
+                <button class="btn btn-sm btn-primary"><i class="bi bi-send"></i></button>
+            </form>
+        </div>
+    }
+</div>

@@ -1,0 +1,189 @@
+@model List<Soransoft.Domain.Entities.ThirdPartyCostItem>
+@{
+    ViewData["Title"] = "هزینه‌های شخص ثالث";
+    var usage = ViewBag.UsageCounts as Dictionary<int, int> ?? new();
+    string TypeTitle(Soransoft.Domain.Entities.ThirdPartyCostType t) => t switch
+    {
+        Soransoft.Domain.Entities.ThirdPartyCostType.Hosting => "هاست/سرور",
+        Soransoft.Domain.Entities.ThirdPartyCostType.Domain => "دامنه",
+        Soransoft.Domain.Entities.ThirdPartyCostType.Certificate => "گواهینامه/مجوز",
+        Soransoft.Domain.Entities.ThirdPartyCostType.Service => "سرویس/API",
+        _ => "سایر"
+    };
+    string TypeBadge(Soransoft.Domain.Entities.ThirdPartyCostType t) => t switch
+    {
+        Soransoft.Domain.Entities.ThirdPartyCostType.Hosting => "bg-primary",
+        Soransoft.Domain.Entities.ThirdPartyCostType.Domain => "bg-info text-dark",
+        Soransoft.Domain.Entities.ThirdPartyCostType.Certificate => "bg-success",
+        Soransoft.Domain.Entities.ThirdPartyCostType.Service => "bg-warning text-dark",
+        _ => "bg-secondary"
+    };
+}
+
+<h5 class="mb-3"><i class="bi bi-receipt-cutoff me-2"></i>کاتالوگ هزینه‌های شخص ثالث (@Model.Count)</h5>
+
+<div class="alert alert-light border small">
+    <i class="bi bi-info-circle me-1"></i>
+    این هزینه‌ها (هاست، دامنه، گواهینامه/SSL، سرویس‌ها و APIها) هنگام اعمال روی قرارداد مشتری، از مبلغ قرارداد در اولین پرداخت کسر می‌شوند
+    و <strong>مابقی مبنای محاسبه پورسانت همکار فروش</strong> است. مشخصات فنی و مالی هر آیتم را اینجا نگه دارید.
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-5">
+        <div class="sn-admin-card h-100">
+            <h6 class="mb-3"><i class="bi bi-plus-circle me-2"></i>ثبت آیتم جدید</h6>
+            <form asp-action="Save" method="post">
+                <input type="hidden" name="Id" value="0" />
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label small">نوع *</label>
+                        <select name="Type" class="form-select form-select-sm">
+                            <option value="1">هاست/سرور</option>
+                            <option value="2">دامنه</option>
+                            <option value="3">گواهینامه/مجوز</option>
+                            <option value="4">سرویس/API</option>
+                            <option value="5">سایر</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">هزینه پیش‌فرض (تومان)</label>
+                        <input name="DefaultAmount" type="number" min="0" step="100000" class="form-control form-control-sm" value="0" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">عنوان *</label>
+                        <input name="Title" class="form-control form-control-sm" required placeholder="مثلاً: هاست لینوکس سالانه" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">مشخصات فنی</label>
+                        <textarea name="TechnicalSpecs" class="form-control form-control-sm" rows="2" placeholder="مثلاً: ۱۰ گیگ SSD، پهنای باند نامحدود، IP اختصاصی"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">توضیحات</label>
+                        <textarea name="Description" class="form-control form-control-sm" rows="2"></textarea>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">ترتیب نمایش</label>
+                        <input name="DisplayOrder" type="number" min="0" class="form-control form-control-sm" value="0" />
+                    </div>
+                    <div class="col-6 d-flex align-items-end">
+                        <div class="form-check">
+                            <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="newActive" checked />
+                            <label class="form-check-label small" for="newActive">فعال (قابل انتخاب روی قرارداد)</label>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm mt-3"><i class="bi bi-save me-1"></i>ثبت آیتم</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+        <div class="sn-admin-card h-100">
+            <h6 class="mb-3"><i class="bi bi-list-ul me-2"></i>آیتم‌های کاتالوگ</h6>
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">هنوز آیتمی ثبت نشده است.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr><th>نوع</th><th>عنوان</th><th>مشخصات فنی</th><th>هزینه</th><th>استفاده</th><th>وضعیت</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var it in Model)
+                            {
+                                var used = usage.TryGetValue(it.Id, out var u) ? u : 0;
+                                <tr>
+                                    <td><span class="badge @TypeBadge(it.Type)">@TypeTitle(it.Type)</span></td>
+                                    <td>
+                                        <strong>@it.Title</strong>
+                                        @if (!string.IsNullOrWhiteSpace(it.Description))
+                                        {
+                                            <div class="small text-muted">@it.Description</div>
+                                        }
+                                    </td>
+                                    <td class="small text-muted" style="max-width:240px">@(it.TechnicalSpecs ?? "—")</td>
+                                    <td>@it.DefaultAmount.ToString("N0")</td>
+                                    <td class="small">@(used > 0 ? $"{used} قرارداد" : "—")</td>
+                                    <td>
+                                        <span class="badge @(it.IsActive ? "bg-success" : "bg-secondary")">@(it.IsActive ? "فعال" : "غیرفعال")</span>
+                                    </td>
+                                    <td class="text-end" style="min-width:150px">
+                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#edit-@it.Id"><i class="bi bi-pencil"></i></button>
+                                        <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('این آیتم حذف شود؟')">
+                                            <input type="hidden" name="id" value="@it.Id" />
+                                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@foreach (var it in Model)
+{
+    <div class="modal fade" id="edit-@it.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="Save" method="post">
+                    <input type="hidden" name="Id" value="@it.Id" />
+                    <div class="modal-header py-2">
+                        <h6 class="modal-title">ویرایش — @it.Title</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small">نوع *</label>
+                                <select name="Type" class="form-select form-select-sm">
+                                    <option value="1" selected="@(it.Type == Soransoft.Domain.Entities.ThirdPartyCostType.Hosting)">هاست/سرور</option>
+                                    <option value="2" selected="@(it.Type == Soransoft.Domain.Entities.ThirdPartyCostType.Domain)">دامنه</option>
+                                    <option value="3" selected="@(it.Type == Soransoft.Domain.Entities.ThirdPartyCostType.Certificate)">گواهینامه/مجوز</option>
+                                    <option value="4" selected="@(it.Type == Soransoft.Domain.Entities.ThirdPartyCostType.Service)">سرویس/API</option>
+                                    <option value="5" selected="@(it.Type == Soransoft.Domain.Entities.ThirdPartyCostType.Other)">سایر</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small">هزینه پیش‌فرض (تومان)</label>
+                                <input name="DefaultAmount" type="number" min="0" step="100000" class="form-control form-control-sm" value="@it.DefaultAmount" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small">عنوان *</label>
+                                <input name="Title" class="form-control form-control-sm" required value="@it.Title" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small">مشخصات فنی</label>
+                                <textarea name="TechnicalSpecs" class="form-control form-control-sm" rows="2">@it.TechnicalSpecs</textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small">توضیحات</label>
+                                <textarea name="Description" class="form-control form-control-sm" rows="2">@it.Description</textarea>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small">ترتیب نمایش</label>
+                                <input name="DisplayOrder" type="number" min="0" class="form-control form-control-sm" value="@it.DisplayOrder" />
+                            </div>
+                            <div class="col-6 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="active-@it.Id" checked="@it.IsActive" />
+                                    <label class="form-check-label small" for="active-@it.Id">فعال</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" class="btn btn-sm btn-primary">ذخیره</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

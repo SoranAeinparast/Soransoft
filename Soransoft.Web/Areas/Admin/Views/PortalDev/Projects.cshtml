@@ -1,0 +1,85 @@
+@model List<Soransoft.Domain.Entities.DevProject>
+@{
+    ViewData["Title"] = "پروژه‌های تیم فنی";
+    var devs = ViewBag.Devs as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<h5 class="mb-3"><i class="bi bi-diagram-3 me-2"></i>پروژه‌ها (@Model.Count)</h5>
+
+<div class="sn-admin-card mb-3">
+    <form asp-action="CreateProject" method="post" class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label class="form-label small">عنوان پروژه *</label>
+            <input name="title" class="form-control form-control-sm" required placeholder="مثلاً: SugarShop" />
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label small">توضیح</label>
+            <input name="description" class="form-control form-control-sm" />
+        </div>
+        <div class="col-9 col-md-3">
+            <label class="form-label small">وضعیت کلی</label>
+            <input name="statusText" class="form-control form-control-sm" placeholder="مثلاً: در مرحله تست" />
+        </div>
+        <div class="col-3 col-md-1">
+            <button class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg"></i></button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3">
+    @foreach (var p in Model)
+    {
+        var done = p.Tasks.Count(t => t.Status == Soransoft.Domain.Entities.TaskStatus.Done);
+        var total = p.Tasks.Count;
+        <div class="col-12 col-lg-6">
+            <div class="sn-admin-card h-100">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                        <h6 class="mb-1">@p.Title</h6>
+                        <div class="small text-muted">@p.Description</div>
+                    </div>
+                    <form asp-action="UpdateProjectStatus" method="post" class="d-inline-flex gap-1">
+                        <input type="hidden" name="id" value="@p.Id" />
+                        <input name="statusText" class="form-control form-control-sm" value="@p.StatusText" placeholder="وضعیت" style="width:140px" />
+                        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-save"></i></button>
+                    </form>
+                </div>
+                @if (total > 0)
+                {
+                    <div class="small mt-2">
+                        پیشرفت: @done از @total تسک
+                        <div class="progress mt-1" style="height:8px">
+                            <div class="progress-bar bg-success" style="width:@(done * 100 / total)%"></div>
+                        </div>
+                    </div>
+                }
+                <hr class="my-2" />
+                <div class="small mb-2"><strong>اعضا:</strong>
+                    @if (p.Members.Any())
+                    {
+                        @foreach (var m in p.Members)
+                        {
+                            <span class="badge bg-light text-dark border ms-1">@m.Partner.FullName @(string.IsNullOrWhiteSpace(m.RoleInProject) ? "" : $"({m.RoleInProject})")</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </div>
+                <form asp-action="AddMember" method="post" class="d-flex gap-1 align-items-center">
+                    <input type="hidden" name="projectId" value="@p.Id" />
+                    <select name="partnerId" class="form-select form-select-sm" required style="max-width:180px">
+                        <option value="">افزودن عضو...</option>
+                        @foreach (var d in devs)
+                        {
+                            <option value="@d.Id">@d.FullName</option>
+                        }
+                    </select>
+                    <input name="roleInProject" class="form-control form-control-sm" placeholder="نقش (مثلاً Backend)" style="max-width:130px" />
+                    <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-person-plus"></i></button>
+                </form>
+            </div>
+        </div>
+    }
+</div>

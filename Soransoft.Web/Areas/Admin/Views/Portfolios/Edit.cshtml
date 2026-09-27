@@ -1,0 +1,17 @@
+@model Portfolio
+@{
+    ViewData["Title"] = "ویرایش نمونه‌کار";
+}
+<h5 class="mb-4">ویرایش نمونه‌کار: @Model.Title</h5>
+<div class="sn-admin-card">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Image" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <partial name="FormFields" model="Model" />
+        <button type="submit" class="btn sn-btn-primary">ذخیره تغییرات</button>
+        <a href="/Admin/Portfolios" class="btn btn-outline-secondary">انصراف</a>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,62 @@
+@model Soransoft.Web.Models.AboutUsViewModel
+@{
+    ViewData["Title"] = "درباره ما";
+    string S(string key, string def = "") => Model.Settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : def;
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">دربــــــــاره مـــــــــا</h1>
+        <p class="sn-hero-text">ما کی هستیم؟ چی هستیم؟ چی کار می کنیم؟ اینجا کجاست؟! الان میگم!</p>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="sn-article-body-content">
+                    <p>@S("AboutText")</p>
+                    <p>
+                        سوران سافت مجموعه‌ای است که قرار است خدمات صفر تا صد سایت و اپلیکیشن را به شما ارائه دهد.
+                        اگر سایت ندارید برایتان طراحی می‌کنیم، اگر سایت دارید و مشتری ندارید با خدمات سئو شما را بهتر به گوگل معرفی می‌کنیم،
+                        اگر فرصت تولید محتوا ندارید محتوای اختصاصی آماده می‌کنیم و در نهایت اگر به یک اپلیکیشن فوق‌العاده نیاز دارید،
+                        باز هم سوران سافت می‌تواند آن را برایتان انجام دهد.
+                    </p>
+                    <p>برای تمامی خدمات بالا مشاوره رایگان داریم. کافیست با ما تماس بگیرید تا درباره‌ی ریز هزینه‌ها و فرآیند انجام خدمات صحبت کنیم.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="sn-section-title mt-5">یک تیم پر از سابقه</h2>
+        <div class="row g-4 justify-content-center">
+            @foreach (var member in Model.Team)
+            {
+                <div class="col-12 col-md-4">
+                    <div class="sn-team-card text-center">
+                        <div class="sn-team-avatar">
+                            @if (!string.IsNullOrWhiteSpace(member.Image))
+                            {
+                                <img src="@member.Image" alt="@member.FullName" loading="lazy" />
+                            }
+                            else
+                            {
+                                <i class="bi bi-person-circle"></i>
+                            }
+                        </div>
+                        <h3>@member.FullName</h3>
+                        <p class="text-muted">@member.Role</p>
+                        @if (!string.IsNullOrWhiteSpace(member.LinkedinUrl))
+                        {
+                            <a href="@member.LinkedinUrl" target="_blank" rel="noopener" class="sn-social d-inline-flex"><i class="bi bi-linkedin"></i></a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-5">
+            <p>اگر در هر زمینه‌ای به کمک تیم سوران سافت نیاز دارید فقط کافیه با ما تماس بگیرید</p>
+            <a href="/ContactUs" class="btn sn-btn-primary px-5">تماس با ما</a>
+        </div>
+    </div>
+</section>

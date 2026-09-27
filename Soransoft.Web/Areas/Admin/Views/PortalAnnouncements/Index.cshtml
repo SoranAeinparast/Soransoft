@@ -1,0 +1,81 @@
+@model List<Soransoft.Domain.Entities.Announcement>
+@{
+    ViewData["Title"] = "مرکز ارتباطی همکاران";
+    var partners = ViewBag.Partners as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<div class="row g-3">
+    <div class="col-12 col-lg-5">
+        <div class="sn-admin-card">
+            <h6 class="mb-3"><i class="bi bi-megaphone me-2"></i>ارسال اطلاعیه</h6>
+            <form asp-action="Send" method="post">
+                <div class="mb-2">
+                    <label class="form-label small">عنوان *</label>
+                    <input name="Title" class="form-control form-control-sm" required />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">متن *</label>
+                    <textarea name="Body" class="form-control form-control-sm" rows="4" required></textarea>
+                </div>
+                <div class="row g-2">
+                    <div class="col-7">
+                        <label class="form-label small">مخاطب</label>
+                        <select name="Audience" class="form-select form-select-sm" id="audienceSelect">
+                            <option value="All">همه همکاران</option>
+                            <option value="Sales">تیم فروش</option>
+                            <option value="Dev">تیم فنی</option>
+                        </select>
+                    </div>
+                    <div class="col-5">
+                        <label class="form-label small">یا یک نفر خاص</label>
+                        <select name="PartnerId" class="form-select form-select-sm">
+                            <option value="">—</option>
+                            @foreach (var p in partners)
+                            {
+                                <option value="@p.Id">@p.FullName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-check mt-2">
+                    <input type="checkbox" name="IsImportant" value="true" class="form-check-input" id="impChk" />
+                    <label class="form-check-label small" for="impChk">مهم (با رنگ هشدار نمایش داده شود)</label>
+                </div>
+                <button class="btn btn-primary btn-sm w-100 mt-3"><i class="bi bi-send me-1"></i>ارسال</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+        <div class="sn-admin-card">
+            <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i>آرشیو اطلاعیه‌ها (@Model.Count)</h6>
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">اطلاعیه‌ای ارسال نشده است.</p>
+            }
+            @foreach (var a in Model)
+            {
+                <div class="border rounded-3 p-2 mb-2">
+                    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                        <div>
+                            <strong class="small">@a.Title</strong>
+                            <span class="badge bg-light text-dark border ms-1">
+                                @(a.PartnerId != null ? $"اختصاصی — {a.Partner?.FullName}" : a.Audience == "Sales" ? "تیم فروش" : a.Audience == "Dev" ? "تیم فنی" : "همه")
+                            </span>
+                            @if (a.IsImportant)
+                            {
+                                <span class="badge bg-warning text-dark">مهم</span>
+                            }
+                        </div>
+                        <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('اطلاعیه حذف شود؟')">
+                            <input type="hidden" name="id" value="@a.Id" />
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </div>
+                    <div class="small text-muted mt-1">@a.Body</div>
+                    <div class="small text-muted mt-1">@a.CreatedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

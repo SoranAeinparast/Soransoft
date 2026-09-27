@@ -1,0 +1,58 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "بار کاری تیم فنی";
+}
+
+<h5 class="mb-3"><i class="bi bi-speedometer me-2"></i>بار کاری تیم فنی</h5>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted mb-0">هنوز توسعه‌دهنده‌ای ثبت نشده است.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>توسعه‌دهنده</th><th>سطح</th><th>تسک باز</th><th>بحرانی/زیاد</th>
+                        <th>انجام‌شده</th><th>کار هفته اخیر</th><th>وضعیت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model)
+                    {
+                        var overload = d.HighPriority >= 3 || d.OpenTasks >= 5;
+                        <tr>
+                            <td><strong>@d.FullName</strong><div class="small text-muted" dir="ltr">@(d.Skills ?? "")</div></td>
+                            <td class="small">@d.TechLevel</td>
+                            <td>@d.OpenTasks</td>
+                            <td>@(d.HighPriority > 0 ? $"<span class='badge bg-danger'>{d.HighPriority}</span>" : "—")</td>
+                            <td>@d.DoneTasks</td>
+                            <td>@(((int)d.WeekMinutes) / 60) ساعت</td>
+                            <td>
+                                @if (overload)
+                                {
+                                    <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>بار زیاد!</span>
+                                }
+                                else if (d.OpenTasks == 0)
+                                {
+                                    <span class="badge bg-success">آماده کار</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info text-dark">عادی</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-muted mb-0 mt-2">
+            <i class="bi bi-lightbulb me-1"></i>
+            «بار زیاد» یعنی ۳ تسک بحرانی/زیاد یا ۵+ تسک باز — در این حالت بهتر است تسک جدید به این عضو تخصیص ندهید.
+        </p>
+    }
+</div>

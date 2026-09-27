@@ -1,0 +1,82 @@
+@using Soransoft.Domain.Enums
+@model List<Soransoft.Application.ViewModels.TariffSectionViewModel>
+@{
+    static string KindTitle(ServiceKind kind) => kind switch
+    {
+        ServiceKind.Site => "طراحی سایت",
+        ServiceKind.Seo => "سـئو",
+        ServiceKind.Application => "اپلیکیشن",
+        _ => "تولید محتوا",
+    };
+}
+<ul class="nav sn-tabs justify-content-center mb-4" role="tablist">
+    @foreach (var tabSection in Model)
+    {
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(tabSection == Model.First() ? "active" : "")" data-bs-toggle="tab"
+                    data-bs-target="#tariff-@((int)tabSection.Kind)" type="button" role="tab">
+                @(KindTitle(tabSection.Kind))
+            </button>
+        </li>
+    }
+</ul>
+
+<div class="tab-content">
+    @foreach (var tabSection in Model)
+    {
+        <div class="tab-pane fade @(tabSection == Model.First() ? "show active" : "")" id="tariff-@((int)tabSection.Kind)" role="tabpanel">
+            <div class="row g-4 justify-content-center">
+                @foreach (var package in tabSection.Packages)
+                {
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="sn-price-card @(package.IsPopular ? "sn-popular" : "")">
+                            @if (package.IsPopular)
+                            {
+                                <span class="sn-popular-badge">محبوب</span>
+                            }
+                            <h3>@package.Title</h3>
+                            @if (!string.IsNullOrWhiteSpace(package.Duration))
+                            {
+                                <p class="sn-price-duration">@package.Duration</p>
+                            }
+                            <ul class="sn-price-features list-unstyled">
+                                @if (package.IsInstallmentAvailable)
+                                {
+                                    <li><i class="bi bi-check2"></i> امکان اقساط</li>
+                                }
+                                @if (package.HasFreeSupport)
+                                {
+                                    <li><i class="bi bi-check2"></i> 1 سال پشتیبانی رایگان</li>
+                                }
+                                @foreach (var item in package.Items)
+                                {
+                                    <li><i class="bi bi-check2"></i> @item</li>
+                                }
+                            </ul>
+                            <div class="sn-price">
+                                @if (package.Price.HasValue)
+                                {
+                                    <span class="sn-price-value">@package.Price.Value.ToString("N0")</span>
+                                    <span class="sn-price-unit">تومان</span>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(package.PriceNote))
+                                {
+                                    <span class="sn-price-note">@package.PriceNote</span>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(package.PriceSuffix))
+                                {
+                                    <span class="sn-price-note">@package.PriceSuffix</span>
+                                }
+                            </div>
+                            <a href="/OrderProject" class="btn sn-btn-primary w-100">سفـــارش</a>
+                        </div>
+                    </div>
+                }
+            </div>
+            @if (tabSection.Kind == ServiceKind.Content)
+            {
+                <p class="text-center text-muted mt-3 small">برای سایت دو زبانه 20 درصد به مبالغ فوق اضافه می شود</p>
+            }
+        </div>
+    }
+</div>

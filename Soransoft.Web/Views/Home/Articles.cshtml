@@ -1,0 +1,83 @@
+@model Soransoft.Web.Models.ArticlesViewModel
+@{
+    ViewData["Title"] = "مقالات";
+    var totalPages = (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">مقــاله‌ها</h1>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-12 col-lg-3">
+                <aside class="sn-sidebar">
+                    <h5 class="sn-sidebar-title">دسته‌بندی‌ها</h5>
+                    <ul class="list-unstyled sn-cat-list">
+                        <li class="@(!Model.SelectedCategoryId.HasValue ? "active" : "")">
+                            <a href="/Articles">همه مقالات</a>
+                        </li>
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <li class="@(Model.SelectedCategoryId == cat.Id ? "active" : "")">
+                                <a href="/Articles?categoryId=@cat.Id">@cat.Title</a>
+                            </li>
+                        }
+                    </ul>
+                </aside>
+            </div>
+            <div class="col-12 col-lg-9">
+                @if (!Model.Articles.Any())
+                {
+                    <p class="text-muted">مقاله‌ای یافت نشد.</p>
+                }
+                <div class="row g-4">
+                    @foreach (var article in Model.Articles)
+                    {
+                        <div class="col-12 col-md-6">
+                            <article class="sn-article-card h-100">
+                                <div class="sn-article-img">
+                                    @if (!string.IsNullOrWhiteSpace(article.Image))
+                                    {
+                                        <img src="@article.Image" alt="@article.Title" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-journal-text"></i>
+                                    }
+                                </div>
+                                <div class="sn-article-body">
+                                    <span class="sn-badge">@article.CategoryTitle</span>
+                                    <h3><a href="/Article/@article.Slug">@article.Title</a></h3>
+                                    <p>@(article.Summary.Length > 150 ? article.Summary[..150] + "…" : article.Summary)</p>
+                                    <div class="sn-article-meta">
+                                        <span><i class="bi bi-person me-1"></i>@article.AuthorName</span>
+                                        <span><i class="bi bi-calendar3 me-1"></i>@article.PublishedAt.ToString("yyyy/MM/dd")</span>
+                                        <span><i class="bi bi-eye me-1"></i>@article.VisitCount</span>
+                                    </div>
+                                    <a href="/Article/@article.Slug" class="sn-readmore">مطالعه <i class="bi bi-arrow-left"></i></a>
+                                </div>
+                            </article>
+                        </div>
+                    }
+                </div>
+
+                @if (totalPages > 1)
+                {
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="/Articles?page=@i@(Model.SelectedCategoryId.HasValue ? $"&categoryId={Model.SelectedCategoryId}" : "")">@i</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,67 @@
+@model List<Soransoft.Domain.Entities.CooperationAgreement>
+@{
+    ViewData["Title"] = "قرارداد همکاری من";
+    string StatusBadge(Soransoft.Domain.Entities.AgreementStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.AgreementStatus.Draft => "bg-secondary",
+        Soransoft.Domain.Entities.AgreementStatus.Active => "bg-success",
+        _ => "bg-danger"
+    };
+    string StatusTitle(Soransoft.Domain.Entities.AgreementStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.AgreementStatus.Draft => "پیش‌نویس (هنوز نهایی نشده)",
+        Soransoft.Domain.Entities.AgreementStatus.Active => "فعال (ملاک طرفین)",
+        _ => "فسخ شده"
+    };
+}
+
+<h5 class="mb-3"><i class="bi bi-journal-bookmark me-2"></i>قراردادهای همکاری من</h5>
+
+@if (!Model.Any())
+{
+    <div class="sn-admin-card"><p class="text-muted mb-0">قرارداد همکاری برای شما ثبت نشده است.</p></div>
+}
+
+@foreach (var a in Model)
+{
+    <div class="sn-admin-card mb-3 @(a.Status == Soransoft.Domain.Entities.AgreementStatus.Active ? "border-success" : "")">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h6 class="mb-1">@a.Title <span class="small text-muted" dir="ltr">(@a.AgreementNo)</span></h6>
+                <div class="small text-muted">موضوع: @a.Subject</div>
+            </div>
+            <span class="badge @StatusBadge(a.Status)">@StatusTitle(a.Status)</span>
+        </div>
+        <dl class="row small mt-3 mb-0">
+            <dt class="col-4">مدت:</dt><dd class="col-8">@a.StartDate.ToString("yyyy/MM/dd") تا @(a.EndDate?.ToString("yyyy/MM/dd") ?? "بدون پایان")</dd>
+            <dt class="col-4">مبلغ کل/سقف:</dt><dd class="col-8">@(a.IsUnlimitedAmount ? "نامحدود (بدون سقف — تعداد قرارداد با مشتری محدود نیست)" : (a.TotalAmount?.ToString("N0") ?? "—") + " تومان")</dd>
+            @if (a.Kind == Soransoft.Domain.Entities.AgreementKind.Sales)
+            {
+                <dt class="col-4">پورسانت من:</dt>
+                <dd class="col-8">
+                    @(a.CommissionMethod == Soransoft.Domain.Entities.CommissionMethod.FixedPercent ? $"{a.CommissionValue:0.##} درصد" : a.CommissionMethod == Soransoft.Domain.Entities.CommissionMethod.FixedAmount ? $"{a.CommissionValue:N0} تومان ثابت" : "پله‌ای")
+                    — @(a.BasedOnPaidStages ? "بر مراحل پرداخت‌شده مشتری (خالص پس از کسر هزینه شخص ثالث)" : "بر کل قرارداد مشتری (خالص پس از کسر هزینه شخص ثالث)")
+                </dd>
+            }
+            else
+            {
+                <dt class="col-4">دستمزد:</dt><dd class="col-8">@(a.MonthlySalary is long m ? $"ماهانه {m:N0} تومان" : "—")</dd>
+            }
+            <dt class="col-4">نحوه تسویه:</dt><dd class="col-8">@a.SettlementTerms</dd>
+            <dt class="col-4">حساب تسویه:</dt>
+            <dd class="col-8">@(a.BankName ?? "—") — <span dir="ltr">@(a.BankAccountIban ?? "—")</span> @(string.IsNullOrWhiteSpace(a.BankAccountHolder) ? "" : $"به نام {a.BankAccountHolder}")</dd>
+        </dl>
+        @if (!string.IsNullOrWhiteSpace(a.Terms))
+        {
+            <hr />
+            <h6 class="small">مفاد و تعهدات</h6>
+            <div class="small">@Html.Raw(a.Terms)</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(a.ContractFile))
+        {
+            <div class="mt-3 pt-2 border-top">
+                <a href="@a.ContractFile" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-pdf me-1"></i>مشاهده متن قرارداد (PDF)</a>
+            </div>
+        }
+    </div>
+}

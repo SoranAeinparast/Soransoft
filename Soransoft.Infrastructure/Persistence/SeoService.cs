@@ -1,0 +1,66 @@
+using Microsoft.EntityFrameworkCore;
+using Soransoft.Application.Interfaces;
+using Soransoft.Domain.Enums;
+using Soransoft.Infrastructure.Persistence;
+
+namespace Soransoft.Infrastructure.Persistence
+{
+    /// <summary>سرویس سئو: تولید نقشه سایت از صفحات ثابت، سرویس‌ها و مقالات اسلاگ‌دار</summary>
+    public class SeoService : ISeoService
+    {
+        private readonly SoransoftDbContext _db;
+        public SeoService(SoransoftDbContext db) => _db = db;
+
+        public async Task<List<SitemapItem>> GetSitemapAsync(string baseUrl, CancellationToken ct = default)
+        {
+            baseUrl = baseUrl.TrimEnd('/');
+
+            var items = new List<SitemapItem>
+            {
+                new() { Url = $"{baseUrl}/", Priority = 1.0, ChangeFrequency = "daily" },
+                new() { Url = $"{baseUrl}/OurServices", Priority = 0.9 },
+                new() { Url = $"{baseUrl}/Portfolio", Priority = 0.9 },
+                new() { Url = $"{baseUrl}/Tariff", Priority = 0.8 },
+                new() { Url = $"{baseUrl}/Articles", Priority = 0.9, ChangeFrequency = "daily" },
+                new() { Url = $"{baseUrl}/AboutUs", Priority = 0.7, ChangeFrequency = "monthly" },
+                new() { Url = $"{baseUrl}/ContactUs", Priority = 0.7, ChangeFrequency = "monthly" },
+                new() { Url = $"{baseUrl}/OrderProject", Priority = 0.8 },
+            };
+
+            // صفحات سرویس (اسلاگ‌دار)
+            var serviceSlugs = await _db.Services.AsNoTracking()
+                .Where(s => s.IsActive)
+                .Select(s => s.Slug)
+                .ToListAsync(ct);
+            items.AddRange(serviceSlugs.Select(s => new SitemapItem
+            {
+                Url = $"{baseUrl}/{Uri.EscapeDataString(s)}",
+                Priority = 0.8
+            }));
+
+            // مقالات منتشرشده (اسلاگ‌دار؛ مقاله بدون اسلاگ با Id ایندکس می‌شود)
+            var articles = await _db.Articles.AsNoTracking()
+                .Where(a => a.Status == PublishStatus.Published && !a.IsDeleted)
+                .OrderByDescending(a => a.PublishedAt)
+                .Select(a => new ArticleSitemapItem
+                {
+                    Id = a.Id,
+                    Slug = a.Slug ?? string.Empty,
+                    LastModified = a.UpdatedAt ?? a.PublishedAt,
+                })
+                .ToListAsync(ct);
+
+            items.AddRange(articles.Select(a => new SitemapItem
+            {
+                Url = !string.IsNullOrWhiteSpace(a.Slug)
+                    ? $"{baseUrl}/Article/{Uri.EscapeDataString(a.Slug)}"
+                    : $"{baseUrl}/Article/{a.Id}",
+                LastModified = a.LastModified,
+                Priority = 0.6,
+                ChangeFrequency = "weekly",
+            }));
+
+            return items;
+        }
+    }
+}

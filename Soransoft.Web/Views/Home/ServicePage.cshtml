@@ -1,0 +1,61 @@
+@model Soransoft.Domain.Entities.Service
+@{
+    ViewData["Title"] = Model.Title;
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">@Model.Title</h1>
+        @if (!string.IsNullOrWhiteSpace(Model.Slogan))
+        {
+            <p class="sn-hero-subtitle">@Model.Slogan</p>
+        }
+        <p class="alert alert-success d-inline-block">درخواست شما با موفقیت ارسال شد. از تماس سریع ما شگفت زده خواهید شد آماده باشید :)</p>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <h2 class="sn-section-title">خدمات @Model.Title</h2>
+        <div class="sn-article-body-content">
+            @Html.Raw(Model.FullDescription)
+        </div>
+
+        @if (Model.Features.Any())
+        {
+            <h3 class="mt-5 mb-4">مزایای @Model.Title با سوران سافت</h3>
+            <div class="row g-4">
+                @foreach (var feature in Model.Features)
+                {
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="sn-service-card h-100">
+                            <h4>@feature.Title</h4>
+                            @if (!string.IsNullOrWhiteSpace(feature.Description))
+                            {
+                                <p>@feature.Description</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Model.Steps.Any())
+        {
+            <h3 class="mt-5 mb-4">مراحل انجام @Model.Title</h3>
+            <div class="sn-timeline">
+                @{ var steps = Model.Steps.OrderBy(s => s.DisplayOrder).ToList(); }
+                @for (int i = 0; i < steps.Count; i++)
+                {
+                    <div class="sn-timeline-step">
+                        <div class="sn-timeline-num">@(i + 1)</div>
+                        <div class="sn-timeline-text">@steps[i].Title</div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="text-center mt-5">
+            <a href="/OrderProject" class="btn sn-btn-primary btn-lg px-5">ثبت سفارش @Model.Title</a>
+        </div>
+    </div>
+</section>

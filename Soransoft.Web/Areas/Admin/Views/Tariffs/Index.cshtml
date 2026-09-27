@@ -1,0 +1,243 @@
+@model List<TariffSection>
+@{
+    ViewData["Title"] = "مدیریت تعرفه‌ها";
+}
+<h5 class="mb-4">مدیریت تعرفه‌ها</h5>
+
+<div class="d-flex justify-content-end mb-3">
+    <button class="btn sn-btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#newSectionForm" aria-expanded="false">
+        <i class="bi bi-plus-lg me-1"></i> بخش تعرفه جدید
+    </button>
+</div>
+<div class="collapse @(Model.Any() ? "" : "show") mb-4" id="newSectionForm">
+    <div class="sn-admin-card">
+        <h6 class="fw-bold mb-3">افزودن بخش تعرفه</h6>
+        <form asp-action="CreateSection" method="post" class="row g-2 align-items-end">
+            @Html.AntiForgeryToken()
+            <div class="col-md-4">
+                <label class="form-label">عنوان بخش</label>
+                <input name="Title" class="form-control" placeholder="مثلاً: طراحی سایت" required />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">نوع سرویس</label>
+                <select name="Kind" class="form-select" asp-items="Html.GetEnumSelectList<ServiceKind>()"></select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">ترتیب</label>
+                <input name="DisplayOrder" class="form-control" type="number" value="1" />
+            </div>
+            <div class="col-md-2">
+                <div class="form-check form-switch mt-4">
+                    <input type="hidden" name="IsActive" value="false" />
+                    <input type="checkbox" name="IsActive" value="true" checked class="form-check-input" id="nsActive" />
+                    <label class="form-check-label" for="nsActive">فعال</label>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn sn-btn-primary w-100">افزودن</button>
+            </div>
+        </form>
+    </div>
+    @if (Model.Any())
+    {
+        <p class="text-muted small mb-0 mt-1">برای افزودن پکیج، روی «پکیج جدید» داخل کارت هر بخش کلیک کنید.</p>
+    }
+</div>
+
+@foreach (var sec in Model)
+{
+    <div class="sn-admin-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h6 class="fw-bold mb-0">
+                @sec.Title
+                <span class="badge bg-info ms-2">@sec.Kind.ToString()</span>
+                <span class="badge @(sec.IsActive ? "bg-success" : "bg-secondary") ms-1">@(sec.IsActive ? "فعال" : "غیرفعال")</span>
+            </h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#pkg-@sec.Id">
+                    <i class="bi bi-plus-lg"></i> پکیج جدید
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#edit-@sec.Id">
+                    <i class="bi bi-pencil"></i> ویرایش بخش
+                </button>
+                <form method="post" action="/Admin/Tariffs/ToggleSection/@sec.Id" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm @(sec.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                        @(sec.IsActive ? "غیرفعال" : "فعال")
+                    </button>
+                </form>
+                <form method="post" action="/Admin/Tariffs/DeleteSection/@sec.Id" class="d-inline"
+                      onsubmit="return confirm('حذف شود؟ همه پکیج‌های این بخش هم از سایت حذف می‌شوند.')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- فرم ویرایش بخش -->
+        <div class="collapse mb-3" id="edit-@sec.Id">
+            <form asp-action="EditSection" method="post" class="border rounded p-3 bg-light row g-2 align-items-end">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@sec.Id" />
+                <div class="col-md-4">
+                    <label class="form-label">عنوان بخش</label>
+                    <input name="Title" value="@sec.Title" class="form-control" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">نوع سرویس</label>
+                    <select name="Kind" class="form-select" asp-items="Html.GetEnumSelectList<ServiceKind>()" data-selected="@((int)sec.Kind)"></select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">ترتیب</label>
+                    <input name="DisplayOrder" value="@sec.DisplayOrder" class="form-control" type="number" />
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check form-switch mt-4">
+                        <input type="hidden" name="IsActive" value="false" />
+                        <input type="checkbox" name="IsActive" value="true" @(sec.IsActive ? "checked" : "") class="form-check-input" id="es-@sec.Id" />
+                        <label class="form-check-label" for="es-@sec.Id">فعال</label>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn sn-btn-primary w-100">ثبت</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- فرم پکیج جدید -->
+        <div class="collapse mb-3" id="pkg-@sec.Id">
+            <form asp-action="CreatePackage" method="post" class="border rounded p-3 bg-light">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TariffSectionId" value="@sec.Id" />
+                <div class="row g-2">
+                    <div class="col-md-3"><input name="Title" class="form-control form-control-sm" placeholder="عنوان پکیج" required /></div>
+                    <div class="col-md-2"><input name="Price" class="form-control form-control-sm" type="number" placeholder="قیمت (تومان)" /></div>
+                    <div class="col-md-2"><input name="PriceNote" class="form-control form-control-sm" placeholder="یادداشت جای قیمت" /></div>
+                    <div class="col-md-2"><input name="PriceSuffix" class="form-control form-control-sm" placeholder="پسوند قیمت (مثل: کلمه‌ای ۱۲۰)" /></div>
+                    <div class="col-md-2"><input name="Duration" class="form-control form-control-sm" placeholder="مدت زمان" /></div>
+                    <div class="col-md-1"><button type="submit" class="btn btn-sm sn-btn-primary w-100">+</button></div>
+                </div>
+                <div class="row g-2 mt-1">
+                    <div class="col-md-3 form-check form-switch ms-md-2">
+                        <input type="hidden" name="IsInstallmentAvailable" value="false" />
+                        <input type="checkbox" name="IsInstallmentAvailable" value="true" class="form-check-input" id="ci-@sec.Id" />
+                        <label class="form-check-label small" for="ci-@sec.Id">اقساطی</label>
+                    </div>
+                    <div class="col-md-3 form-check form-switch">
+                        <input type="hidden" name="HasFreeSupport" value="false" />
+                        <input type="checkbox" name="HasFreeSupport" value="true" class="form-check-input" id="cs-@sec.Id" />
+                        <label class="form-check-label small" for="cs-@sec.Id">پشتیبانی رایگان</label>
+                    </div>
+                    <div class="col-md-2 form-check form-switch">
+                        <input type="hidden" name="IsActive" value="false" />
+                        <input type="checkbox" name="IsActive" value="true" checked class="form-check-input" id="ca-@sec.Id" />
+                        <label class="form-check-label small" for="ca-@sec.Id">فعال</label>
+                    </div>
+                    <div class="col-md-2 form-check form-switch">
+                        <input type="hidden" name="IsPopular" value="false" />
+                        <input type="checkbox" name="IsPopular" value="true" class="form-check-input" id="cp-@sec.Id" />
+                        <label class="form-check-label small" for="cp-@sec.Id">محبوب‌ترین</label>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table sn-admin-table align-middle">
+                <thead>
+                    <tr><th style="width:180px">عنوان</th><th>قیمت / یادداشت</th><th>مدت</th><th>اقساط</th><th>پشتیبانی</th><th>محبوب</th><th>فعال</th><th style="width:120px"></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var pkg in sec.Packages.OrderBy(p => p.DisplayOrder))
+                    {
+                        <tr>
+                            <td colspan="8" class="p-0 border-bottom-0">
+                                <form asp-action="EditPackage" method="post" class="row g-1 align-items-center px-2 py-2 m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Id" value="@pkg.Id" />
+                                    <input type="hidden" name="TariffSectionId" value="@pkg.TariffSectionId" />
+                                    <div class="col-3">
+                                        <input name="Title" value="@pkg.Title" class="form-control form-control-sm" />
+                                        <div class="small text-muted mt-1">ترتیب: <input name="DisplayOrder" value="@pkg.DisplayOrder" class="form-control form-control-sm d-inline-block" style="width:60px" type="number" /></div>
+                                    </div>
+                                    <div class="col-2">
+                                        <input name="Price" value="@pkg.Price" class="form-control form-control-sm mb-1" type="number" placeholder="قیمت" />
+                                        <input name="PriceNote" value="@pkg.PriceNote" class="form-control form-control-sm" placeholder="یادداشت" />
+                                    </div>
+                                    <div class="col-2">
+                                        <input name="PriceSuffix" value="@pkg.PriceSuffix" class="form-control form-control-sm mb-1" placeholder="پسوند" />
+                                        <input name="Duration" value="@pkg.Duration" class="form-control form-control-sm" placeholder="مدت" />
+                                    </div>
+                                    <div class="col-1 text-center">
+                                        <input type="hidden" name="IsInstallmentAvailable" value="false" />
+                                        <input type="checkbox" name="IsInstallmentAvailable" value="true" @(pkg.IsInstallmentAvailable ? "checked" : "") class="form-check-input" />
+                                    </div>
+                                    <div class="col-1 text-center">
+                                        <input type="hidden" name="HasFreeSupport" value="false" />
+                                        <input type="checkbox" name="HasFreeSupport" value="true" @(pkg.HasFreeSupport ? "checked" : "") class="form-check-input" />
+                                    </div>
+                                    <div class="col-1 text-center">
+                                        <input type="hidden" name="IsPopular" value="false" />
+                                        <input type="checkbox" name="IsPopular" value="true" @(pkg.IsPopular ? "checked" : "") class="form-check-input" />
+                                    </div>
+                                    <div class="col-1 text-center">
+                                        <input type="hidden" name="IsActive" value="false" />
+                                        <input type="checkbox" name="IsActive" value="true" @(pkg.IsActive ? "checked" : "") class="form-check-input" />
+                                    </div>
+                                    <div class="col-1 text-center">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" title="ذخیره پکیج"><i class="bi bi-check-lg"></i></button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" class="pt-0">
+                                <div class="d-flex flex-wrap gap-2 align-items-start">
+                                    @* ردیف‌های ویژگی پکیج *@
+                                    @foreach (var item in pkg.Items.OrderBy(i => i.DisplayOrder))
+                                    {
+                                        <form asp-action="EditItem" method="post" class="d-flex align-items-center gap-1 border rounded-pill px-2 py-1 bg-light" style="font-size:.8rem">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input name="title" value="@item.Title" class="form-control form-control-sm border-0 bg-transparent px-1" style="width:180px;box-shadow:none" />
+                                            <button type="submit" class="btn btn-sm btn-link p-0 text-primary" title="ذخیره"><i class="bi bi-check2"></i></button>
+                                        </form>
+                                        <form method="post" action="/Admin/Tariffs/DeleteItem/@item.Id" class="d-flex align-items-center">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-link p-0 text-danger" title="حذف ردیف" onsubmit="return confirm('حذف شود؟')"><i class="bi bi-x"></i></button>
+                                        </form>
+                                    }
+                                    <form asp-action="AddItem" method="post" class="d-flex align-items-center gap-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="packageId" value="@pkg.Id" />
+                                        <input name="title" class="form-control form-control-sm" placeholder="ویژگی جدید…" style="width:170px" />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="افزودن"><i class="bi bi-plus-lg"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (!sec.Packages.Any())
+        {
+            <p class="text-muted small text-center my-2">هنوز پکیجی در این بخش ثبت نشده است.</p>
+        }
+    </div>
+}
+@if (!Model.Any())
+{
+    <div class="sn-admin-card">
+        <p class="text-muted text-center my-4 mb-0">هنوز بخش تعرفه‌ای ثبت نشده — از فرم بالا اولین بخش را اضافه کنید.</p>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // انتخاب گزینه صحیح Kind در فرم ویرایش بخش (asp-items مقدار مدل نمی‌داند)
+        document.querySelectorAll('select[data-selected]').forEach(function (sel) {
+            sel.value = sel.getAttribute('data-selected');
+        });
+    </script>
+}

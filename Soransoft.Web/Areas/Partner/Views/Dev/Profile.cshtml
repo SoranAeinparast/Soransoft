@@ -1,0 +1,61 @@
+@model Soransoft.Domain.Entities.Partner
+@{
+    ViewData["Title"] = "پروفایل فنی";
+    var memberships = ViewBag.Memberships as IEnumerable<Soransoft.Domain.Entities.ProjectMember> ?? Enumerable.Empty<Soransoft.Domain.Entities.ProjectMember>();
+    string LevelBadge(string? l) => (l ?? "").ToLowerInvariant() switch
+    {
+        "senior" => "bg-success",
+        "mid" => "bg-warning text-dark",
+        "junior" => "bg-info text-dark",
+        _ => "bg-secondary"
+    };
+    string LevelTitle(string? l) => (l ?? "").ToLowerInvariant() switch
+    {
+        "senior" => "Senior",
+        "mid" => "Mid-Level",
+        "junior" => "Junior",
+        _ => "—"
+    };
+}
+
+<div class="row g-3">
+    <div class="col-12 col-lg-5">
+        <div class="sn-admin-card h-100">
+            <h6 class="mb-3"><i class="bi bi-person-vcard me-2"></i>مشخصات من</h6>
+            <dl class="row mb-0 small">
+                <dt class="col-5">نام:</dt><dd class="col-7">@Model.FullName</dd>
+                <dt class="col-5">نام کاربری:</dt><dd class="col-7" dir="ltr">@Model.Username</dd>
+                <dt class="col-5">سطح تخصص:</dt>
+                <dd class="col-7"><span class="badge @LevelBadge(Model.TechLevel)">@LevelTitle(Model.TechLevel)</span></dd>
+                <dt class="col-5">ایمیل:</dt><dd class="col-7">@Model.Email</dd>
+                <dt class="col-5">موبایل:</dt><dd class="col-7" dir="ltr">@Model.Mobile</dd>
+            </dl>
+            <hr />
+            <h6 class="small">پروژه‌های من</h6>
+            @if (!memberships.Any())
+            {
+                <p class="small text-muted mb-0">عضو پروژه‌ای نیستید.</p>
+            }
+            <ul class="list-unstyled small mb-0">
+                @foreach (var m in memberships)
+                {
+                    <li class="mb-1"><i class="bi bi-check2 me-1 text-success"></i>@m.Project.Title @(string.IsNullOrWhiteSpace(m.RoleInProject) ? "" : $"— {m.RoleInProject}")</li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+        <div class="sn-admin-card h-100">
+            <h6 class="mb-3"><i class="bi bi-stack me-2"></i>مهارت‌های فنی (Stack)</h6>
+            <form asp-action="UpdateSkills" method="post">
+                <textarea name="skills" class="form-control" rows="8" placeholder="مثلاً:&#10;ASP.NET Core, C#, SQL Server&#10;React, TypeScript&#10;Docker, Git">@Model.Skills</textarea>
+                <button class="btn btn-primary mt-3"><i class="bi bi-save me-1"></i>ذخیره مهارت‌ها</button>
+            </form>
+            <p class="small text-muted mt-2 mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                مهارت‌های خود را با ویرگول جدا کنید؛ این اطلاعات در پروفایل فنی شما برای مدیر نمایش داده می‌شود.
+            </p>
+        </div>
+    </div>
+</div>

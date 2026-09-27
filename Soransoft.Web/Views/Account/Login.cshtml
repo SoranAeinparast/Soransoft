@@ -1,0 +1,54 @@
+@model Soransoft.Application.ViewModels.UserLoginViewModel
+@{
+    ViewData["Title"] = "ورود";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">ورود به حساب کاربری</h1>
+        <p class="sn-hero-text">برای پیگیری سفارش‌های خود وارد شوید</p>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-5">
+                <div class="sn-form-card">
+                    @if (TempData["Success"] is string success)
+                    {
+                        <div class="alert alert-success text-center">@success</div>
+                    }
+                    <form asp-action="Login" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <div class="mb-3">
+                            <label asp-for="Mobile" class="form-label"></label>
+                            <input asp-for="Mobile" class="form-control sn-input" dir="ltr" placeholder="09xxxxxxxxx" autofocus />
+                            <span asp-validation-for="Mobile" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control sn-input" dir="ltr" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label"></label>
+                        </div>
+                        <div asp-validation-summary="All" class="text-danger small mb-2"></div>
+                        <button type="submit" class="btn sn-btn-primary btn-lg w-100">ورود</button>
+                    </form>
+                    <div class="text-center mt-4">
+                        <p class="mb-1 text-muted">حساب کاربری ندارید؟</p>
+                        <a href="/Account/Register" class="btn sn-btn-outline">عضویت</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

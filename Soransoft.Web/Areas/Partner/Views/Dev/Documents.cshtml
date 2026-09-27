@@ -1,0 +1,61 @@
+@model List<Soransoft.Domain.Entities.DevProject>
+@{
+    ViewData["Title"] = "مستندات فنی";
+    string CatIcon(string c) => c switch
+    {
+        "Architecture" => "bi-diagram-3",
+        "Database" => "bi-database",
+        "API" => "bi-braces",
+        _ => "bi-file-text"
+    };
+    string CatTitle(string c) => c switch
+    {
+        "Architecture" => "معماری",
+        "Database" => "دیتابیس",
+        "API" => "API",
+        _ => "عمومی"
+    };
+}
+
+<h5 class="mb-3"><i class="bi bi-journal-code me-2"></i>مستندات فنی پروژه‌ها</h5>
+
+@if (!Model.Any())
+{
+    <div class="sn-admin-card">
+        <p class="text-muted mb-0">به هیچ پروژه‌ای عضو نیستید؛ پس از تخصیص پروژه توسط مدیر فنی، مستندات اینجا نمایش داده می‌شود.</p>
+    </div>
+}
+
+@foreach (var p in Model)
+{
+    <div class="sn-admin-card mb-3">
+        <h6><i class="bi bi-diagram-3 me-2"></i>@p.Title</h6>
+        @if (!string.IsNullOrWhiteSpace(p.StatusText))
+        {
+            <div class="small text-muted mb-3"><i class="bi bi-activity me-1"></i>وضعیت: @p.StatusText</div>
+        }
+        @if (!p.Documents.Any())
+        {
+            <p class="small text-muted mb-0">مستندی برای این پروژه ثبت نشده است.</p>
+        }
+        <div class="accordion" id="docs-@p.Id">
+            @foreach (var d in p.Documents.OrderBy(d => d.DisplayOrder))
+            {
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button @(d != p.Documents.OrderBy(x => x.DisplayOrder).First() ? "collapsed" : "")" type="button" data-bs-toggle="collapse" data-bs-target="#doc-@d.Id">
+                            <i class="bi @CatIcon(d.Category) me-2"></i>
+                            @d.Title
+                            <span class="badge bg-light text-dark border ms-2">@CatTitle(d.Category)</span>
+                        </button>
+                    </h2>
+                    <div id="doc-@d.Id" class="accordion-collapse collapse @(d == p.Documents.OrderBy(x => x.DisplayOrder).First() ? "show" : "")" data-bs-parent="#docs-@p.Id">
+                        <div class="accordion-body small">
+                            @Html.Raw(d.Body)
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

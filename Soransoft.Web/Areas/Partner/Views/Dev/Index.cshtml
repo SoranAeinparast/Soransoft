@@ -1,0 +1,74 @@
+@model List<Soransoft.Domain.Entities.DevTask>
+@{
+    ViewData["Title"] = "برد تسک‌ها";
+    var isTechManager = User.HasClaim("PartnerRole", "4");
+    string PrioBadge(Soransoft.Domain.Entities.TaskPriority p) => p switch
+    {
+        Soransoft.Domain.Entities.TaskPriority.Critical => "bg-danger",
+        Soransoft.Domain.Entities.TaskPriority.High => "bg-warning text-dark",
+        Soransoft.Domain.Entities.TaskPriority.Medium => "bg-info text-dark",
+        _ => "bg-secondary"
+    };
+    var columns = new (Soransoft.Domain.Entities.TaskStatus St, string Title, string Icon)[]
+    {
+        (Soransoft.Domain.Entities.TaskStatus.ToDo, "انجام نشده", "bi-inbox"),
+        (Soransoft.Domain.Entities.TaskStatus.InProgress, "در حال انجام", "bi-arrow-repeat"),
+        (Soransoft.Domain.Entities.TaskStatus.Testing, "در حال تست", "bi-bug"),
+        (Soransoft.Domain.Entities.TaskStatus.Done, "انجام شده", "bi-check2-circle"),
+    };
+    var next = new Dictionary<Soransoft.Domain.Entities.TaskStatus, (Soransoft.Domain.Entities.TaskStatus St, string Label)>
+    {
+        [Soransoft.Domain.Entities.TaskStatus.ToDo] = (Soransoft.Domain.Entities.TaskStatus.InProgress, "شروع کار"),
+        [Soransoft.Domain.Entities.TaskStatus.InProgress] = (Soransoft.Domain.Entities.TaskStatus.Testing, "ارسال به تست"),
+        [Soransoft.Domain.Entities.TaskStatus.Testing] = (Soransoft.Domain.Entities.TaskStatus.Done, "تایید نهایی"),
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h5 class="mb-0"><i class="bi bi-kanban me-2"></i>برد تسک‌های من</h5>
+    <a href="/Partner/Dev/TimeLogs" class="btn btn-sm btn-outline-primary"><i class="bi bi-stopwatch me-1"></i>ثبت زمان این تسک‌ها</a>
+</div>
+
+<div class="row g-3">
+    @foreach (var col in columns)
+    {
+        var items = Model.Where(t => t.Status == col.St).ToList();
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="sn-admin-card h-100">
+                <h6 class="mb-3"><i class="bi @col.Icon me-1"></i>@col.Title <span class="badge bg-secondary ms-1">@items.Count</span></h6>
+                @if (!items.Any())
+                {
+                    <p class="small text-muted mb-0">—</p>
+                }
+                @foreach (var t in items)
+                {
+                    <div class="border rounded-3 p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start gap-1">
+                            <strong class="small">@t.Title</strong>
+                            <span class="badge @PrioBadge(t.Priority)">@(t.Priority == Soransoft.Domain.Entities.TaskPriority.Critical ? "بحرانی" : t.Priority == Soransoft.Domain.Entities.TaskPriority.High ? "زیاد" : t.Priority == Soransoft.Domain.Entities.TaskPriority.Medium ? "متوسط" : "کم")</span>
+                        </div>
+                        <div class="small text-muted">@t.Project?.Title @(t.Sprint != null ? $"· {t.Sprint.Title}" : "")</div>
+                        @if (t.PartnerId != null && isTechManager)
+                        {
+                            <div class="small text-muted"><i class="bi bi-person me-1"></i>@t.Partner?.FullName</div>
+                        }
+                        @if (t.DueDate is DateTime d)
+                        {
+                            <div class="small @(d < DateTime.Now && t.Status != Soransoft.Domain.Entities.TaskStatus.Done ? "text-danger fw-bold" : "text-muted")">
+                                <i class="bi bi-calendar-event me-1"></i>@d.ToString("yyyy/MM/dd")
+                            </div>
+                        }
+                        @if (next.TryGetValue(col.St, out var n))
+                        {
+                            <form asp-action="ChangeTaskStatus" method="post" class="mt-2">
+                                <input type="hidden" name="id" value="@t.Id" />
+                                <input type="hidden" name="status" value="@((int)n.St)" />
+                                <button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-arrow-right me-1"></i>@n.Label</button>
+                            </form>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

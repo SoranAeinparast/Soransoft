@@ -1,0 +1,47 @@
+@model List<Soransoft.Application.ViewModels.PortfolioCardViewModel>
+@{
+    ViewData["Title"] = "نمونه کارها";
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">مهمان های کهکشان سوران سافت</h1>
+        <h2 class="sn-hero-subtitle">نمونه کارهای ما</h2>
+        <p class="sn-hero-text">مجموعه ای بی نظیر از مهمان های سوران سافت</p>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <div class="row g-4">
+            @foreach (var p in Model)
+            {
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="sn-portfolio-card @(p.ComingSoon ? "sn-soon" : "")">
+                        <div class="sn-portfolio-img">
+                            @if (!string.IsNullOrWhiteSpace(p.Image))
+                            {
+                                <img src="@p.Image" alt="@p.Title" loading="lazy" />
+                            }
+                            else
+                            {
+                                <i class="bi bi-window-sidebar"></i>
+                            }
+                        </div>
+                        <div class="sn-portfolio-body">
+                            <h3>@p.Title</h3>
+                            <p>@p.Description</p>
+                            @if (p.ComingSoon)
+                            {
+                                <span class="btn sn-btn-outline disabled">به زودی</span>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(p.Url))
+                            {
+                                <a href="@p.Url" target="_blank" rel="noopener" class="btn sn-btn-primary">مشاهده</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

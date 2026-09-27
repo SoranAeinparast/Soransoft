@@ -1,0 +1,82 @@
+@model Soransoft.Domain.Entities.ProjectOrder
+@using Soransoft.Web.Models
+@{
+    ViewData["Title"] = "جزئیات سفارش";
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">سفارش #@Model.Id</h1>
+        <p class="sn-hero-text">
+            وضعیت فعلی:
+            <span class="sn-badge @PanelDisplay.StatusBadgeClass(Model.Status)">@PanelDisplay.StatusTitle(Model.Status)</span>
+        </p>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="sn-form-card">
+                    <dl class="row mb-0">
+                        <dt class="col-5 col-md-4">نوع پروژه</dt>
+                        <dd class="col-7 col-md-8">@PanelDisplay.OrderTypeTitle(Model.ProjectType)</dd>
+                        <dt class="col-5 col-md-4">بودجه</dt>
+                        <dd class="col-7 col-md-8">@(Model.Budget?.ToString("N0") is string b ? b + " تومان" : "مشخص نشده")</dd>
+                        <dt class="col-5 col-md-4">تاریخ ثبت</dt>
+                        <dd class="col-7 col-md-8">@Model.CreatedAt.ToString("yyyy/MM/dd HH:mm")</dd>
+                        <dt class="col-5 col-md-4">توضیحات</dt>
+                        <dd class="col-7 col-md-8" style="line-height:2">@Model.Description</dd>
+                    </dl>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
+                    {
+                        <hr />
+                        <h6 class="fw-bold">یادداشت تیم سوران سافت</h6>
+                        <p class="mb-0" style="line-height:2">@Model.AdminNote</p>
+                    }
+                </div>
+
+                <!-- تایم‌لاین وضعیت -->
+                <div class="sn-timeline mt-5">
+                    @{
+                        var stages = new[] {
+                            (Soransoft.Domain.Enums.ProjectOrderStatus.New, "ثبت سفارش"),
+                            (Soransoft.Domain.Enums.ProjectOrderStatus.InReview, "بررسی"),
+                            (Soransoft.Domain.Enums.ProjectOrderStatus.Approved, "تایید"),
+                            (Soransoft.Domain.Enums.ProjectOrderStatus.InProgress, "اجرا"),
+                            (Soransoft.Domain.Enums.ProjectOrderStatus.Delivered, "تحویل"),
+                        };
+                        var currentIndex = Array.FindIndex(stages, s => s.Item1 == Model.Status);
+                        var cancelled = Model.Status == Soransoft.Domain.Enums.ProjectOrderStatus.Cancelled;
+                    }
+                    @foreach (var (status, title) in stages)
+                    {
+                        var stageIndex = Array.FindIndex(stages, s => s.Item1 == status);
+                        <div class="sn-timeline-step">
+                            <div class="sn-timeline-num @(cancelled ? "" : stageIndex <= currentIndex ? "sn-step-done" : "")">
+                                @if (!cancelled && stageIndex < currentIndex)
+                                {
+                                    <i class="bi bi-check2"></i>
+                                }
+                                else
+                                {
+                                    @(stageIndex + 1)
+                                }
+                            </div>
+                            <div class="sn-timeline-text">@title</div>
+                        </div>
+                    }
+                </div>
+                @if (cancelled)
+                {
+                    <p class="text-center text-danger mt-3">این سفارش لغو شده است. برای اطلاعات بیشتر با پشتیبانی تماس بگیرید.</p>
+                }
+
+                <div class="text-center mt-4">
+                    <a href="/Panel" class="btn sn-btn-outline">بازگشت به پنل</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,251 @@
+@using Soransoft.Application.ViewModels
+@model StorageOverview
+@{
+    ViewData["Title"] = "مصرف فضای ذخیره‌سازی";
+
+    // قالب‌بندی اندازه‌ها
+    static string Size(long bytes) =>
+        bytes >= 1L << 30 ? $"{bytes / (double)(1L << 30):N1} گیگابایت" :
+        bytes >= 1L << 20 ? $"{bytes / (double)(1L << 20):N1} مگابایت" :
+        bytes >= 1024 ? $"{bytes / 1024d:N0} کیلوبایت" : $"{bytes} بایت";
+
+    var totalPct = Model.DriveTotalBytes > 0
+        ? Math.Round((Model.DriveTotalBytes - Model.DriveFreeBytes) * 100d / Model.DriveTotalBytes, 1)
+        : 0;
+    var orphanPct = Model.TotalSizeBytes > 0
+        ? Math.Round(Model.TotalOrphanSizeBytes * 100d / Model.TotalSizeBytes, 1)
+        : 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>مصرف فضای ذخیره‌سازی</h5>
+    <div class="d-flex gap-2">
+        <a href="/Admin/MediaLibrary" class="btn btn-sm btn-outline-secondary"><i class="bi bi-folder2-open me-1"></i> کتابخانه رسانه</a>
+        <form method="post" action="/Admin/MediaLibrary/CleanupOrphans" class="d-inline"
+              onsubmit="return confirm('همه فایل‌های بدون ارجاع (@Model.TotalOrphans فایل — @Size(Model.TotalOrphanSizeBytes)) حذف شوند؟\n\nاین عمل قابل بازگشت نیست.');">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn sn-btn-primary btn-sm" @(Model.TotalOrphans == 0 ? "disabled" : "")>
+                <i class="bi bi-trash3 me-1"></i> پاکسازی فایل‌های بدون ارجاع
+            </button>
+        </form>
+    </div>
+</div>
+
+@* کارت‌های خلاصه *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-file-earmark-image"></i></div>
+            <div>
+                <div class="sn-stat-value">@Model.TotalFiles.ToString("N0")</div>
+                <div class="sn-stat-label">کل فایل‌ها</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-hdd"></i></div>
+            <div>
+                <div class="sn-stat-value">@Size(Model.TotalSizeBytes)</div>
+                <div class="sn-stat-label">حجم کل آپلودها</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card @(Model.TotalOrphans > 0 ? "sn-stat-danger" : "")">
+            <div class="sn-stat-icon"><i class="bi bi-file-earmark-x"></i></div>
+            <div>
+                <div class="sn-stat-value">@Model.TotalOrphans.ToString("N0")</div>
+                <div class="sn-stat-label">بدون ارجاع (@Size(Model.TotalOrphanSizeBytes))</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-device-hdd"></i></div>
+            <div>
+                <div class="sn-stat-value">@Size(Model.DriveFreeBytes)</div>
+                <div class="sn-stat-label">فضای آزاد درایو</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    @* نمودار سهم پوشه‌ها *@
+    <div class="col-12 col-lg-5">
+        <div class="sn-admin-card">
+            <h6 class="fw-bold mb-3">سهم هر پوشه از حجم آپلودها</h6>
+            <div style="height:300px"><canvas id="folderShareChart"></canvas></div>
+        </div>
+    </div>
+
+    @* نمودار سالم/بدون ارجاع + فضای درایو *@
+    <div class="col-12 col-lg-7">
+        <div class="sn-admin-card">
+            <h6 class="fw-bold mb-3">حجم سالم در برابر بدون ارجاع</h6>
+            <div style="height:300px"><canvas id="healthChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+@* جدول ریز پوشه‌ها *@
+<div class="sn-admin-card mb-4">
+    <h6 class="fw-bold mb-3">ریز پوشه‌های آپلود</h6>
+    <div class="table-responsive">
+        <table class="table sn-admin-table align-middle">
+            <thead>
+                <tr><th>پوشه</th><th>تعداد فایل</th><th>حجم</th><th>بدون ارجاع</th><th style="min-width:180px">سهم</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var f in Model.Folders)
+                {
+                    var share = Model.TotalSizeBytes > 0 ? Math.Round(f.SizeBytes * 100d / Model.TotalSizeBytes, 1) : 0;
+                    <tr>
+                        <td><i class="bi bi-folder me-1 text-warning"></i> @f.Name</td>
+                        <td>@f.FileCount.ToString("N0")</td>
+                        <td>@Size(f.SizeBytes)</td>
+                        <td>
+                            @if (f.OrphanCount > 0)
+                            {
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                    @f.OrphanCount فایل — @Size(f.OrphanSizeBytes)
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">—</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="progress" style="height:8px">
+                                <div class="progress-bar" style="width:@share%;background:#00b3a4"></div>
+                            </div>
+                            <small class="text-muted">@share٪</small>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@* فهرست فایل‌های بدون ارجاع *@
+<div class="sn-admin-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0 fw-bold">فایل‌های بدون ارجاع (@Model.TotalOrphans)</h6>
+        <span class="text-muted small">در هیچ مقاله، سرویس، نمونه‌کار، اسلایدر، عضو تیم یا تنظیماتی استفاده نشده‌اند</span>
+    </div>
+    @if (Model.TotalOrphans == 0)
+    {
+        <p class="text-muted text-center my-4">
+            <i class="bi bi-check2-circle d-block mb-2" style="font-size:1.6rem"></i>
+            همه فایل‌ها در حال استفاده هستند — چیزی برای پاکسازی نیست.
+        </p>
+    }
+    else
+    {
+        <div class="sn-media-grid">
+            @foreach (var f in Model.OrphanFiles.Take(24))
+            {
+                <div class="sn-media-card">
+                    <div class="sn-media-thumb">
+                        @if (f.IsImage)
+                        {
+                            <a href="@f.Url" target="_blank"><img src="@f.Url" alt="@f.FileName" loading="lazy" /></a>
+                        }
+                        else
+                        {
+                            <i class="bi bi-file-earmark" style="font-size:2rem;color:#7a8a94"></i>
+                        }
+                    </div>
+                    <div class="sn-media-meta">
+                        <span class="sn-media-name" dir="ltr">@f.FileName</span>
+                        <span class="sn-media-info">@Size(f.SizeBytes)</span>
+                    </div>
+                </div>
+            }
+        </div>
+        @if (Model.TotalOrphans > 24)
+        {
+            <p class="text-muted small mt-2 mb-0">و @(Model.TotalOrphans - 24) فایل دیگر…</p>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+        (function () {
+            'use strict';
+            Chart.defaults.font.family = "Vazirmatn, Tahoma, sans-serif";
+            Chart.defaults.color = "#7a8a94";
+
+            var folders = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                Model.Folders.Select(f => new { f.Name, f.SizeBytes, f.OrphanSizeBytes }).ToList()));
+            var healthy = folders.map(function (f) { return Math.max(f.sizeBytes - f.orphanSizeBytes, 0); });
+            var orphan = folders.map(function (f) { return f.orphanSizeBytes; });
+
+            function kb(v) { return (v / 1024).toFixed(0) + ' KB'; }
+
+            // ---------- سهم پوشه‌ها (دونات) ----------
+            new Chart(document.getElementById('folderShareChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: folders.map(function (f) { return f.name; }),
+                    datasets: [{
+                        data: folders.map(function (f) { return f.sizeBytes; }),
+                        backgroundColor: ['#00b3a4', '#4c7ef3', '#f5a623', '#e35d6a', '#9b59b6', '#2ecc71', '#95a5a6'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', rtl: true },
+                        tooltip: { callbacks: { label: function (c) { return c.label + ': ' + kb(c.raw); } } }
+                    }
+                }
+            });
+
+            // ---------- سالم در برابر بدون ارجاع (میله انباشته) ----------
+            new Chart(document.getElementById('healthChart'), {
+                type: 'bar',
+                data: {
+                    labels: folders.map(function (f) { return f.name; }),
+                    datasets: [
+                        {
+                            label: 'سالم (در حال استفاده)',
+                            data: healthy,
+                            backgroundColor: 'rgba(0,179,164,.65)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'بدون ارجاع',
+                            data: orphan,
+                            backgroundColor: 'rgba(227,93,106,.65)',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: { callback: function (v) { return kb(v); } }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', rtl: true },
+                        tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + kb(c.raw); } } }
+                    }
+                }
+            });
+        })();
+    </script>
+}

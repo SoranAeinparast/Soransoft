@@ -1,0 +1,47 @@
+@model List<ProjectOrder>
+@{
+    ViewData["Title"] = "سفارش‌های پروژه";
+}
+<h5 class="mb-4">سفارش‌های پروژه</h5>
+
+<div class="sn-admin-card">
+    <div class="table-responsive">
+        <table class="table sn-admin-table align-middle">
+            <thead>
+                <tr>
+                    <th>#</th><th>نام</th><th>موبایل</th><th>نوع پروژه</th><th>بودجه</th><th>وضعیت</th><th>تاریخ</th><th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.FullName</td>
+                        <td dir="ltr">@item.Mobile</td>
+                        <td>@item.ProjectType.ToString()</td>
+                        <td>@(item.Budget?.ToString("N0") ?? "—")</td>
+                        <td>
+                            <span class="badge @(item.Status == ProjectOrderStatus.New ? "bg-primary" : item.Status == ProjectOrderStatus.Delivered ? "bg-success" : item.Status == ProjectOrderStatus.Cancelled ? "bg-danger" : "bg-secondary")">
+                                @item.Status.ToString()
+                            </span>
+                        </td>
+                        <td class="small">@item.CreatedAt.ToString("yyyy/MM/dd")</td>
+                        <td class="text-nowrap">
+                            <a href="/Admin/ProjectOrders/Details/@item.Id" class="btn btn-sm btn-outline-primary">جزئیات</a>
+                            <form method="post" action="/Admin/ProjectOrders/Delete/@item.Id" class="d-inline"
+                                  onsubmit="return confirm('حذف شود؟')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <p class="text-muted text-center my-4">سفارشی ثبت نشده است.</p>
+    }
+</div>

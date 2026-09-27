@@ -1,0 +1,51 @@
+@model List<ConsultationRequest>
+@{
+    ViewData["Title"] = "درخواست‌های مشاوره";
+}
+<h5 class="mb-4">درخواست‌های مشاوره</h5>
+
+<div class="sn-admin-card">
+    <div class="table-responsive">
+        <table class="table sn-admin-table align-middle">
+            <thead>
+                <tr><th>#</th><th>نام</th><th>موبایل</th><th>سرویس</th><th>توضیح</th><th>وضعیت</th><th>تاریخ</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr class="@(item.Status == MessageStatus.Unread ? "fw-bold" : "")">
+                        <td>@item.Id</td>
+                        <td>@item.FullName</td>
+                        <td dir="ltr">@item.Mobile</td>
+                        <td>@item.ServiceKind.ToString()</td>
+                        <td class="small text-muted">@(item.Description is { Length: > 50 } ? item.Description[..50] + "…" : item.Description)</td>
+                        <td>
+                            <span class="badge @(item.Status == MessageStatus.Unread ? "bg-primary" : "bg-success")">
+                                @item.Status.ToString()
+                            </span>
+                        </td>
+                        <td class="small">@item.CreatedAt.ToString("yyyy/MM/dd")</td>
+                        <td class="text-nowrap">
+                            @if (item.Status == MessageStatus.Unread)
+                            {
+                                <form method="post" action="/Admin/ConsultationRequests/MarkAnswered/@item.Id" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-success">پاسخ داده شد</button>
+                                </form>
+                            }
+                            <form method="post" action="/Admin/ConsultationRequests/Delete/@item.Id" class="d-inline"
+                                  onsubmit="return confirm('حذف شود؟')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <p class="text-muted text-center my-4">درخواستی وجود ندارد.</p>
+    }
+</div>

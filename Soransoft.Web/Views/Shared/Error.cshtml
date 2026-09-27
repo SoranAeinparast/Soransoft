@@ -1,0 +1,15 @@
+@model Soransoft.Web.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "خطا";
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">اوه! مشکلی پیش آمد</h1>
+        <p class="sn-hero-subtitle">متوجه شدیم که خطایی رخ داده است. لطفاً دوباره تلاش کنید.</p>
+        @if (Model.ShowRequestId)
+        {
+            <p class="text-muted small" dir="ltr">Request ID: @Model.RequestId</p>
+        }
+        <a href="/" class="btn sn-btn-primary mt-3">بازگشت به خانه</a>
+    </div>
+</section>

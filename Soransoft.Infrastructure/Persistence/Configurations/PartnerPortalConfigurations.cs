@@ -1,0 +1,286 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Soransoft.Domain.Entities;
+
+namespace Soransoft.Infrastructure.Persistence.Configurations
+{
+    internal sealed class PartnerConfig : IEntityTypeConfiguration<Partner>
+    {
+        public void Configure(EntityTypeBuilder<Partner> b)
+        {
+            b.ToTable("Partners");
+            b.Property(x => x.Username).HasMaxLength(80).IsRequired();
+            b.HasIndex(x => x.Username).IsUnique();
+            b.Property(x => x.PasswordHash).HasMaxLength(500).IsRequired();
+            b.Property(x => x.FullName).HasMaxLength(150).IsRequired();
+            b.Property(x => x.Mobile).HasMaxLength(20);
+            b.Property(x => x.Email).HasMaxLength(200);
+            b.Property(x => x.TechLevel).HasMaxLength(60);
+            b.Property(x => x.Skills).HasMaxLength(500);
+            b.Property(x => x.AdminNote).HasColumnType("nvarchar(max)");
+        }
+    }
+
+    internal sealed class LeadConfig : IEntityTypeConfiguration<Lead>
+    {
+        public void Configure(EntityTypeBuilder<Lead> b)
+        {
+            b.ToTable("Leads");
+            b.Property(l => l.EstimatedAmount).HasColumnType("bigint");
+            b.Property(x => x.CustomerName).HasMaxLength(150).IsRequired();
+            b.Property(x => x.CustomerMobile).HasMaxLength(20).IsRequired();
+            b.Property(x => x.Requirement).HasColumnType("nvarchar(max)");
+            b.Property(x => x.AdminNote).HasColumnType("nvarchar(max)");
+            b.HasIndex(x => x.Stage);
+            b.HasMany(x => x.History).WithOne(x => x.Lead).HasForeignKey(x => x.LeadId).OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+
+    internal sealed class LeadHistoryConfig : IEntityTypeConfiguration<LeadHistory>
+    {
+        public void Configure(EntityTypeBuilder<LeadHistory> b)
+        {
+            b.ToTable("LeadHistories");
+            b.Property(x => x.Note).HasMaxLength(500);
+        }
+    }
+
+    internal sealed class PartnerContractConfig : IEntityTypeConfiguration<PartnerContract>
+    {
+        public void Configure(EntityTypeBuilder<PartnerContract> b)
+        {
+            b.ToTable("PartnerContracts");
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.CustomerName).HasMaxLength(150).IsRequired();
+            b.Property(x => x.ContractFile).HasMaxLength(300);
+            b.Property(x => x.Description).HasColumnType("nvarchar(max)");
+            b.HasIndex(x => x.Status);
+            b.HasMany(x => x.PaymentStages).WithOne(x => x.Contract).HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.ThirdPartyCosts).WithOne(x => x.Contract).HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.CommissionRates).WithOne(x => x.Contract).HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.Tickets).WithOne(x => x.Contract).HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+
+    internal sealed class ContractPaymentStageConfig : IEntityTypeConfiguration<ContractPaymentStage>
+    {
+        public void Configure(EntityTypeBuilder<ContractPaymentStage> b)
+        {
+            b.ToTable("ContractPaymentStages");
+            b.Property(x => x.Title).HasMaxLength(250).IsRequired();
+            b.Property(x => x.Description).HasColumnType("nvarchar(max)");
+            b.Property(x => x.PercentOfTotal).HasPrecision(5, 2);
+            b.Property(x => x.ReceiptFile).HasMaxLength(300);
+            b.Property(x => x.DocumentFile).HasMaxLength(300);
+            b.Property(x => x.DocumentNote).HasMaxLength(500);
+            b.Property(x => x.ChequeNo).HasMaxLength(60);
+            b.Property(x => x.ChequeBank).HasMaxLength(100);
+            b.Property(x => x.AdminNote).HasMaxLength(500);
+            b.HasIndex(x => new { x.ContractId, x.Number }).IsUnique();
+        }
+    }
+
+    internal sealed class ThirdPartyCostItemConfig : IEntityTypeConfiguration<ThirdPartyCostItem>
+    {
+        public void Configure(EntityTypeBuilder<ThirdPartyCostItem> b)
+        {
+            b.ToTable("ThirdPartyCostItems");
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.TechnicalSpecs).HasColumnType("nvarchar(max)");
+            b.Property(x => x.Description).HasColumnType("nvarchar(max)");
+            b.HasIndex(x => x.Type);
+        }
+    }
+
+    internal sealed class ContractThirdPartyCostConfig : IEntityTypeConfiguration<ContractThirdPartyCost>
+    {
+        public void Configure(EntityTypeBuilder<ContractThirdPartyCost> b)
+        {
+            b.ToTable("ContractThirdPartyCosts");
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.TechnicalSpecs).HasColumnType("nvarchar(max)");
+            b.Property(x => x.Note).HasMaxLength(500);
+            b.HasIndex(x => x.ContractId);
+            b.HasOne(x => x.Item).WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.SetNull);
+        }
+    }
+
+    internal sealed class CommissionRateConfig : IEntityTypeConfiguration<CommissionRate>
+    {
+        public void Configure(EntityTypeBuilder<CommissionRate> b)
+        {
+            b.ToTable("CommissionRates");
+            b.Property(r => r.Value).HasPrecision(18, 2);
+            b.Property(x => x.TiersJson).HasColumnType("nvarchar(max)");
+            b.HasIndex(x => new { x.ContractId, x.PartnerId }).IsUnique();
+        }
+    }
+
+    internal sealed class SupportTicketConfig : IEntityTypeConfiguration<SupportTicket>
+    {
+        public void Configure(EntityTypeBuilder<SupportTicket> b)
+        {
+            b.ToTable("SupportTickets");
+            b.Property(x => x.Subject).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Description).HasColumnType("nvarchar(max)");
+            b.Property(x => x.Response).HasColumnType("nvarchar(max)");
+            b.HasIndex(x => x.Status);
+        }
+    }
+
+    internal sealed class DevProjectConfig : IEntityTypeConfiguration<DevProject>
+    {
+        public void Configure(EntityTypeBuilder<DevProject> b)
+        {
+            b.ToTable("DevProjects");
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Description).HasColumnType("nvarchar(max)");
+            b.Property(x => x.StatusText).HasMaxLength(150);
+            b.HasMany(x => x.Tasks).WithOne(x => x.Project).HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.SetNull);
+            b.HasMany(x => x.Documents).WithOne(x => x.Project).HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.Members).WithOne(x => x.Project).HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.TimeLogs).WithOne(x => x.Project).HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.SetNull);
+        }
+    }
+
+    internal sealed class ProjectMemberConfig : IEntityTypeConfiguration<ProjectMember>
+    {
+        public void Configure(EntityTypeBuilder<ProjectMember> b)
+        {
+            b.ToTable("ProjectMembers");
+            b.Property(x => x.RoleInProject).HasMaxLength(120);
+            b.HasIndex(x => new { x.ProjectId, x.PartnerId }).IsUnique();
+        }
+    }
+
+    internal sealed class SprintConfig : IEntityTypeConfiguration<Sprint>
+    {
+        public void Configure(EntityTypeBuilder<Sprint> b)
+        {
+            b.ToTable("Sprints");
+            b.Property(x => x.Title).HasMaxLength(150).IsRequired();
+            b.Property(x => x.Goal).HasMaxLength(500);
+            b.HasMany(x => x.Tasks).WithOne(x => x.Sprint).HasForeignKey(x => x.SprintId).OnDelete(DeleteBehavior.SetNull);
+        }
+    }
+
+    internal sealed class DevTaskConfig : IEntityTypeConfiguration<DevTask>
+    {
+        public void Configure(EntityTypeBuilder<DevTask> b)
+        {
+            b.ToTable("DevTasks");
+            b.Property(x => x.Title).HasMaxLength(250).IsRequired();
+            b.Property(x => x.Description).HasColumnType("nvarchar(max)");
+            b.HasIndex(x => x.Status);
+            b.HasIndex(x => x.PartnerId);
+        }
+    }
+
+    internal sealed class TimeLogConfig : IEntityTypeConfiguration<TimeLog>
+    {
+        public void Configure(EntityTypeBuilder<TimeLog> b)
+        {
+            b.ToTable("TimeLogs");
+            b.Property(x => x.Note).HasMaxLength(500);
+            b.HasIndex(x => new { x.PartnerId, x.WorkDate });
+        }
+    }
+
+    internal sealed class ProjectDocumentConfig : IEntityTypeConfiguration<ProjectDocument>
+    {
+        public void Configure(EntityTypeBuilder<ProjectDocument> b)
+        {
+            b.ToTable("ProjectDocuments");
+            b.Property(x => x.Title).HasMaxLength(250).IsRequired();
+            b.Property(x => x.Body).HasColumnType("nvarchar(max)");
+            b.Property(x => x.Category).HasMaxLength(80).IsRequired();
+        }
+    }
+
+    internal sealed class AnnouncementConfig : IEntityTypeConfiguration<Announcement>
+    {
+        public void Configure(EntityTypeBuilder<Announcement> b)
+        {
+            b.ToTable("Announcements");
+            b.Property(x => x.Title).HasMaxLength(250).IsRequired();
+            b.Property(x => x.Body).HasColumnType("nvarchar(max)");
+            b.Property(x => x.Audience).HasMaxLength(20).IsRequired();
+        }
+    }
+
+    internal sealed class PartnerNotificationReadConfig : IEntityTypeConfiguration<PartnerNotificationRead>
+    {
+        public void Configure(EntityTypeBuilder<PartnerNotificationRead> b)
+        {
+            b.ToTable("PartnerNotificationReads");
+            b.HasIndex(x => new { x.AnnouncementId, x.PartnerId }).IsUnique();
+        }
+    }
+
+    internal sealed class CooperationAgreementConfig : IEntityTypeConfiguration<CooperationAgreement>
+    {
+        public void Configure(EntityTypeBuilder<CooperationAgreement> b)
+        {
+            b.ToTable("CooperationAgreements");
+            b.Property(x => x.AgreementNo).HasMaxLength(60).IsRequired();
+            b.HasIndex(x => x.AgreementNo).IsUnique();
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Subject).HasColumnType("nvarchar(max)");
+            b.Property(x => x.Terms).HasColumnType("nvarchar(max)");
+            b.Property(x => x.ContractFile).HasMaxLength(300);
+            b.Property(x => x.SettlementTerms).HasColumnType("nvarchar(max)");
+            b.Property(x => x.BankName).HasMaxLength(100);
+            b.Property(x => x.BankAccountIban).HasMaxLength(34);
+            b.Property(x => x.BankAccountHolder).HasMaxLength(150);
+            b.Property(x => x.AdminNote).HasColumnType("nvarchar(max)");
+            b.Property(x => x.CommissionValue).HasPrecision(18, 2);
+            b.HasIndex(x => new { x.PartnerId, x.Kind });
+        }
+    }
+
+    internal sealed class WalletTransactionConfig : IEntityTypeConfiguration<WalletTransaction>
+    {
+        public void Configure(EntityTypeBuilder<WalletTransaction> b)
+        {
+            b.ToTable("WalletTransactions");
+            b.Property(x => x.Amount).HasPrecision(18, 2);
+            b.Property(x => x.BalanceAfter).HasPrecision(18, 2);
+            b.Property(x => x.Description).HasMaxLength(500).IsRequired();
+            b.Property(x => x.Reference).HasMaxLength(120);
+            b.Property(x => x.DocumentFile).HasMaxLength(300);
+            b.Property(x => x.BankTrackingNo).HasMaxLength(80);
+            b.HasIndex(x => new { x.PartnerId, x.Status });
+            b.HasIndex(x => x.CreatedAt);
+            b.HasOne(x => x.Partner).WithMany().HasForeignKey(x => x.PartnerId).OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+
+    internal sealed class WithdrawalRequestConfig : IEntityTypeConfiguration<WithdrawalRequest>
+    {
+        public void Configure(EntityTypeBuilder<WithdrawalRequest> b)
+        {
+            b.ToTable("WithdrawalRequests");
+            b.Property(x => x.Amount).HasPrecision(18, 2);
+            b.Property(x => x.Note).HasColumnType("nvarchar(max)");
+            b.Property(x => x.AdminResponse).HasColumnType("nvarchar(max)");
+            b.Property(x => x.DestinationIban).HasMaxLength(34).IsRequired();
+            b.Property(x => x.DestinationBank).HasMaxLength(100).IsRequired();
+            b.Property(x => x.DestinationHolder).HasMaxLength(150).IsRequired();
+            b.HasIndex(x => x.Status);
+            b.HasOne(x => x.Partner).WithMany().HasForeignKey(x => x.PartnerId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne(x => x.WalletTransaction).WithMany().HasForeignKey(x => x.WalletTransactionId).OnDelete(DeleteBehavior.SetNull);
+        }
+    }
+
+    internal sealed class PasswordResetRequestConfig : IEntityTypeConfiguration<PasswordResetRequest>
+    {
+        public void Configure(EntityTypeBuilder<PasswordResetRequest> b)
+        {
+            b.ToTable("PasswordResetRequests");
+            b.Property(x => x.Message).HasColumnType("nvarchar(max)");
+            b.Property(x => x.AdminResponse).HasColumnType("nvarchar(max)");
+            b.HasIndex(x => x.Status);
+            b.HasOne(x => x.Partner).WithMany().HasForeignKey(x => x.PartnerId).OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+}

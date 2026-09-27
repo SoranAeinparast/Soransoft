@@ -1,0 +1,93 @@
+using Microsoft.EntityFrameworkCore;
+using Soransoft.Application.Interfaces;
+using Soransoft.Application.ViewModels;
+using Soransoft.Domain.Entities;
+
+namespace Soransoft.Infrastructure.Persistence
+{
+    /// <summary>پیاده‌سازی سرویس حساب کاربری کاربران عادی</summary>
+    public class UserAccountService : IUserAccountService
+    {
+        private readonly SoransoftDbContext _db;
+        private readonly IPasswordHasher _hasher;
+
+        public UserAccountService(SoransoftDbContext db, IPasswordHasher hasher)
+        {
+            _db = db;
+            _hasher = hasher;
+        }
+
+        public async Task<AuthResult> RegisterAsync(RegisterViewModel model, CancellationToken ct = default)
+        {
+            var mobile = model.Mobile.Trim();
+            if (await _db.SiteUsers.AnyAsync(u => u.Mobile == mobile, ct))
+                return AuthResult.Fail("این شماره موبایل قبلاً ثبت‌نام کرده است. وارد شوید یا شماره دیگری را امتحان کنید.");
+
+            var user = new SiteUser
+            {
+                FullName = model.FullName.Trim(),
+                Mobile = mobile,
+                Email = model.Email?.Trim() ?? string.Empty,
+                PasswordHash = _hasher.Hash(model.Password),
+                IsActive = true,
+                LastLoginAt = DateTime.Now,
+            };
+
+            _db.SiteUsers.Add(user);
+            await _db.SaveChangesAsync(ct);
+            return AuthResult.Ok(user, "ثبت‌نام با موفقیت انجام شد. خوش آمدید!");
+        }
+
+        public async Task<AuthResult> LoginAsync(UserLoginViewModel model, CancellationToken ct = default)
+        {
+            var mobile = model.Mobile.Trim();
+            var user = await _db.SiteUsers.FirstOrDefaultAsync(u => u.Mobile == mobile, ct);
+
+            if (user is null || !user.IsActive)
+                return AuthResult.Fail("کاربری با این شماره موبایل یافت نشد");
+
+            if (!_hasher.Verify(model.Password, user.PasswordHash))
+                return AuthResult.Fail("رمز عبور اشتباه است");
+
+            user.LastLoginAt = DateTime.Now;
+            await _db.SaveChangesAsync(ct);
+            return AuthResult.Ok(user, "ورود موفق. خوش آمدید!");
+        }
+
+        public Task<SiteUser?> GetByIdAsync(int userId, CancellationToken ct = default) =>
+            _db.SiteUsers.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, ct);
+
+        public async Task<AuthResult> UpdateProfileAsync(int userId, UserProfileViewModel model, CancellationToken ct = default)
+        {
+            var user = await _db.SiteUsers.FirstOrDefaultAsync(u => u.Id == userId, ct);
+            if (user is null) return AuthResult.Fail("کاربر یافت نشد");
+
+            user.FullName = model.FullName.Trim();
+            user.Email = model.Email?.Trim() ?? string.Empty;
+            await _db.SaveChangesAsync(ct);
+            return AuthResult.Ok(user, "پروفایل با موفقیت به‌روزرسانی شد");
+        }
+
+        public async Task<AuthResult> ChangePasswordAsync(int userId, ChangePasswordViewModel model, CancellationToken ct = default)
+        {
+            var user = await _db.SiteUsers.FirstOrDefaultAsync(u => u.Id == userId, ct);
+            if (user is null) return AuthResult.Fail("کاربر یافت نشد");
+
+            if (!_hasher.Verify(model.CurrentPassword, user.PasswordHash))
+                return AuthResult.Fail("رمز عبور فعلی اشتباه است");
+
+            if (_hasher.Verify(model.NewPassword, user.PasswordHash))
+                return AuthResult.Fail("رمز عبور جدید نباید با رمز فعلی یکسان باشد");
+
+            user.PasswordHash = _hasher.Hash(model.NewPassword);
+            await _db.SaveChangesAsync(ct);
+            return AuthResult.Ok(user, "رمز عبور با موفقیت تغییر کرد");
+        }
+
+        public Task<List<ProjectOrder>> GetUserOrdersAsync(int userId, CancellationToken ct = default) =>
+            _db.ProjectOrders.AsNoTracking()
+                .Where(o => o.SiteUserId == userId)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync(ct);
+    }
+}

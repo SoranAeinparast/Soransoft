@@ -1,0 +1,79 @@
+@model List<ArticleCategory>
+@{
+    ViewData["Title"] = "دسته‌بندی مقالات";
+}
+<h5 class="mb-4">دسته‌بندی مقالات</h5>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-4">
+        <div class="sn-admin-card">
+            <h6 class="fw-bold mb-3">افزودن دسته‌بندی</h6>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">عنوان</label>
+                    <input name="Title" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">اسلاگ</label>
+                    <input name="Slug" class="form-control" dir="ltr" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">ترتیب</label>
+                    <input name="DisplayOrder" class="form-control" type="number" value="1" />
+                </div>
+                <button type="submit" class="btn sn-btn-primary w-100">افزودن</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-12 col-lg-8">
+        <div class="sn-admin-card">
+            <div class="table-responsive">
+                <table class="table sn-admin-table align-middle">
+                    <thead>
+                        <tr><th>#</th><th>عنوان</th><th>اسلاگ</th><th>فعال</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>
+                                    <form asp-action="Edit" method="post" class="d-flex gap-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="Id" value="@item.Id" />
+                                        <input type="hidden" name="Slug" value="@item.Slug" />
+                                        <input type="hidden" name="DisplayOrder" value="@item.DisplayOrder" />
+                                        <input name="Title" value="@item.Title" class="form-control form-control-sm" />
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">ثبت</button>
+                                    </form>
+                                </td>
+                                <td dir="ltr" class="small">@item.Slug</td>
+                                <td>
+                                    <form asp-action="Edit" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="Id" value="@item.Id" />
+                                        <input type="hidden" name="Title" value="@item.Title" />
+                                        <input type="hidden" name="Slug" value="@item.Slug" />
+                                        <input type="hidden" name="DisplayOrder" value="@item.DisplayOrder" />
+                                        <input type="hidden" name="IsActive" value="@(item.IsActive ? "false" : "true")" />
+                                        <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-success" : "btn-outline-secondary")">
+                                            @(item.IsActive ? "فعال" : "غیرفعال")
+                                        </button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="post" action="/Admin/ArticleCategories/Delete/@item.Id"
+                                          onsubmit="return confirm('حذف شود؟')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

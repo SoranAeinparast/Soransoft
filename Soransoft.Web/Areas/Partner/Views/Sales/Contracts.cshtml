@@ -1,0 +1,149 @@
+@model List<Soransoft.Domain.Entities.PartnerContract>
+@{
+    ViewData["Title"] = "مراحل پرداخت قراردادها";
+    string StatusBadge(Soransoft.Domain.Entities.ContractStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.ContractStatus.PendingApproval => "bg-warning text-dark",
+        Soransoft.Domain.Entities.ContractStatus.Active => "bg-success",
+        Soransoft.Domain.Entities.ContractStatus.Finished => "bg-secondary",
+        _ => "bg-danger"
+    };
+    string StatusTitle(Soransoft.Domain.Entities.ContractStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.ContractStatus.PendingApproval => "در انتظار تایید",
+        Soransoft.Domain.Entities.ContractStatus.Active => "فعال",
+        Soransoft.Domain.Entities.ContractStatus.Finished => "خاتمه یافته",
+        _ => "لغو شده"
+    };
+    string StageBadge(Soransoft.Domain.Entities.PaymentStageStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.PaymentStageStatus.Paid => "bg-success",
+        Soransoft.Domain.Entities.PaymentStageStatus.AwaitingApproval => "bg-warning text-dark",
+        Soransoft.Domain.Entities.PaymentStageStatus.Rejected => "bg-danger",
+        _ => "bg-light text-dark border"
+    };
+    string StageTitle(Soransoft.Domain.Entities.PaymentStageStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.PaymentStageStatus.Paid => "پرداخت شده",
+        Soransoft.Domain.Entities.PaymentStageStatus.AwaitingApproval => "در انتظار تایید",
+        Soransoft.Domain.Entities.PaymentStageStatus.Rejected => "رسید رد شده",
+        _ => "پرداخت نشده"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>مراحل پرداخت قراردادهای مشتریان (@Model.Count)</h5>
+    <a href="/Partner/Sales/Commissions" class="btn btn-sm btn-outline-primary"><i class="bi bi-cash-stack me-1"></i>عملکرد و کمیسیون</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="sn-admin-card"><p class="text-muted mb-0">قرارداد مشتری ثبت نشده است. با بستن هر قرارداد، مدیر آن را اینجا ایجاد می‌کند.</p></div>
+}
+
+@foreach (var c in Model)
+{
+    var stages = c.PaymentStages.OrderBy(i => i.Number).ToList();
+    var paid = stages.Where(i => i.Status == Soransoft.Domain.Entities.PaymentStageStatus.Paid).Sum(i => (long)i.Amount);
+    var paidCount = stages.Count(i => i.Status == Soransoft.Domain.Entities.PaymentStageStatus.Paid);
+    var thirdParty = c.ThirdPartyCosts.Where(x => x.DeductFromFirstPayment).Sum(x => x.Amount);
+    <div class="sn-admin-card mb-3">
+        <div class="d-flex justify-content-between flex-wrap gap-2 align-items-start">
+            <div>
+                <h6 class="mb-1">@c.Title</h6>
+                <div class="small text-muted">مشتری: @c.CustomerName</div>
+                @if (c.LicenseExpiresAt is DateTime exp)
+                {
+                    var days = (exp - DateTime.Now).Days;
+                    <div class="small @(days < 30 ? "text-danger" : "text-muted")">
+                        <i class="bi bi-shield-check me-1"></i>انقضای لایسنس: @exp.ToString("yyyy/MM/dd") @(days < 30 ? $"({days} روز مانده)" : "")
+                    </div>
+                }
+            </div>
+            <div class="text-start">
+                <span class="badge @StatusBadge(c.Status)">@StatusTitle(c.Status)</span>
+                <div class="small mt-1">@c.TotalAmount.ToString("N0") تومان</div>
+            </div>
+        </div>
+
+        @if (stages.Any())
+        {
+            <div class="mt-2 small">
+                <strong>مراحل پرداخت:</strong> از @stages.Count مرحله، @paidCount پرداخت شده
+                <div class="progress mt-1" style="height:8px">
+                    <div class="progress-bar bg-success" style="width:@(stages.Count == 0 ? 0 : paidCount * 100 / stages.Count)%"></div>
+                </div>
+            </div>
+            <div class="table-responsive mt-2">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>عنوان مرحله</th><th>درصد</th><th>مبلغ</th><th>موعد</th><th>وضعیت</th><th>رسید/سند</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var i in stages)
+                        {
+                            <tr>
+                                <td>@i.Number</td>
+                                <td>
+                                    <div>@i.Title</div>
+                                    @if (!string.IsNullOrWhiteSpace(i.Description))
+                                    {
+                                        <div class="small text-muted">@i.Description</div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(i.DocumentNote))
+                                    {
+                                        <div class="small text-muted"><i class="bi bi-paperclip me-1"></i>@i.DocumentNote</div>
+                                    }
+                                </td>
+                                <td>@(i.PercentOfTotal is decimal p ? $"{p:0.##}%" : "—")</td>
+                                <td>@i.Amount.ToString("N0")</td>
+                                <td>@(i.DueDate?.ToString("yyyy/MM/dd") ?? "—")</td>
+                                <td><span class="badge @StageBadge(i.Status)">@StageTitle(i.Status)</span></td>
+                                <td class="small">
+                                    @if (!string.IsNullOrWhiteSpace(i.ReceiptFile))
+                                    {
+                                        <a href="@i.ReceiptFile" target="_blank" class="me-2"><i class="bi bi-receipt"></i> رسید</a>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(i.DocumentFile))
+                                    {
+                                        <a href="@i.DocumentFile" target="_blank"><i class="bi bi-file-earmark-text"></i> سند</a>
+                                    }
+                                    @if (string.IsNullOrWhiteSpace(i.ReceiptFile) && string.IsNullOrWhiteSpace(i.DocumentFile))
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="small text-muted mt-2 mb-0">مرحله پرداختی برای این قرارداد تعریف نشده است (توسط مدیر تعریف می‌شود).</p>
+        }
+
+        @if (thirdParty > 0)
+        {
+            <div class="alert alert-light border small mt-2 mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                هزینه‌های شخص ثالث این قرارداد: <strong>@thirdParty.ToString("N0")</strong> تومان —
+                از اولین پرداخت مشتری کسر و مبنای پورسانت من = مبلغ دریافتی منهای این هزینه‌ها.
+            </div>
+        }
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-2 border-top">
+            @if (!string.IsNullOrWhiteSpace(c.ContractFile))
+            {
+                <a href="@c.ContractFile" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-pdf me-1"></i>مشاهده قرارداد (PDF)</a>
+            }
+            <form asp-action="UploadContract" method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                <input type="hidden" name="id" value="@c.Id" />
+                <input type="file" name="file" accept=".pdf" class="form-control form-control-sm" style="max-width:260px" required />
+                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-upload"></i> بارگذاری PDF</button>
+            </form>
+            <span class="small text-muted">پرداخت‌شده: @paid.ToString("N0") تومان</span>
+        </div>
+    </div>
+}

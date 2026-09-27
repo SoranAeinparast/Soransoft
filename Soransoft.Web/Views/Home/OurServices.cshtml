@@ -1,0 +1,36 @@
+@model Soransoft.Web.Models.OurServicesViewModel
+@{
+    ViewData["Title"] = "خدمات ما";
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">خدمات سایت سوران سافت</h1>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        @foreach (var service in Model.Services)
+        {
+            <div class="row g-4 align-items-center mb-5 pb-4">
+                <div class="col-12">
+                    <div class="sn-service-wide @(service.ComingSoon ? "sn-soon" : "")">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="sn-service-icon"><i class="bi @service.Icon"></i></div>
+                            <h2 class="mb-0">@service.Title</h2>
+                        </div>
+                        <p class="sn-service-desc">@service.ShortDescription</p>
+                        @if (service.ComingSoon)
+                        {
+                            <span class="btn sn-btn-outline disabled">به زودی</span>
+                        }
+                        else
+                        {
+                            <a href="/@service.Slug" class="btn sn-btn-primary">بیشتر بدانید</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>

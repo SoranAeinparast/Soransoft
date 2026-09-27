@@ -1,0 +1,7 @@
+<Solution>
+  <!-- Web first = default startup project in Visual Studio -->
+  <Project Path="Soransoft.Web/Soransoft.Web.csproj" />
+  <Project Path="Soransoft.Domain/Soransoft.Domain.csproj" />
+  <Project Path="Soransoft.Application/Soransoft.Application.csproj" />
+  <Project Path="Soransoft.Infrastructure/Soransoft.Infrastructure.csproj" />
+</Solution>

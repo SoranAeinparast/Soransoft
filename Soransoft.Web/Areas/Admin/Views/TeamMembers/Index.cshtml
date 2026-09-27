@@ -1,0 +1,154 @@
+@model List<TeamMember>
+@{
+    ViewData["Title"] = "اعضای تیم";
+}
+<h5 class="mb-4">اعضای تیم</h5>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-4">
+        <div class="sn-admin-card">
+            <h6 class="fw-bold mb-3">افزودن عضو</h6>
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">نام و نام خانوادگی</label>
+                    <input name="FullName" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">سمت</label>
+                    <input name="Role" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">تصویر</label>
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">لینک لینکدین (اختیاری)</label>
+                    <input name="LinkedinUrl" class="form-control" dir="ltr" placeholder="https://linkedin.com/in/…" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">ترتیب نمایش</label>
+                    <input name="DisplayOrder" class="form-control" type="number" value="1" />
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input type="hidden" name="IsActive" value="false" />
+                    <input type="checkbox" name="IsActive" value="true" checked class="form-check-input" id="ntActive" />
+                    <label class="form-check-label" for="ntActive">فعال</label>
+                </div>
+                <button type="submit" class="btn sn-btn-primary w-100">افزودن</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-12 col-lg-8">
+        <div class="sn-admin-card">
+            @if (!Model.Any())
+            {
+                <p class="text-muted text-center my-4 mb-0">عضوی ثبت نشده است.</p>
+            }
+            <div class="table-responsive">
+                <table class="table sn-admin-table align-middle">
+                    <thead>
+                        <tr><th>#</th><th style="width:70px">تصویر</th><th>نام</th><th>سمت</th><th>لینکدین</th><th>ترتیب</th><th>فعال</th><th style="width:190px"></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.Image))
+                                    {
+                                        <img src="@item.Image" alt="" class="rounded" style="width:46px;height:46px;object-fit:cover" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">—</span>
+                                    }
+                                </td>
+                                <td colspan="2" class="p-0">
+                                    <form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-1 align-items-center px-2 py-2 m-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="Id" value="@item.Id" />
+                                        <input type="hidden" name="Image" value="@item.Image" />
+                                        <div class="col-12 col-md-5"><input name="FullName" value="@item.FullName" class="form-control form-control-sm" /></div>
+                                        <div class="col-12 col-md-5"><input name="Role" value="@item.Role" class="form-control form-control-sm" /></div>
+                                        <div class="col-12 col-md-2"><button type="submit" class="btn btn-sm btn-outline-primary w-100">ثبت</button></div>
+                                    </form>
+                                </td>
+                                <td class="small">
+                                    @if (!string.IsNullOrWhiteSpace(item.LinkedinUrl))
+                                    {
+                                        <a href="@item.LinkedinUrl" target="_blank" rel="noopener" dir="ltr">لینکدین</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <form asp-action="Edit" method="post" class="d-inline-flex align-items-center gap-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="Id" value="@item.Id" />
+                                        <input type="hidden" name="FullName" value="@item.FullName" />
+                                        <input type="hidden" name="Role" value="@item.Role" />
+                                        <input type="hidden" name="Image" value="@item.Image" />
+                                        <input type="hidden" name="LinkedinUrl" value="@item.LinkedinUrl" />
+                                        <input type="hidden" name="IsActive" value="@item.IsActive.ToString().ToLower()" />
+                                        <input name="DisplayOrder" value="@item.DisplayOrder" class="form-control form-control-sm" type="number" style="width:64px" />
+                                        <button type="submit" class="btn btn-sm btn-link p-0 text-primary" title="ذخیره ترتیب"><i class="bi bi-check2"></i></button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="post" action="/Admin/TeamMembers/Toggle/@item.Id" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-success" : "btn-outline-secondary")">
+                                            @(item.IsActive ? "فعال" : "غیرفعال")
+                                        </button>
+                                    </form>
+                                </td>
+                                <td class="text-nowrap">
+                                    @* تغییر تصویر عضو *@
+                                    <details class="d-inline-block me-1">
+                                        <summary class="btn btn-sm btn-outline-secondary d-inline-flex" style="list-style:none;cursor:pointer">تصویر</summary>
+                                        <form asp-action="Edit" method="post" enctype="multipart/form-data" class="mt-1 p-2 border rounded bg-light">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Id" value="@item.Id" />
+                                            <input type="hidden" name="FullName" value="@item.FullName" />
+                                            <input type="hidden" name="Role" value="@item.Role" />
+                                            <input type="hidden" name="Image" value="@item.Image" />
+                                            <input type="hidden" name="LinkedinUrl" value="@item.LinkedinUrl" />
+                                            <input type="hidden" name="DisplayOrder" value="@item.DisplayOrder" />
+                                            <input type="hidden" name="IsActive" value="@item.IsActive.ToString().ToLower()" />
+                                            <input type="file" name="imageFile" class="form-control form-control-sm mb-2" accept="image/*" required />
+                                            <button type="submit" class="btn btn-sm btn-primary w-100">آپلود</button>
+                                        </form>
+                                    </details>
+                                    @* ویرایش لینکدین *@
+                                    <details class="d-inline-block me-1">
+                                        <summary class="btn btn-sm btn-outline-secondary d-inline-flex" style="list-style:none;cursor:pointer">لینکدین</summary>
+                                        <form asp-action="Edit" method="post" class="mt-1 p-2 border rounded bg-light">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Id" value="@item.Id" />
+                                            <input type="hidden" name="FullName" value="@item.FullName" />
+                                            <input type="hidden" name="Role" value="@item.Role" />
+                                            <input type="hidden" name="Image" value="@item.Image" />
+                                            <input type="hidden" name="DisplayOrder" value="@item.DisplayOrder" />
+                                            <input type="hidden" name="IsActive" value="@item.IsActive.ToString().ToLower()" />
+                                            <input name="LinkedinUrl" value="@item.LinkedinUrl" class="form-control form-control-sm mb-2" dir="ltr" placeholder="https://…" />
+                                            <button type="submit" class="btn btn-sm btn-primary w-100">ذخیره</button>
+                                        </form>
+                                    </details>
+                                    <form method="post" action="/Admin/TeamMembers/Delete/@item.Id" class="d-inline"
+                                          onsubmit="return confirm('حذف شود؟')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

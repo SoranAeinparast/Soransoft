@@ -1,0 +1,153 @@
+@using Soransoft.Application.ViewModels
+@model IReadOnlyList<MediaFileItem>
+@{
+    ViewData["Title"] = "کتابخانه رسانه";
+    var folders = (IReadOnlyList<MediaFolder>)ViewData["Folders"]!;
+    var current = (string?)ViewData["CurrentFolder"];
+    var usage = (IDictionary<string, IReadOnlyList<MediaUsageRef>>)ViewData["Usage"]!;
+
+    string SizeText(long bytes) => bytes < 1024 ? $"{bytes} بایت" : $"{bytes / 1024d:N0} کیلوبایت";
+
+    // متن هشدار حذف — برای تصاویرِ در حال استفاده، فهرست محل‌های استفاده ذکر می‌شود
+    string DeleteConfirm(List<MediaUsageRef> refs, string name)
+    {
+        if (refs.Count == 0)
+            return $"فایل «{name}» برای همیشه حذف شود؟ این عمل قابل بازگشت نیست.";
+        var places = string.Join("، ", refs.Select(r => $"{r.KindTitle} «{r.Title}» ({r.Field})"));
+        return $"⚠️ هشدار: فایل «{name}» در حال استفاده است!\n\nمحل‌های استفاده:\n{places}\n\nبا حذف، تصویر در این محتواها نمایش داده نمی‌شود. مطمئنید که حذف شود؟";
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h5 class="mb-0"><i class="bi bi-folder2-open me-2"></i>کتابخانه رسانه</h5>
+    <form method="post" action="/Admin/MediaLibrary/Upload" enctype="multipart/form-data" class="d-flex gap-2 align-items-center flex-wrap">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="folder" value="@current" />
+        <input type="file" name="file" accept=".jpg,.jpeg,.png,.gif,.webp,.svg" class="form-control form-control-sm" required />
+        <button type="submit" class="btn sn-btn-primary btn-sm"><i class="bi bi-upload me-1"></i> آپلود</button>
+    </form>
+</div>
+
+@* فیلتر پوشه‌ها *@
+<div class="mb-3 d-flex flex-wrap gap-2">
+    <a class="btn btn-sm @(string.IsNullOrWhiteSpace(current) ? "sn-btn-primary" : "btn-outline-secondary")"
+       href="/Admin/MediaLibrary">همه فایل‌ها</a>
+    @foreach (var f in folders)
+    {
+        <a class="btn btn-sm @(current == f.Name ? "sn-btn-primary" : "btn-outline-secondary")"
+           href="/Admin/MediaLibrary?folder=@f.Name">
+            <i class="bi bi-folder me-1"></i>@f.Name
+            <span class="badge bg-light text-dark ms-1">@f.FileCount</span>
+        </a>
+    }
+</div>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted text-center my-5">
+            <i class="bi bi-images d-block mb-2" style="font-size:2rem"></i>
+            هنوز فایلی آپلود نشده است. با دکمه «آپلود» یا از داخل ویرایشگر تصویر اضافه کنید.
+        </p>
+    }
+    else
+    {
+        <div class="sn-media-grid">
+            @foreach (var item in Model)
+            {
+                var refs = usage.TryGetValue(item.Url, out var u) ? u.ToList() : new List<MediaUsageRef>();
+                <div class="sn-media-card @(refs.Count > 0 ? "sn-media-inuse" : "")">
+                    <div class="sn-media-thumb">
+                        @if (item.IsImage)
+                        {
+                            <a href="@item.Url" target="_blank" title="مشاهده در اندازه اصلی">
+                                <img src="@item.Url" alt="@item.FileName" loading="lazy" />
+                            </a>
+                        }
+                        else
+                        {
+                            <i class="bi bi-file-earmark" style="font-size:2rem;color:#7a8a94"></i>
+                        }
+                    </div>
+                    <div class="sn-media-meta">
+                        <span class="sn-media-name" title="@item.FileName" dir="ltr">@item.FileName</span>
+                        <span class="sn-media-info">@SizeText(item.SizeBytes)</span>
+                    </div>
+
+                    @* وضعیت استفاده در محتوا *@
+                    @if (refs.Count > 0)
+                    {
+                        var kinds = refs.Select(r => r.KindTitle).Distinct().ToList();
+                        <div class="sn-media-usage">
+                            <span class="sn-usage-badge" title="@string.Join("، ", refs.Select(r => $"{r.KindTitle} «{r.Title}» ({r.Field})"))">
+                                <i class="bi bi-link-45deg"></i>
+                                در حال استفاده در @string.Join("، ", kinds)
+                            </span>
+                            <ul class="sn-usage-list">
+                                @foreach (var r in refs)
+                                {
+                                    <li>
+                                        @if (!string.IsNullOrEmpty(r.EditUrl))
+                                        {
+                                            <a href="@r.EditUrl" title="ویرایش این @r.KindTitle">
+                                                @r.KindTitle: @r.Title <small>(@r.Field)</small>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span>@r.KindTitle: @r.Title <small>(@r.Field)</small></span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="sn-media-usage">
+                            <span class="sn-usage-badge sn-usage-free"><i class="bi bi-check2"></i> بدون استفاده</span>
+                        </div>
+                    }
+
+                    <div class="sn-media-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary sn-copy-link" data-url="@item.Url"
+                                title="کپی لینک تصویر">
+                            <i class="bi bi-clipboard"></i> کپی لینک
+                        </button>
+                        <form method="post" action="/Admin/MediaLibrary/Delete" class="d-inline"
+                              onsubmit="return confirm('@DeleteConfirm(refs, item.FileName).Replace("'", "&#39;")');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="path" value="@item.Url" />
+                            <input type="hidden" name="folder" value="@current" />
+                            @* تأیید دیالوگ هشدار = پذیرش حذف سمت سرور نیز هست *@
+                            <input type="hidden" name="force" value="true" />
+                            <button type="submit" class="btn btn-sm @(refs.Count > 0 ? "btn-danger" : "btn-outline-danger")"
+                                    title="@(refs.Count > 0 ? "حذف — در حال استفاده!" : "حذف فایل")">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // کپی لینک فایل — با delegation تا بعد از هر رندر هم کار کند
+        document.addEventListener('click', async function (e) {
+            var btn = e.target.closest('.sn-copy-link');
+            if (!btn) return;
+            var url = new URL(btn.dataset.url, window.location.origin).href;
+            try {
+                await navigator.clipboard.writeText(url);
+                var original = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check2"></i> کپی شد';
+                setTimeout(function () { btn.innerHTML = original; }, 1500);
+            } catch {
+                btn.title = url;
+            }
+        });
+    </script>
+}

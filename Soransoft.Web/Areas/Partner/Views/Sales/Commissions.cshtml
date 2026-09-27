@@ -1,0 +1,109 @@
+@{
+    ViewData["Title"] = "عملکرد و کمیسیون";
+    var rows = ViewBag.Rows as List<CommissionRow>;
+    var hasAgreement = ViewBag.HasActiveAgreement as bool? ?? false;
+    string MethodTitle(Soransoft.Domain.Entities.CommissionMethod m) => m switch
+    {
+        Soransoft.Domain.Entities.CommissionMethod.FixedPercent => "درصدی ثابت",
+        Soransoft.Domain.Entities.CommissionMethod.FixedAmount => "مبلغ ثابت",
+        _ => "پله‌ای"
+    };
+    var totalCommission = rows?.Sum(r => r.Commission) ?? 0m;
+    var totalSales = rows?.Sum(r => r.Paid) ?? 0;
+    var totalThirdParty = rows?.Sum(r => r.ThirdParty) ?? 0;
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="sn-stat-card sn-stat-success"><i class="bi bi-graph-up-arrow"></i>
+            <div><span class="sn-stat-value">@totalSales.ToString("N0")</span><span class="sn-stat-label">مراحل پرداخت‌شده (تومان)</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sn-stat-card sn-stat-info"><i class="bi bi-receipt"></i>
+            <div><span class="sn-stat-value">@totalThirdParty.ToString("N0")</span><span class="sn-stat-label">هزینه شخص ثالث (کسر‌شده)</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sn-stat-card sn-stat-primary"><i class="bi bi-cash-stack"></i>
+            <div><span class="sn-stat-value">@totalCommission.ToString("N0")</span><span class="sn-stat-label">پورسانت من</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="sn-stat-card sn-stat-info"><i class="bi bi-file-earmark-text"></i>
+            <div><span class="sn-stat-value">@rows?.Count</span><span class="sn-stat-label">قرارداد</span></div>
+        </div>
+    </div>
+</div>
+
+@if (!hasAgreement)
+{
+    <div class="alert alert-warning small">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        برای شما قرارداد همکاری فعالی ثبت نشده است؛ در صورت نبود نرخ مجزا روی هر قرارداد، پورسانت محاسبه نمی‌شود.
+    </div>
+}
+
+<div class="sn-admin-card">
+    @if (rows is null || !rows.Any())
+    {
+        <p class="text-muted mb-0">قراردادی برای محاسبه پورسانت وجود ندارد.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>قرارداد</th><th>مبلغ کل</th><th>مراحل پرداخت‌شده</th><th>هزینه شخص ثالث</th>
+                        <th>مبنای خالص</th><th>روش پورسانت</th><th>پورسانت من</th><th>وضعیت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in rows)
+                    {
+                        var baseNet = Math.Max(0, r.Paid - r.ThirdParty);
+                        <tr>
+                            <td><strong>@r.Contract.Title</strong><div class="small text-muted">@r.Contract.CustomerName</div></td>
+                            <td>@r.Total.ToString("N0")</td>
+                            <td>@r.Paid.ToString("N0")</td>
+                            <td class="text-danger">@(r.ThirdParty > 0 ? "-" + r.ThirdParty.ToString("N0") : "—")</td>
+                            <td>@baseNet.ToString("N0")</td>
+                            <td class="small">
+                                @if (r.Rate is null)
+                                {
+                                    <span class="text-muted">تعیین نشده</span>
+                                }
+                                else
+                                {
+                                    @MethodTitle(r.Rate.Method)
+                                    @if (r.Rate.Method == Soransoft.Domain.Entities.CommissionMethod.FixedPercent)
+                                    {
+                                        <span> (@r.Rate.Value.ToString("0.##")%)</span>
+                                    }
+                                    @if (r.RateFromAgreement)
+                                    {
+                                        <span class="badge bg-info text-dark ms-1">از قرارداد همکاری</span>
+                                    }
+                                    <div class="text-muted">@(r.Rate.BasedOnPaidStages ? "بر مراحل پرداخت‌شده" : "بر کل قرارداد")</div>
+                                }
+                            </td>
+                            <td><strong class="text-success">@r.Commission.ToString("N0")</strong> <span class="small text-muted">تومان</span></td>
+                            <td>
+                                <span class="badge @(r.Contract.Status == Soransoft.Domain.Entities.ContractStatus.Active ? "bg-success" : r.Contract.Status == Soransoft.Domain.Entities.ContractStatus.PendingApproval ? "bg-warning text-dark" : "bg-secondary")">
+                                    @(r.Contract.Status == Soransoft.Domain.Entities.ContractStatus.PendingApproval ? "در انتظار تایید" : r.Contract.Status == Soransoft.Domain.Entities.ContractStatus.Active ? "فعال" : "خاتمه/لغو")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-muted mb-0 mt-2">
+            <i class="bi bi-info-circle me-1"></i>
+            مبنای پورسانت = مجموع مراحل پرداخت‌شده منهای هزینه‌های شخص ثالث قرارداد (هاست، دامنه، گواهینامه، سرویس‌ها).
+            با تایید هر مرحله توسط مدیر، پورسانت به‌روز می‌شود.
+            <a href="/Partner/Sales/Contracts" class="ms-1">مشاهده مراحل پرداخت قراردادها</a>
+        </p>
+    }
+</div>

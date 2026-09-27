@@ -1,0 +1,287 @@
+@using Soransoft.Application.ViewModels
+@using Soransoft.Application.Interfaces
+@using Soransoft.Domain.Enums
+@using Soransoft.Domain.Entities
+@inject ISiteService Site
+@model Soransoft.Application.ViewModels.HomeViewModel
+@{
+    ViewData["Title"] = null;
+    string S(string key, string def = "") => Model.Settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : def;
+    static string KindTitle(ServiceKind kind) => kind switch
+    {
+        ServiceKind.Site => "طراحــی سایــت",
+        ServiceKind.Seo => "ســـئو",
+        ServiceKind.Application => "طراحــی اپلیکیشن",
+        _ => "تولید محتوا",
+    };
+    var sliders = await Site.GetSlidersAsync();
+    var hasSlider = sliders.Any();
+}
+
+<!-- هیرو / اسلایدر -->
+@if (hasSlider)
+{
+    <section class="sn-hero p-0">
+        @* کمان‌های تزئینی و عناصر شناور روی اسلایدر — مانند مرجع *@
+        <div class="sn-arc sn-arc1"></div>
+        <div class="sn-arc sn-arc2"></div>
+        <i class="bi bi-rocket-takeoff sn-float-icon sn-f1"></i>
+        <i class="bi bi-globe2 sn-float-icon sn-f2"></i>
+        <i class="bi bi-code-slash sn-float-icon sn-f3"></i>
+        <i class="bi bi-brush sn-float-icon sn-f4"></i>
+
+        <div id="heroSlider" class="carousel slide carousel-fade" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                @{ var idx = 0; }
+                @foreach (var slide in sliders)
+                {
+                    <div class="carousel-item @(idx++ == 0 ? "active" : "")">
+                        @if (!string.IsNullOrWhiteSpace(slide.Image))
+                        {
+                            <div class="sn-hero-bg" style="background-image:url('@slide.Image')"></div>
+                        }
+                        <div class="container text-center sn-hero-slide">
+                            <h2 class="sn-hero-title">@slide.Title</h2>
+                            @if (!string.IsNullOrWhiteSpace(slide.SubTitle))
+                            {
+                                <p class="sn-hero-text">@slide.SubTitle</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(slide.Link))
+                            {
+                                <a href="@slide.Link" class="btn sn-btn-primary btn-lg mt-2">شروع کنید</a>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="carousel-indicators sn-hero-indicators">
+                @{ idx = 0; }
+                @foreach (var slide in sliders)
+                {
+                    <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="@(idx++)" class="@(idx == 1 ? "active" : "")" aria-label="اسلاید @idx"></button>
+                }
+            </div>
+        </div>
+    </section>
+}
+else
+{
+    <section class="sn-hero">
+        @* کمان‌های تزئینی گوشه — مانند top_arc1/top_arc2 مرجع *@
+        <div class="sn-arc sn-arc1"></div>
+        <div class="sn-arc sn-arc2"></div>
+
+        @* عناصر فضایی شناور — الهام از انیمیشن‌های مرجع *@
+        <i class="bi bi-rocket-takeoff sn-float-icon sn-f1"></i>
+        <i class="bi bi-globe2 sn-float-icon sn-f2"></i>
+        <i class="bi bi-code-slash sn-float-icon sn-f3"></i>
+        <i class="bi bi-brush sn-float-icon sn-f4"></i>
+        <i class="bi bi-star sn-float-icon sn-f5"></i>
+
+        <div class="container text-center">
+            <div class="sn-hero-badge mx-auto">SORANSOFT</div>
+            <h1 class="sn-hero-title">@S("SiteTagline", "هر چه در فکر شماست، ما می‌سازیم")</h1>
+            <a href="#services" class="btn sn-btn-primary btn-lg mt-2">مشاهده خدمات</a>
+        </div>
+    </section>
+
+    @* نوار سبز سرویس‌ها — مانند btnSection مرجع *@
+    <div class="sn-btn-section" id="services">
+        <h2 class="sn-hero-subtitle text-center pt-3 mb-0" style="color:#fff">خدمــــات ما</h2>
+        <p class="text-center text-white mb-2">برآوردن سخت‌ترین انتظارات مشتری تخصص ماست! در تک تک مراحل کنار شما هستیم</p>
+        <div class="clearfix">
+            @foreach (var service in Model.Services)
+            {
+                <a href="@(service.ComingSoon ? "#" : "/" + service.Slug)" class="sn-btn-item d-block">
+                    <i class="bi @service.Icon"></i>@service.Title
+                </a>
+            }
+        </div>
+    </div>
+}
+
+<!-- سرویس‌ها -->
+<section class="sn-section">
+    <div class="container">
+        <div class="row g-4">
+            @foreach (var service in Model.Services)
+            {
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="sn-service-card @(service.ComingSoon ? "sn-soon" : "")">
+                        <div class="sn-service-icon"><i class="bi @service.Icon"></i></div>
+                        <h3 class="sn-service-title">@service.Title</h3>
+                        <p class="sn-service-desc">@service.ShortDescription</p>
+                        @if (service.ComingSoon)
+                        {
+                            <span class="btn sn-btn-outline disabled">به زودی</span>
+                        }
+                        else
+                        {
+                            <a href="/@service.Slug" class="btn sn-btn-outline">بیشتر بدانید</a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- هوشمندانه انتخاب کن -->
+<section class="sn-section sn-section-alt">
+    <div class="container">
+        <h2 class="sn-section-title">هوشمندانه انتخاب کن</h2>
+        <p class="sn-section-subtitle">مراحل تکمیل پروژه خود را رصد کنید</p>
+
+        <ul class="nav sn-tabs justify-content-center mb-4" role="tablist">
+            @foreach (var tl in Model.Timelines)
+            {
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(tl == Model.Timelines.First() ? "active" : "")" data-bs-toggle="tab"
+                            data-bs-target="#timeline-@((int)tl.Kind)" type="button" role="tab">
+                        @(KindTitle(tl.Kind))
+                    </button>
+                </li>
+            }
+        </ul>
+
+        <div class="tab-content">
+            @foreach (var tl in Model.Timelines)
+            {
+                <div class="tab-pane fade @(tl == Model.Timelines.First() ? "show active" : "")" id="timeline-@((int)tl.Kind)" role="tabpanel">
+                    <p class="text-center sn-timeline-label">زمــــــــان تقریبـــــی</p>
+                    <div class="sn-timeline">
+                        @for (int i = 0; i < tl.Steps.Count; i++)
+                        {
+                            <div class="sn-timeline-step">
+                                <div class="sn-timeline-num">@(i + 1)</div>
+                                <div class="sn-timeline-text">@tl.Steps[i]</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- شمارش معکوس -->
+        <div class="sn-countdown mt-4">
+            <div class="sn-count-item"><span id="cd-days">18</span><small>روز</small></div>
+            <div class="sn-count-sep">:</div>
+            <div class="sn-count-item"><span id="cd-hours">14</span><small>ساعت</small></div>
+            <div class="sn-count-sep">:</div>
+            <div class="sn-count-item"><span id="cd-mins">30</span><small>دقیقه</small></div>
+        </div>
+    </div>
+</section>
+
+<!-- نمونه کارها -->
+<section class="sn-section">
+    <div class="container">
+        <h2 class="sn-section-title">نمونه کارهای ما</h2>
+        <p class="sn-section-subtitle">تمام نمونه کارها دارای دموی آنلاین هستند</p>
+
+        <div id="portfolioCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                @{
+                    var chunks = Model.Portfolios.Chunk(3).ToList();
+                }
+                @for (int i = 0; i < chunks.Count; i++)
+                {
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <div class="row g-4">
+                            @foreach (var p in chunks[i])
+                            {
+                                <div class="col-md-4">
+                                    <div class="sn-portfolio-card @(p.ComingSoon ? "sn-soon" : "")">
+                                        <div class="sn-portfolio-img">
+                                            @if (!string.IsNullOrWhiteSpace(p.Image))
+                                            {
+                                                <img src="@p.Image" alt="@p.Title" loading="lazy" />
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-window-sidebar"></i>
+                                            }
+                                        </div>
+                                        <div class="sn-portfolio-body">
+                                            <h3>@p.Title</h3>
+                                            <p>@p.Description</p>
+                                            @if (p.ComingSoon)
+                                            {
+                                                <span class="btn sn-btn-outline disabled">به زودی</span>
+                                            }
+                                            else if (!string.IsNullOrWhiteSpace(p.Url))
+                                            {
+                                                <a href="@p.Url" target="_blank" rel="noopener" class="btn sn-btn-primary">مشاهده</a>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#portfolioCarousel" data-bs-slide="prev">
+                <span class="bi bi-chevron-right"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#portfolioCarousel" data-bs-slide="next">
+                <span class="bi bi-chevron-left"></span>
+            </button>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="/Portfolio" class="btn sn-btn-primary px-5">همه نمونه کارها</a>
+        </div>
+    </div>
+</section>
+
+<!-- تعرفه‌ها -->
+<section class="sn-section sn-section-alt">
+    <div class="container">
+        <h2 class="sn-section-title">تعرفه‌های خدمات</h2>
+        <p class="sn-section-subtitle">تعرفه ها حدودی هستند و طبیعتا بنا بر نیاز شما تغییر می کنند</p>
+
+        <partial name="_TariffTabs" model="Model.TariffSections" />
+
+        <div class="sn-consultation mt-5">
+            <h4 class="sn-consultation-title">@S("ConsultationNote")</h4>
+            <partial name="_ConsultationForm" model="new Soransoft.Application.ViewModels.ConsultationRequestViewModel()" />
+        </div>
+    </div>
+</section>
+
+<!-- آخرین مقالات -->
+<section class="sn-section">
+    <div class="container">
+        <h2 class="sn-section-title">آخرین مقالات</h2>
+        <div class="row g-4">
+            @foreach (var article in Model.LatestArticles)
+            {
+                <div class="col-12 col-md-6">
+                    <article class="sn-article-card">
+                        <div class="sn-article-img">
+                            @if (!string.IsNullOrWhiteSpace(article.Image))
+                            {
+                                <img src="@article.Image" alt="@article.Title" loading="lazy" />
+                            }
+                            else
+                            {
+                                <i class="bi bi-journal-text"></i>
+                            }
+                        </div>
+                        <div class="sn-article-body">
+                            <span class="sn-badge">@article.CategoryTitle</span>
+                            <h3><a href="/Article/@article.Slug">@article.Title</a></h3>
+                            <p>@(article.Summary.Length > 180 ? article.Summary[..180] + "…" : article.Summary)</p>
+                            <div class="sn-article-meta">
+                                <span><i class="bi bi-person me-1"></i>@article.AuthorName</span>
+                                <span><i class="bi bi-calendar3 me-1"></i>@article.PublishedAt.ToString("yyyy/MM/dd")</span>
+                            </div>
+                            <a href="/Article/@article.Slug" class="sn-readmore">مطالعه <i class="bi bi-arrow-left"></i></a>
+                        </div>
+                    </article>
+                </div>
+            }
+        </div>
+    </div>
+</section>

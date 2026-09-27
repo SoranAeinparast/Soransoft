@@ -1,0 +1,59 @@
+@model List<SiteUser>
+@{
+    ViewData["Title"] = "کاربران سایت";
+}
+<h5 class="mb-4">کاربران سایت</h5>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted text-center my-4 mb-0">هنوز کاربری ثبت‌نام نکرده است.</p>
+    }
+    <div class="table-responsive">
+        <table class="table sn-admin-table align-middle">
+            <thead>
+                <tr><th>#</th><th>نام</th><th>موبایل</th><th>ایمیل</th><th>سفارش‌ها</th><th>آخرین ورود</th><th>وضعیت</th><th style="width:170px"></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr class="@(item.IsDeleted ? "text-decoration-line-through text-muted" : "")">
+                        <td>@item.Id</td>
+                        <td>@item.FullName</td>
+                        <td dir="ltr">@item.Mobile</td>
+                        <td dir="ltr" class="small">@item.Email</td>
+                        <td>@item.ProjectOrders.Count</td>
+                        <td class="small">@(item.LastLoginAt?.ToString("yyyy/MM/dd HH:mm") ?? "—")</td>
+                        <td>
+                            @if (item.IsDeleted)
+                            {
+                                <span class="badge bg-dark">حذف‌شده</span>
+                            }
+                            else
+                            {
+                                <span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")">@(item.IsActive ? "فعال" : "غیرفعال")</span>
+                            }
+                        </td>
+                        <td class="text-nowrap">
+                            @if (!item.IsDeleted)
+                            {
+                                <a href="/Admin/SiteUsers/Details/@item.Id" class="btn btn-sm btn-outline-primary">جزئیات</a>
+                                <form method="post" action="/Admin/SiteUsers/Toggle/@item.Id" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                                        @(item.IsActive ? "غیرفعال" : "فعال")
+                                    </button>
+                                </form>
+                                <form method="post" action="/Admin/SiteUsers/Delete/@item.Id" class="d-inline"
+                                      onsubmit="return confirm('حذف شود؟ کاربر دیگر نمی‌تواند وارد شود.')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

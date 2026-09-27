@@ -1,0 +1,185 @@
+@model List<Soransoft.Domain.Entities.CooperationAgreement>
+@{
+    ViewData["Title"] = "قراردادهای همکاری فی‌مابین";
+    var partners = ViewBag.Partners as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    string KindTitle(Soransoft.Domain.Entities.AgreementKind k) => k == Soransoft.Domain.Entities.AgreementKind.Sales ? "فروش" : "فنی";
+    string StatusBadge(Soransoft.Domain.Entities.AgreementStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.AgreementStatus.Draft => "bg-secondary",
+        Soransoft.Domain.Entities.AgreementStatus.Active => "bg-success",
+        _ => "bg-danger"
+    };
+    string StatusTitle(Soransoft.Domain.Entities.AgreementStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.AgreementStatus.Draft => "پیش‌نویس",
+        Soransoft.Domain.Entities.AgreementStatus.Active => "فعال",
+        _ => "فسخ شده"
+    };
+}
+
+<h5 class="mb-3"><i class="bi bi-journal-bookmark me-2"></i>قراردادهای همکاری (@Model.Count)</h5>
+
+<div class="sn-admin-card mb-3">
+    <h6 class="mb-3"><i class="bi bi-plus-circle me-2"></i>ثبت قرارداد جدید</h6>
+    <form asp-action="Save" method="post" id="agreementForm">
+        <div class="row g-2">
+            <div class="col-6 col-md-3">
+                <label class="form-label small">همکار *</label>
+                <select name="PartnerId" class="form-select form-select-sm" required>
+                    <option value="">— انتخاب —</option>
+                    @foreach (var p in partners)
+                    {
+                        <option value="@p.Id">@p.FullName (@(Convert.ToInt32(p.Role) == 1 || Convert.ToInt32(p.Role) == 3 ? "فروش" : "فنی"))</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small">نوع *</label>
+                <select name="Kind" class="form-select form-select-sm" id="agKind">
+                    <option value="1">فروش (پورسانتی)</option>
+                    <option value="2">فنی (توسعه‌دهنده)</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small">عنوان *</label>
+                <input name="Title" class="form-control form-control-sm" required placeholder="مثلاً: قرارداد همکاری فروش" />
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">موضوع *</label>
+                <input name="Subject" class="form-control form-control-sm" required placeholder="موضوع اصلی قرارداد" />
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label class="form-label small">تاریخ شروع *</label>
+                <input name="StartDate" type="date" class="form-control form-control-sm" required />
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">تاریخ پایان</label>
+                <input name="EndDate" type="date" class="form-control form-control-sm" />
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">مبلغ کل/سقف (تومان)</label>
+                <input name="TotalAmount" id="agTotalAmount" type="number" class="form-control form-control-sm" min="0" step="1000000" />
+                <div class="form-check mt-1">
+                    <input type="checkbox" name="IsUnlimitedAmount" value="true" class="form-check-input" id="agUnlimited" />
+                    <label class="form-check-label small" for="agUnlimited">سقف نامحدود (تعداد قرارداد با مشتری محدود نیست)</label>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-2" id="rowCommissionMethod">
+                <label class="form-label small">روش پورسانت</label>
+                <select name="CommissionMethod" class="form-select form-select-sm" id="agMethod">
+                    <option value="1">درصدی ثابت</option>
+                    <option value="2">مبلغ ثابت</option>
+                    <option value="3">پله‌ای</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2" id="rowCommissionValue">
+                <label class="form-label small">درصد/مبلغ</label>
+                <input name="CommissionValue" type="number" class="form-control form-control-sm" step="0.1" min="0" />
+            </div>
+            <div class="col-6 col-md-3" id="rowMonthlySalary" style="display:none">
+                <label class="form-label small">ماهانه ثابت (تومان)</label>
+                <input name="MonthlySalary" type="number" class="form-control form-control-sm" min="0" step="1000000" />
+            </div>
+            <div class="col-12 col-md-5" id="rowSettlement">
+                <label class="form-label small">نحوه تسویه</label>
+                <input name="SettlementTerms" class="form-control form-control-sm" placeholder="مثلاً: تا ۵ روز کاری پس از هر واریز مشتری" />
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label class="form-label small">بانک همکار</label>
+                <input name="BankName" class="form-control form-control-sm" placeholder="مثلاً: ملت" />
+            </div>
+            <div class="col-6 col-md-4">
+                <label class="form-label small">شماره شبا همکار</label>
+                <input name="BankAccountIban" class="form-control form-control-sm" dir="ltr" placeholder="IR..." />
+            </div>
+            <div class="col-12 col-md-5">
+                <label class="form-label small">به نام</label>
+                <input name="BankAccountHolder" class="form-control form-control-sm" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label small">شرح مفاد و تعهدات</label>
+                <textarea name="Terms" class="form-control form-control-sm" rows="4" placeholder="بندهای قرارداد، تعهدات طرفین، جرائم، رازداری و..."></textarea>
+            </div>
+            <div class="col-12">
+                <label class="form-label small">یادداشت مدیر (داخلی)</label>
+                <input name="AdminNote" class="form-control form-control-sm" />
+            </div>
+        </div>
+        <div class="form-check mt-2">
+            <input type="checkbox" name="BasedOnPaidStages" value="true" class="form-check-input" id="agPaid" checked />
+            <label class="form-check-label small" for="agPaid">پورسانت فقط بر مراحل پرداخت‌شده مشتری محاسبه شود (پس از کسر هزینه‌های شخص ثالث)</label>
+        </div>
+        <button class="btn btn-primary btn-sm mt-2"><i class="bi bi-save me-1"></i>ثبت پیش‌نویس قرارداد</button>
+    </form>
+</div>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted mb-0">هنوز قراردادی ثبت نشده است.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr><th>شماره</th><th>همکار</th><th>نوع</th><th>عنوان</th><th>مبلغ/سقف</th><th>پورسانت</th><th>وضعیت</th><th>PDF</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model)
+                    {
+                        <tr>
+                            <td class="small" dir="ltr">@a.AgreementNo</td>
+                            <td>@a.Partner.FullName</td>
+                            <td><span class="badge @(a.Kind == Soransoft.Domain.Entities.AgreementKind.Sales ? "bg-primary" : "bg-success")">@KindTitle(a.Kind)</span></td>
+                            <td class="small">@a.Title</td>
+                            <td class="small">@(a.IsUnlimitedAmount ? "نامحدود" : (a.TotalAmount?.ToString("N0") ?? "—"))</td>
+                            <td class="small">
+                                @if (a.Kind == Soransoft.Domain.Entities.AgreementKind.Sales)
+                                {
+                                    @(a.CommissionMethod == Soransoft.Domain.Entities.CommissionMethod.FixedPercent ? $"{a.CommissionValue:0.##}%" : a.CommissionMethod == Soransoft.Domain.Entities.CommissionMethod.FixedAmount ? $"{a.CommissionValue:N0} تومان" : "پله‌ای")
+                                }
+                                else
+                                {
+                                    @(a.MonthlySalary is long m ? $"ماهانه {m:N0}" : "—")
+                                }
+                            </td>
+                            <td><span class="badge @StatusBadge(a.Status)">@StatusTitle(a.Status)</span></td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(a.ContractFile))
+                                {
+                                    <a href="@a.ContractFile" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-pdf"></i></a>
+                                }
+                            </td>
+                            <td class="text-end"><a href="/Admin/PortalAgreements/Details/@a.Id" class="btn btn-sm btn-outline-secondary">مدیریت</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('agKind').addEventListener('change', function () {
+            var isSales = this.value === '1';
+            document.getElementById('rowCommissionMethod').style.display = isSales ? '' : 'none';
+            document.getElementById('rowCommissionValue').style.display = isSales ? '' : 'none';
+            document.getElementById('rowMonthlySalary').style.display = isSales ? 'none' : '';
+        });
+
+        var unlimited = document.getElementById('agUnlimited');
+        var totalAmount = document.getElementById('agTotalAmount');
+        function syncUnlimited() {
+            totalAmount.disabled = unlimited.checked;
+            if (unlimited.checked) totalAmount.value = '';
+        }
+        unlimited.addEventListener('change', syncUnlimited);
+        syncUnlimited();
+    </script>
+}

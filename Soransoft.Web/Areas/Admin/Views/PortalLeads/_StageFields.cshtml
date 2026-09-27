@@ -1,0 +1,62 @@
+@model Soransoft.Domain.Entities.ContractPaymentStage?
+@{
+    var s = Model;
+    var dueDate = s?.DueDate?.ToString("yyyy-MM-dd");
+    var chequeDue = s?.ChequeDueDate?.ToString("yyyy-MM-dd");
+}
+
+<div class="row g-2">
+    <div class="col-6 col-md-2">
+        <label class="form-label small">شماره ترتیب</label>
+        <input name="Number" type="number" min="0" class="form-control form-control-sm" value="@(s?.Number ?? 0)" />
+    </div>
+    <div class="col-6 col-md-10">
+        <label class="form-label small">عنوان مرحله *</label>
+        <input name="Title" class="form-control form-control-sm" required value="@s?.Title"
+               placeholder="مثلاً: مرحله اول هم‌زمان با امضای قرارداد" />
+    </div>
+
+    <div class="col-6 col-md-4">
+        <label class="form-label small">مبلغ (تومان)</label>
+        <input name="Amount" type="number" min="0" step="100000" class="form-control form-control-sm" value="@(s?.Amount ?? 0)" />
+    </div>
+    <div class="col-6 col-md-3">
+        <label class="form-label small">درصد از کل قرارداد</label>
+        <input name="PercentOfTotal" type="number" min="0" max="100" step="0.1" class="form-control form-control-sm" value="@s?.PercentOfTotal" />
+    </div>
+    <div class="col-12 col-md-5">
+        <label class="form-label small">موعد پرداخت</label>
+        <input name="DueDate" type="date" class="form-control form-control-sm" value="@dueDate" />
+    </div>
+
+    <div class="col-12">
+        <label class="form-label small">شرح/شرایط مرحله</label>
+        <textarea name="Description" class="form-control form-control-sm" rows="2" placeholder="مثلاً: پس از راه‌اندازی اولیه و ارائه به مشتری">@s?.Description</textarea>
+    </div>
+
+    <div class="col-12 col-md-6">
+        <label class="form-label small">شماره چک</label>
+        <input name="ChequeNo" class="form-control form-control-sm" dir="ltr" value="@s?.ChequeNo" />
+    </div>
+    <div class="col-6 col-md-3">
+        <label class="form-label small">بانک چک</label>
+        <input name="ChequeBank" class="form-control form-control-sm" value="@s?.ChequeBank" />
+    </div>
+    <div class="col-6 col-md-3">
+        <label class="form-label small">سررسید چک</label>
+        <input name="ChequeDueDate" type="date" class="form-control form-control-sm" value="@chequeDue" />
+    </div>
+
+    <div class="col-12">
+        <label class="form-label small">توضیح سند/چک</label>
+        <input name="DocumentNote" class="form-control form-control-sm" value="@s?.DocumentNote" placeholder="مثلاً: چک ۹۰ روزه بانک ملت" />
+    </div>
+    <div class="col-12">
+        <label class="form-label small">سند/مدارک/تصویر چک (PDF یا تصویر)</label>
+        <input name="document" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" class="form-control form-control-sm" />
+        @if (!string.IsNullOrWhiteSpace(s?.DocumentFile))
+        {
+            <a href="@s!.DocumentFile" target="_blank" class="small">مشاهده سند فعلی</a>
+        }
+    </div>
+</div>

@@ -1,0 +1,57 @@
+@model Soransoft.Application.ViewModels.UserProfileViewModel
+@{
+    ViewData["Title"] = "پروفایل";
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">پروفایل من</h1>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="sn-form-card">
+                    @if (TempData["Success"] is string success)
+                    {
+                        <div class="alert alert-success text-center">@success</div>
+                    }
+                    <form asp-action="Profile" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control sn-input" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Mobile" class="form-label"></label>
+                            <input asp-for="Mobile" class="form-control sn-input" dir="ltr" readonly />
+                            <small class="text-muted">شماره موبایل قابل تغییر نیست</small>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control sn-input" dir="ltr" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <p class="text-muted small">
+                            <i class="bi bi-calendar3 me-1"></i> تاریخ عضویت: @Model.RegisteredAt.ToString("yyyy/MM/dd")
+                            @if (Model.LastLoginAt.HasValue)
+                            {
+                                <span class="ms-3"><i class="bi bi-box-arrow-in-left me-1"></i> آخرین ورود: @Model.LastLoginAt.Value.ToString("yyyy/MM/dd HH:mm")</span>
+                            }
+                        </p>
+                        <button type="submit" class="btn sn-btn-primary w-100">ذخیره تغییرات</button>
+                    </form>
+                    <hr />
+                    <a href="/Panel/ChangePassword" class="btn sn-btn-outline w-100"><i class="bi bi-shield-lock me-2"></i>تغییر رمز عبور</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

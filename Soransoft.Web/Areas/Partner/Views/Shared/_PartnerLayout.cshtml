@@ -1,0 +1,96 @@
+@using System.Security.Claims
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var partnerName = User.FindFirstValue(ClaimTypes.Name) ?? "همکار";
+    var roleClaim = User.FindFirstValue("PartnerRole");
+    var role = System.Enum.TryParse<PartnerRole>(roleClaim, out var r) ? r : PartnerRole.Sales;
+    var roleTitle = role switch
+    {
+        PartnerRole.Sales => "همکار فروش",
+        PartnerRole.SalesManager => "مدیر فروش",
+        PartnerRole.Developer => "توسعه‌دهنده",
+        PartnerRole.TechManager => "مدیر فنی",
+        _ => "همکار"
+    };
+    var isSalesSide = role is PartnerRole.Sales or PartnerRole.SalesManager;
+    var isDevSide = role is PartnerRole.Developer or PartnerRole.TechManager;
+    var canSeeAllSales = User.HasClaim("CanSeeAllSales", "1");
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} | پرتال همکاران" : "پرتال همکاران سوران سافت")</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" asp-append-version="true" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+</head>
+<body class="sn-admin sn-portal">
+    <div class="sn-admin-wrapper">
+        <aside class="sn-admin-sidebar">
+            <div class="sn-admin-brand">
+                <span class="sn-logo">SORANSOFT</span>
+                <small>پرتال همکاران</small>
+            </div>
+            <nav class="sn-admin-nav">
+                <a href="/Partner/Dashboard" class="@(controller == "Dashboard" ? "active" : "")"><i class="bi bi-speedometer2"></i> داشبورد</a>
+
+                @if (isSalesSide)
+                {
+                    <div class="sn-admin-nav-group">پنل فروش</div>
+                    <a href="/Partner/Sales" class="@(controller == "Sales" && action == "Index" ? "active" : "")"><i class="bi bi-funnel"></i> لیدها</a>
+                    <a href="/Partner/Sales/Commissions" class="@(controller == "Sales" && action == "Commissions" ? "active" : "")"><i class="bi bi-cash-stack"></i> عملکرد و کمیسیون</a>
+                    <a href="/Partner/Sales/Tickets" class="@(controller == "Sales" && action == "Tickets" ? "active" : "")"><i class="bi bi-life-preserver"></i> درخواست بررسی فنی</a>
+                }
+
+                @if (isDevSide)
+                {
+                    <div class="sn-admin-nav-group">پنل فنی</div>
+                    <a href="/Partner/Dev" class="@(controller == "Dev" && action == "Index" ? "active" : "")"><i class="bi bi-kanban"></i> برد تسک‌ها</a>
+                    <a href="/Partner/Dev/TimeLogs" class="@(controller == "Dev" && action == "TimeLogs" ? "active" : "")"><i class="bi bi-stopwatch"></i> ثبت زمان</a>
+                    <a href="/Partner/Dev/Documents" class="@(controller == "Dev" && action == "Documents" ? "active" : "")"><i class="bi bi-journal-code"></i> مستندات فنی</a>
+                    <a href="/Partner/Dev/Profile" class="@(controller == "Dev" && action == "Profile" ? "active" : "")"><i class="bi bi-person-vcard"></i> پروفایل فنی</a>
+                }
+
+                <div class="sn-admin-nav-group">مالی</div>
+                <a href="/Partner/Agreement" class="@(controller == "Agreement" ? "active" : "")"><i class="bi bi-journal-bookmark"></i> قرارداد همکاری من</a>
+                <a href="/Partner/Wallet" class="@(controller == "Wallet" ? "active" : "")"><i class="bi bi-wallet2"></i> کیف پول من</a>
+
+                <div class="sn-admin-nav-group">پیام‌ها</div>
+                <a href="/Partner/Dev/Notifications" class="@(controller == "Dev" && action == "Notifications" ? "active" : "")"><i class="bi bi-megaphone"></i> اطلاعیه‌ها</a>
+
+                <div class="sn-admin-nav-group">حساب</div>
+                <a href="/Partner/Account/Logout"><i class="bi bi-box-arrow-right"></i> خروج (@partnerName)</a>
+            </nav>
+        </aside>
+
+        <main class="sn-admin-main">
+            <header class="sn-admin-topbar">
+                <button class="sn-admin-burger d-lg-none" type="button" id="adminBurger"><i class="bi bi-list"></i></button>
+                <h1 class="sn-admin-page-title">@ViewData["Title"]</h1>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <span class="badge sn-badge-admin">@roleTitle</span>
+                </div>
+            </header>
+            <div class="sn-admin-content">
+                @if (TempData["Success"] is string success)
+                {
+                    <div class="alert alert-success">@success</div>
+                }
+                @if (TempData["Error"] is string error)
+                {
+                    <div class="alert alert-danger">@error</div>
+                }
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/admin.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

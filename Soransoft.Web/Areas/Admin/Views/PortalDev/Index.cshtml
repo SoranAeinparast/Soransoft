@@ -1,0 +1,124 @@
+@model List<Soransoft.Domain.Entities.DevTask>
+@{
+    ViewData["Title"] = "برد تسک‌های تیم فنی";
+    var projects = ViewBag.Projects as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var sprints = ViewBag.Sprints as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var devs = ViewBag.Devs as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    string PrioBadge(Soransoft.Domain.Entities.TaskPriority p) => p switch
+    {
+        Soransoft.Domain.Entities.TaskPriority.Critical => "bg-danger",
+        Soransoft.Domain.Entities.TaskPriority.High => "bg-warning text-dark",
+        Soransoft.Domain.Entities.TaskPriority.Medium => "bg-info text-dark",
+        _ => "bg-secondary"
+    };
+    var columns = new (Soransoft.Domain.Entities.TaskStatus St, string Title, string Icon)[]
+    {
+        (Soransoft.Domain.Entities.TaskStatus.ToDo, "انجام نشده", "bi-inbox"),
+        (Soransoft.Domain.Entities.TaskStatus.InProgress, "در حال انجام", "bi-arrow-repeat"),
+        (Soransoft.Domain.Entities.TaskStatus.Testing, "در حال تست", "bi-bug"),
+        (Soransoft.Domain.Entities.TaskStatus.Done, "انجام شده", "bi-check2-circle"),
+    };
+}
+
+<div class="row g-3 mb-4">
+    @foreach (var col in columns)
+    {
+        var items = Model.Where(t => t.Status == col.St).ToList();
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="sn-admin-card h-100">
+                <h6 class="mb-3"><i class="bi @col.Icon me-1"></i>@col.Title <span class="badge bg-secondary ms-1">@items.Count</span></h6>
+                @foreach (var t in items)
+                {
+                    <div class="border rounded-3 p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start gap-1">
+                            <strong class="small">@t.Title</strong>
+                            <span class="badge @PrioBadge(t.Priority)">@(t.Priority == Soransoft.Domain.Entities.TaskPriority.Critical ? "بحرانی" : t.Priority == Soransoft.Domain.Entities.TaskPriority.High ? "زیاد" : t.Priority == Soransoft.Domain.Entities.TaskPriority.Medium ? "متوسط" : "کم")</span>
+                        </div>
+                        <div class="small text-muted">@t.Project?.Title @(t.Sprint != null ? $"· {t.Sprint.Title}" : "")</div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 gap-1 flex-wrap">
+                            <form asp-action="Assign" method="post" class="d-inline-flex gap-1 align-items-center">
+                                <input type="hidden" name="id" value="@t.Id" />
+                                <select name="assigneeId" class="form-select form-select-sm" style="width:110px" title="تخصیص به" onchange="this.form.submit()">
+                                    <option value="">— تخصیص —</option>
+                                    @foreach (var d in devs)
+                                    {
+                                        <option value="@d.Id">@d.FullName</option>
+                                    }
+                                </select>
+                            </form>
+                            <div class="d-inline-flex gap-1">
+                                <form asp-action="DeleteTask" method="post" class="d-inline" onsubmit="return confirm('تسک حذف شود؟')">
+                                    <input type="hidden" name="id" value="@t.Id" />
+                                    <button class="btn btn-sm btn-outline-danger" title="حذف"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (!items.Any())
+                {
+                    <p class="small text-muted mb-0">—</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<div class="sn-admin-card">
+    <h6 class="mb-3"><i class="bi bi-plus-circle me-2"></i>ساخت تسک جدید</h6>
+    <form asp-action="CreateTask" method="post" class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label class="form-label small">عنوان *</label>
+            <input name="Title" class="form-control form-control-sm" required placeholder="مثلاً: افزودن ماژول پیامک به SugarShop" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small">پروژه</label>
+            <select name="ProjectId" class="form-select form-select-sm">
+                <option value="">—</option>
+                @foreach (var p in projects)
+                {
+                    <option value="@p.Id">@p.Title</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small">اسپرینت</label>
+            <select name="SprintId" class="form-select form-select-sm">
+                <option value="">—</option>
+                @foreach (var s in sprints)
+                {
+                    <option value="@s.Id">@s.Title</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small">تخصیص به</label>
+            <select name="AssigneeId" class="form-select form-select-sm">
+                <option value="">—</option>
+                @foreach (var d in devs)
+                {
+                    <option value="@d.Id">@d.FullName</option>
+                }
+            </select>
+        </div>
+        <div class="col-3 col-md-1">
+            <label class="form-label small">اولویت</label>
+            <select name="Priority" class="form-select form-select-sm">
+                <option value="2">متوسط</option>
+                <option value="3">زیاد</option>
+                <option value="4">بحرانی</option>
+                <option value="1">کم</option>
+            </select>
+        </div>
+        <div class="col-9 col-md-1">
+            <label class="form-label small">موعد</label>
+            <input name="DueDate" type="date" class="form-control form-control-sm" />
+        </div>
+        <div class="col-12 col-md-12 mt-2">
+            <input name="Description" class="form-control form-control-sm" placeholder="توضیحات تسک (اختیاری)" />
+        </div>
+        <div class="col-12 mt-2">
+            <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>ساخت تسک</button>
+        </div>
+    </form>
+</div>

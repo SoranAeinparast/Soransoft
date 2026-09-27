@@ -1,0 +1,61 @@
+@model Article
+<div class="mb-3">
+    <label class="form-label">عنوان</label>
+    <input asp-for="Title" class="form-control" />
+    <span asp-validation-for="Title" class="text-danger small"></span>
+</div>
+<div class="mb-3">
+    <label class="form-label">خلاصه</label>
+    <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
+</div>
+<div class="mb-3">
+    <label class="form-label">متن کامل (HTML)</label>
+    <partial name="_RichTextEditor" for="Body" view-data="@(new ViewDataDictionary(ViewData) { ["EditorHeight"] = 480 })" />
+</div>
+<div class="row g-3">
+    <div class="col-md-4 mb-3">
+        <label class="form-label">دسته‌بندی</label>
+        <select asp-for="ArticleCategoryId" class="form-select">
+            @if (ViewBag.Categories is List<ArticleCategory> cats)
+            {
+                @foreach (var c in cats)
+                {
+                    <option value="@c.Id">@c.Title</option>
+                }
+            }
+        </select>
+        <span asp-validation-for="ArticleCategoryId" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label">نویسنده</label>
+        <input asp-for="AuthorName" class="form-control" />
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label">تاریخ انتشار</label>
+        <input asp-for="PublishedAt" class="form-control" type="datetime-local" />
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-md-4 mb-3">
+        <label class="form-label">وضعیت</label>
+        <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<PublishStatus>()"></select>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label">اسلاگ (اختیاری)</label>
+        <input asp-for="Slug" class="form-control" dir="ltr" />
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="form-check form-switch mt-4">
+            <input asp-for="IsFeatured" class="form-check-input" />
+            <label asp-for="IsFeatured" class="form-check-label"></label>
+        </div>
+    </div>
+</div>
+<div class="mb-3">
+    <label class="form-label">تصویر شاخص</label>
+    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+    @if (!string.IsNullOrWhiteSpace(Model.Image))
+    {
+        <img src="@Model.Image" alt="" class="mt-2 rounded" style="max-height:80px;" />
+    }
+</div>

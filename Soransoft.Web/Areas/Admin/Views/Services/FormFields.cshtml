@@ -1,0 +1,53 @@
+@model Service
+<div class="mb-3">
+    <label class="form-label">عنوان</label>
+    <input asp-for="Title" class="form-control" />
+    <span asp-validation-for="Title" class="text-danger small"></span>
+</div>
+<div class="row g-3">
+    <div class="col-md-6 mb-3">
+        <label class="form-label">نوع سرویس</label>
+        <select asp-for="Kind" class="form-select" asp-items="Html.GetEnumSelectList<ServiceKind>()"></select>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label">اسلاگ (آدرس صفحه)</label>
+        <input asp-for="Slug" class="form-control" dir="ltr" />
+        <span asp-validation-for="Slug" class="text-danger small"></span>
+    </div>
+</div>
+<div class="mb-3">
+    <label class="form-label">توضیح کوتاه</label>
+    <textarea asp-for="ShortDescription" class="form-control" rows="2"></textarea>
+</div>
+<div class="mb-3">
+    <label class="form-label">متن کامل (HTML)</label>
+    <partial name="_RichTextEditor" for="FullDescription" view-data="@(new ViewDataDictionary(ViewData) { ["EditorHeight"] = 440 })" />
+</div>
+<div class="row g-3">
+    <div class="col-md-6 mb-3">
+        <label class="form-label">شعار صفحه</label>
+        <input asp-for="Slogan" class="form-control" />
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label">آیکون (کلاس Bootstrap Icons)</label>
+        <input asp-for="Icon" class="form-control" dir="ltr" />
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-md-4 mb-3">
+        <div class="form-check form-switch">
+            <input asp-for="ComingSoon" class="form-check-input" />
+            <label asp-for="ComingSoon" class="form-check-label"></label>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="form-check form-switch">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label"></label>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label">ترتیب نمایش</label>
+        <input asp-for="DisplayOrder" class="form-control" type="number" />
+    </div>
+</div>

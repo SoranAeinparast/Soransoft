@@ -1,0 +1,108 @@
+@model Soransoft.Domain.Entities.CooperationAgreement
+@{
+    ViewData["Title"] = $"قرارداد {Model.AgreementNo}";
+    string StatusBadge(Soransoft.Domain.Entities.AgreementStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.AgreementStatus.Draft => "bg-secondary",
+        Soransoft.Domain.Entities.AgreementStatus.Active => "bg-success",
+        _ => "bg-danger"
+    };
+    string StatusTitle(Soransoft.Domain.Entities.AgreementStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.AgreementStatus.Draft => "پیش‌نویس",
+        Soransoft.Domain.Entities.AgreementStatus.Active => "فعال (ملاک طرفین)",
+        _ => "فسخ شده"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h5 class="mb-0"><i class="bi bi-journal-bookmark me-2"></i>@Model.Title <span class="badge @StatusBadge(Model.Status) ms-2">@StatusTitle(Model.Status)</span></h5>
+    <a href="/Admin/PortalAgreements" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
+        <div class="sn-admin-card h-100">
+            <h6 class="mb-3"><i class="bi bi-card-text me-2"></i>مفاد قرارداد</h6>
+            <dl class="row small mb-0">
+                <dt class="col-4">شماره:</dt><dd class="col-8" dir="ltr">@Model.AgreementNo</dd>
+                <dt class="col-4">همکار:</dt><dd class="col-8">@Model.Partner.FullName (@(Model.Partner.Role == Soransoft.Domain.Entities.PartnerRole.Sales || Model.Partner.Role == Soransoft.Domain.Entities.PartnerRole.SalesManager ? "فروش" : "فنی"))</dd>
+                <dt class="col-4">موضوع:</dt><dd class="col-8">@Model.Subject</dd>
+                <dt class="col-4">مدت:</dt><dd class="col-8">@Model.StartDate.ToString("yyyy/MM/dd") تا @(Model.EndDate?.ToString("yyyy/MM/dd") ?? "بدون پایان")</dd>
+                <dt class="col-4">مبلغ کل/سقف:</dt><dd class="col-8">@(Model.IsUnlimitedAmount ? "نامحدود (بدون سقف)" : (Model.TotalAmount?.ToString("N0") ?? "—") + " تومان")</dd>
+                @if (Model.Kind == Soransoft.Domain.Entities.AgreementKind.Sales)
+                {
+                    <dt class="col-4">پورسانت:</dt>
+                    <dd class="col-8">
+                        @(Model.CommissionMethod == Soransoft.Domain.Entities.CommissionMethod.FixedPercent ? $"{Model.CommissionValue:0.##} درصد" : Model.CommissionMethod == Soransoft.Domain.Entities.CommissionMethod.FixedAmount ? $"{Model.CommissionValue:N0} تومان ثابت" : "پله‌ای")
+                        — @(Model.BasedOnPaidStages ? "بر مراحل پرداخت‌شده مشتری (خالص پس از کسر هزینه شخص ثالث)" : "بر کل قرارداد مشتری (خالص پس از کسر هزینه شخص ثالث)")
+                    </dd>
+                }
+                else
+                {
+                    <dt class="col-4">دستمزد:</dt><dd class="col-8">@(Model.MonthlySalary is long m ? $"ماهانه {m:N0} تومان" : "—")</dd>
+                }
+                <dt class="col-4">نحوه تسویه:</dt><dd class="col-8">@Model.SettlementTerms</dd>
+                <dt class="col-4">حساب بانکی همکار:</dt>
+                <dd class="col-8">
+                    @(Model.BankName ?? "—") — <span dir="ltr">@(Model.BankAccountIban ?? "—")</span>
+                    @(string.IsNullOrWhiteSpace(Model.BankAccountHolder) ? "" : $"به نام {Model.BankAccountHolder}")
+                </dd>
+                <dt class="col-4">تاریخ انعقاد:</dt><dd class="col-8">@Model.SignedAt.ToString("yyyy/MM/dd")</dd>
+            </dl>
+            @if (!string.IsNullOrWhiteSpace(Model.Terms))
+            {
+                <hr />
+                <h6>شرح مفاد و تعهدات</h6>
+                <div class="small">@Html.Raw(Model.Terms)</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
+            {
+                <div class="alert alert-light border small mt-3 mb-0">یادداشت مدیر: @Model.AdminNote</div>
+            }
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="sn-admin-card mb-3">
+            <h6 class="mb-3"><i class="bi bi-file-earmark-pdf me-2"></i>فایل قرارداد</h6>
+            @if (!string.IsNullOrWhiteSpace(Model.ContractFile))
+            {
+                <a href="@Model.ContractFile" target="_blank" class="btn btn-outline-primary btn-sm w-100 mb-2"><i class="bi bi-eye me-1"></i>مشاهده PDF فعلی</a>
+            }
+            <form asp-action="UploadPdf" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="file" name="file" accept=".pdf" class="form-control form-control-sm" required />
+                <button class="btn btn-primary btn-sm w-100 mt-2"><i class="bi bi-upload me-1"></i>بارگذاری PDF امضاشده</button>
+            </form>
+        </div>
+
+        <div class="sn-admin-card">
+            <h6 class="mb-3"><i class="bi bi-shield-check me-2"></i>اقدامات</h6>
+            @if (Model.Status == Soransoft.Domain.Entities.AgreementStatus.Draft)
+            {
+                <form asp-action="Activate" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button class="btn btn-success btn-sm w-100" @(string.IsNullOrWhiteSpace(Model.ContractFile) ? "disabled title=\"ابتدا PDF را بارگذاری کنید\"" : "")>
+                        <i class="bi bi-check2-circle me-1"></i>فعال‌سازی (ملاک طرفین)
+                    </button>
+                </form>
+            }
+            @if (Model.Status == Soransoft.Domain.Entities.AgreementStatus.Active)
+            {
+                <form asp-action="Terminate" method="post" class="mb-2">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input name="note" class="form-control form-control-sm mb-2" placeholder="دلیل فسخ (ثبت در یادداشت)" />
+                    <button class="btn btn-warning btn-sm w-100"><i class="bi bi-x-circle me-1"></i>فسخ قرارداد</button>
+                </form>
+            }
+            @if (Model.Status != Soransoft.Domain.Entities.AgreementStatus.Active)
+            {
+                <form asp-action="Delete" method="post" onsubmit="return confirm('قرارداد حذف شود؟')">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-trash me-1"></i>حذف</button>
+                </form>
+            }
+        </div>
+    </div>
+</div>

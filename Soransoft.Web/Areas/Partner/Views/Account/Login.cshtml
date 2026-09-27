@@ -1,0 +1,59 @@
+@model Soransoft.Web.Areas.Partner.Controllers.PartnerLoginViewModel
+@{
+    ViewData["Title"] = "ورود به پرتال همکاران";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+<div class="sn-portal-login-wrap">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100 py-5">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="text-center mb-4">
+                    <a href="/" class="sn-logo">SORANSOFT</a>
+                    <h1 class="sn-portal-title mt-3"><i class="bi bi-briefcase me-2"></i>پرتال همکاران</h1>
+                    <p class="sn-portal-sub">ورود همکاران فروش و تیم توسعه</p>
+                </div>
+
+                <div class="sn-portal-card">
+                    @if (TempData["Success"] is string ok)
+                    {
+                        <div class="alert alert-success py-2">@ok</div>
+                    }
+                    <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+                    <form asp-area="Partner" asp-controller="Account" asp-action="Login" method="post">
+                        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                        <div class="mb-3">
+                            <label class="form-label">نام کاربری</label>
+                            <input asp-for="Username" class="form-control" autocomplete="username" autofocus />
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">رمز عبور</label>
+                            <input asp-for="Password" type="password" class="form-control" autocomplete="current-password" />
+                        </div>
+                        <button type="submit" class="btn sn-btn-portal-lg w-100">
+                            <i class="bi bi-box-arrow-in-left me-2"></i>ورود به پرتال
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <a asp-area="Partner" asp-controller="Account" asp-action="ForgotPassword" class="small sn-portal-hint">
+                            <i class="bi bi-key me-1"></i>رمزم را فراموش کرده‌ام
+                            </a>
+                    </div>
+                </div>
+
+                <p class="text-center small sn-portal-hint mt-4">
+                    <i class="bi bi-info-circle me-1"></i>
+                    نام کاربری و رمز عبور توسط مدیر برای شما ایجاد می‌شود.
+                    <br />
+                    این ورود مخصوص همکاران است و با «ورود / عضویت» کاربران سایت تفاوت دارد.
+                </p>
+                <p class="text-center mt-3">
+                    <a href="/" class="sn-portal-back"><i class="bi bi-arrow-right me-1"></i>بازگشت به سایت</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

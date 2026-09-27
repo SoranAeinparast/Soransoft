@@ -1,0 +1,15 @@
+@model Service
+@{
+    ViewData["Title"] = "سرویس جدید";
+    ViewData["LoadRichEditor"] = true;
+}
+<h5 class="mb-4">سرویس جدید</h5>
+<div class="sn-admin-card">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <partial name="FormFields" model="Model" />
+        <button type="submit" class="btn sn-btn-primary">ذخیره</button>
+        <a href="/Admin/Services" class="btn btn-outline-secondary">انصراف</a>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

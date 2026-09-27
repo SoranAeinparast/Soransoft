@@ -1,0 +1,423 @@
+@model List<Soransoft.Domain.Entities.PartnerContract>
+@using Soransoft.Domain.Entities
+@{
+    ViewData["Title"] = "قراردادها، مراحل پرداخت و پورسانت";
+    var salesPartners = ViewBag.SalesPartners as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var catalogue = ViewBag.CostCatalogue as List<ThirdPartyCostItem> ?? new();
+    var commissionInfo = ViewBag.CommissionInfo as Dictionary<int, (decimal Commission, long Base)> ?? new();
+    var thirdPartyTotals = ViewBag.ThirdPartyTotals as Dictionary<int, long> ?? new();
+
+    string StatusBadge(ContractStatus s) => s switch
+    {
+        ContractStatus.PendingApproval => "bg-warning text-dark",
+        ContractStatus.Active => "bg-success",
+        ContractStatus.Finished => "bg-secondary",
+        _ => "bg-danger"
+    };
+    string StatusTitle(ContractStatus s) => s switch
+    {
+        ContractStatus.PendingApproval => "در انتظار تایید",
+        ContractStatus.Active => "فعال",
+        ContractStatus.Finished => "خاتمه یافته",
+        _ => "لغو شده"
+    };
+    string StageBadge(PaymentStageStatus s) => s switch
+    {
+        PaymentStageStatus.Paid => "bg-success",
+        PaymentStageStatus.AwaitingApproval => "bg-warning text-dark",
+        PaymentStageStatus.Rejected => "bg-danger",
+        _ => "bg-light text-dark border"
+    };
+    string StageTitle(PaymentStageStatus s) => s switch
+    {
+        PaymentStageStatus.Paid => "پرداخت شده",
+        PaymentStageStatus.AwaitingApproval => "در انتظار تایید",
+        PaymentStageStatus.Rejected => "رسید رد شده",
+        _ => "پرداخت نشده"
+    };
+    string CostTypeTitle(ThirdPartyCostType t) => t switch
+    {
+        ThirdPartyCostType.Hosting => "هاست/سرور",
+        ThirdPartyCostType.Domain => "دامنه",
+        ThirdPartyCostType.Certificate => "گواهینامه/مجوز",
+        ThirdPartyCostType.Service => "سرویس/API",
+        _ => "سایر"
+    };
+}
+
+<h5 class="mb-3"><i class="bi bi-file-earmark-text me-2"></i>قراردادها (@Model.Count)</h5>
+
+<div class="alert alert-light border small">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>قاعده پورسانت:</strong> مجموع هزینه‌های شخص ثالث (هاست، دامنه، گواهینامه، سرویس‌ها) از مبلغ قرارداد در اولین پرداخت مشتری کسر می‌شود؛
+    باقی‌مانده، مبنای محاسبه پورسانت همکار فروش است. پله‌ای‌ها را در هر خط به شکل <code dir="ltr">مبلغ|درصد</code> وارد کنید.
+    <a href="/Admin/PortalCosts" class="ms-1">مدیریت کاتالوگ هزینه‌های شخص ثالث</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="sn-admin-card"><p class="text-muted mb-0">قراردادی ثبت نشده است. لیدهای تاییدشده در بخش لیدها به قرارداد تبدیل می‌شوند.</p></div>
+}
+
+@foreach (var c in Model)
+{
+    var stages = c.PaymentStages.OrderBy(i => i.Number).ToList();
+    var paid = stages.Where(i => i.Status == PaymentStageStatus.Paid).Sum(i => (long)i.Amount);
+    var thirdParty = thirdPartyTotals.TryGetValue(c.Id, out var tp) ? tp : 0;
+    <div class="sn-admin-card mb-3">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+            <div>
+                <h6 class="mb-1">@c.Title</h6>
+                <div class="small text-muted">مشتری: @c.CustomerName · فروشنده: @(c.Partner?.FullName ?? "—")</div>
+                @if (c.LicenseExpiresAt is DateTime exp)
+                {
+                    <div class="small text-muted"><i class="bi bi-shield-check me-1"></i>انقضای لایسنس: @exp.ToString("yyyy/MM/dd")</div>
+                }
+            </div>
+            <div class="text-start">
+                <span class="badge @StatusBadge(c.Status)">@StatusTitle(c.Status)</span>
+                <div class="small mt-1">@c.TotalAmount.ToString("N0") تومان</div>
+            </div>
+        </div>
+
+        @* ---------- مراحل پرداخت ---------- *@
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <h6 class="small mb-0"><i class="bi bi-list-check me-1"></i>مراحل پرداخت مشتری</h6>
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#stageModal-@c.Id">
+                <i class="bi bi-plus-lg me-1"></i>افزودن مرحله
+            </button>
+        </div>
+        @if (stages.Any())
+        {
+            <div class="table-responsive mt-2">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>عنوان مرحله</th><th>درصد</th><th>مبلغ</th><th>موعد</th><th>وضعیت</th><th>اسناد</th><th class="text-end">عملیات</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var i in stages)
+                        {
+                            <tr>
+                                <td>@i.Number</td>
+                                <td style="min-width:220px">
+                                    <div>@i.Title</div>
+                                    @if (!string.IsNullOrWhiteSpace(i.Description))
+                                    {
+                                        <div class="small text-muted">@i.Description</div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(i.ChequeNo))
+                                    {
+                                        <div class="small text-muted"><i class="bi bi-card-checklist me-1"></i>چک @i.ChequeNo — @i.ChequeBank @(i.ChequeDueDate is DateTime cd ? $"({cd:yyyy/MM/dd})" : "")</div>
+                                    }
+                                    @if (i.DocumentsVerifiedAt is DateTime v)
+                                    {
+                                        <div class="small text-success"><i class="bi bi-check2-circle me-1"></i>بررسی مدارک: @v.ToString("yyyy/MM/dd")</div>
+                                    }
+                                </td>
+                                <td>@(i.PercentOfTotal is decimal p ? $"{p:0.##}%" : "—")</td>
+                                <td>@i.Amount.ToString("N0")</td>
+                                <td>@(i.DueDate?.ToString("yyyy/MM/dd") ?? "—")</td>
+                                <td><span class="badge @StageBadge(i.Status)">@StageTitle(i.Status)</span></td>
+                                <td class="small">
+                                    @if (!string.IsNullOrWhiteSpace(i.ReceiptFile))
+                                    {
+                                        <a href="@i.ReceiptFile" target="_blank" class="me-2"><i class="bi bi-receipt"></i></a>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(i.DocumentFile))
+                                    {
+                                        <a href="@i.DocumentFile" target="_blank" class="me-2"><i class="bi bi-file-earmark-text"></i></a>
+                                    }
+                                    <form asp-action="UploadStageDoc" method="post" enctype="multipart/form-data" class="d-inline-flex gap-1 align-items-center mt-1">
+                                        <input type="hidden" name="id" value="@i.Id" />
+                                        <select name="kind" class="form-select form-select-sm" style="width:90px">
+                                            <option value="document">سند</option>
+                                            <option value="receipt">رسید</option>
+                                        </select>
+                                        <input type="file" name="file" class="form-control form-control-sm" style="width:140px" required />
+                                        <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-upload"></i></button>
+                                    </form>
+                                </td>
+                                <td class="text-end" style="min-width:190px">
+                                    @if (i.Status != PaymentStageStatus.Paid)
+                                    {
+                                        <form asp-action="SetStageStatus" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@i.Id" />
+                                            <input type="hidden" name="status" value="3" />
+                                            <button class="btn btn-sm btn-outline-success" title="تایید پرداخت"><i class="bi bi-check2"></i></button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="SetStageStatus" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@i.Id" />
+                                            <input type="hidden" name="status" value="1" />
+                                            <button class="btn btn-sm btn-outline-warning" title="برگشت به پرداخت‌نشده"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                        </form>
+                                    }
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#stageEdit-@i.Id"><i class="bi bi-pencil"></i></button>
+                                    <form asp-action="DeleteStage" method="post" class="d-inline" onsubmit="return confirm('این مرحله حذف شود؟')">
+                                        <input type="hidden" name="id" value="@i.Id" />
+                                        <button class="btn btn-sm btn-outline-danger" @(i.Status == PaymentStageStatus.Paid ? "disabled" : "")><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="small text-muted mt-2 mb-0">مرحله‌ای تعریف نشده است. با «افزودن مرحله» مراحل پرداخت (مثلاً ۳۰٪ امضا، ۴۰٪ راه‌اندازی، ۳۰٪ تحویل) را تعریف کنید.</p>
+        }
+
+        @* ---------- هزینه‌های شخص ثالث ---------- *@
+        <div class="border-top mt-3 pt-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="small mb-0">
+                    <i class="bi bi-receipt-cutoff me-1"></i>هزینه‌های شخص ثالث
+                    @if (thirdParty > 0)
+                    {
+                        <span class="badge bg-danger ms-1">@thirdParty.ToString("N0") تومان کسر می‌شود</span>
+                    }
+                </h6>
+                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#costModal-@c.Id">
+                    <i class="bi bi-plus-lg me-1"></i>افزودن هزینه
+                </button>
+            </div>
+            @if (c.ThirdPartyCosts.Any())
+            {
+                <table class="table table-sm table-bordered align-middle mt-2 mb-0">
+                    <thead class="table-light">
+                        <tr><th>نوع</th><th>عنوان</th><th>مشخصات فنی</th><th>مبلغ</th><th>یادداشت</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var cost in c.ThirdPartyCosts.OrderBy(x => x.Type))
+                        {
+                            <tr>
+                                <td><span class="badge bg-secondary">@CostTypeTitle(cost.Type)</span></td>
+                                <td>@cost.Title</td>
+                                <td class="small text-muted" style="max-width:260px">@(cost.TechnicalSpecs ?? "—")</td>
+                                <td>@cost.Amount.ToString("N0")</td>
+                                <td class="small">@(cost.Note ?? "—")@(cost.DeductFromFirstPayment ? "" : " (بدون کسر)")</td>
+                                <td class="text-end">
+                                    <form asp-action="DeleteThirdPartyCost" method="post" onsubmit="return confirm('این هزینه حذف شود؟')">
+                                        <input type="hidden" name="id" value="@cost.Id" />
+                                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="small text-muted mb-0 mt-1">هزینه شخص ثالثی ثبت نشده است (هاست، دامنه، SSL، سرویس پیامکی و...).</p>
+            }
+        </div>
+
+        @* ---------- پورسانت ---------- *@
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-2 border-top">
+            <div class="small">
+                <strong>پورسانت:</strong>
+                @if (c.CommissionRates.Any())
+                {
+                    @foreach (var r in c.CommissionRates.Where(x => x.IsActive))
+                    {
+                        var info = commissionInfo.TryGetValue(r.Id, out var ci) ? ci : (0m, 0L);
+                        <span class="badge bg-primary ms-1">
+                            @r.Partner?.FullName:
+                            @(r.Method == CommissionMethod.FixedPercent ? $"{r.Value:0.##}%" : r.Method == CommissionMethod.FixedAmount ? $"{r.Value:N0} تومان" : "پله‌ای")
+                            · محاسبه‌شده: @info.Item1.ToString("N0")
+                            · مبنا: @info.Item2.ToString("N0")
+                        </span>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">تعیین نشده</span>
+                }
+                <span class="text-muted ms-2">مراحل پرداخت‌شده: @paid.ToString("N0")</span>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#rateModal-@c.Id">
+                <i class="bi bi-percent me-1"></i>تعیین/ویرایش پورسانت
+            </button>
+        </div>
+    </div>
+
+    @* ---------- مودال افزودن مرحله ---------- *@
+    <div class="modal fade" id="stageModal-@c.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="SaveStage" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="ContractId" value="@c.Id" />
+                    <input type="hidden" name="Id" value="0" />
+                    <div class="modal-header py-2">
+                        <h6 class="modal-title">افزودن مرحله پرداخت — @c.Title</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        @await Html.PartialAsync("_StageFields", new Soransoft.Domain.Entities.ContractPaymentStage())
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" class="btn btn-sm btn-primary">ذخیره مرحله</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* ---------- مودال ویرایش مراحل ---------- *@
+    @foreach (var i in stages)
+    {
+        <div class="modal fade" id="stageEdit-@i.Id" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <form asp-action="SaveStage" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="ContractId" value="@c.Id" />
+                        <input type="hidden" name="Id" value="@i.Id" />
+                        <div class="modal-header py-2">
+                            <h6 class="modal-title">ویرایش مرحله @i.Number — @c.Title</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            @await Html.PartialAsync("_StageFields", i)
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                            <button type="submit" class="btn btn-sm btn-primary">ذخیره تغییرات</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ---------- مودال افزودن هزینه شخص ثالث ---------- *@
+    <div class="modal fade" id="costModal-@c.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="AddThirdPartyCost" method="post">
+                    <input type="hidden" name="contractId" value="@c.Id" />
+                    <div class="modal-header py-2">
+                        <h6 class="modal-title">افزودن هزینه شخص ثالث</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label class="form-label small">از کاتالوگ</label>
+                            <select name="itemId" class="form-select form-select-sm cost-catalogue" data-target="costTitle-@c.Id" data-amount="costAmount-@c.Id">
+                                <option value="">— ثبت دستی —</option>
+                                @foreach (var it in catalogue)
+                                {
+                                    <option value="@it.Id" data-title="@it.Title" data-amount="@it.DefaultAmount" data-specs="@it.TechnicalSpecs">
+                                        @CostTypeTitle(it.Type) — @it.Title (@it.DefaultAmount.ToString("N0"))
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-7">
+                                <label class="form-label small">عنوان</label>
+                                <input name="title" id="costTitle-@c.Id" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label small">مبلغ (تومان)</label>
+                                <input name="amount" id="costAmount-@c.Id" type="number" min="0" step="100000" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small">یادداشت</label>
+                                <input name="note" class="form-control form-control-sm" placeholder="مثلاً: هاست سالانه شرکت X" />
+                            </div>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" name="deductFromFirstPayment" value="true" class="form-check-input" id="deduct-@c.Id" checked />
+                            <label class="form-check-label small" for="deduct-@c.Id">از اولین پرداخت مشتری کسر و از مبنای پورسانت کم شود</label>
+                        </div>
+                        <p class="small text-muted mb-0 mt-2">آیتم جدید کاتالوگ را از <a href="/Admin/PortalCosts" target="_blank">اینجا</a> بسازید.</p>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" class="btn btn-sm btn-primary">افزودن</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* ---------- مودال پورسانت ---------- *@
+    <div class="modal fade" id="rateModal-@c.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="SetCommission" method="post">
+                    <input type="hidden" name="contractId" value="@c.Id" />
+                    <div class="modal-header py-2">
+                        <h6 class="modal-title">نرخ پورسانت — @c.Title</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small">همکار فروش *</label>
+                            <select name="partnerId" class="form-select form-select-sm" required>
+                                @if (c.Partner is not null)
+                                {
+                                    <option value="@c.Partner.Id" selected>@c.Partner.FullName</option>
+                                }
+                                @foreach (var p in salesPartners.Where(p => c.Partner == null || p.Id != c.Partner.Id))
+                                {
+                                    <option value="@p.Id">@p.FullName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small">روش</label>
+                                <select name="method" class="form-select form-select-sm comm-method" data-target="tiers-@c.Id">
+                                    <option value="1">درصدی ثابت</option>
+                                    <option value="2">مبلغ ثابت (تومان)</option>
+                                    <option value="3">پله‌ای</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small">مقدار (درصد / تومان)</label>
+                                <input name="value" type="number" class="form-control form-control-sm" step="0.1" min="0" required />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small">پله‌ها (فقط روش پله‌ای) — هر خط: مبلغ|درصد</label>
+                                <textarea name="tiersText" id="tiers-@c.Id" class="form-control form-control-sm" rows="3" dir="ltr"
+                                          placeholder="100000000|5&#10;300000000|8&#10;999999999999|12"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" name="basedOnPaid" value="true" class="form-check-input" id="paid-@c.Id" checked />
+                            <label class="form-check-label small" for="paid-@c.Id">محاسبه فقط بر مراحل پرداخت‌شده (خالص پس از کسر هزینه شخص ثالث)</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" class="btn btn-sm btn-primary">ذخیره</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // پرکردن خودکار عنوان/مبلغ از کاتالوگ هزینه شخص ثالث
+        document.querySelectorAll('.cost-catalogue').forEach(function (sel) {
+            sel.addEventListener('change', function () {
+                var opt = this.options[this.selectedIndex];
+                var title = document.getElementById(this.dataset.target);
+                var amount = document.getElementById(this.dataset.amount);
+                if (this.value) {
+                    title.value = opt.dataset.title || '';
+                    amount.value = opt.dataset.amount || '';
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,20 @@
+@*
+    ویرایشگر متن پیشرفته TinyMCE — استفاده:
+    <partial name="_RichTextEditor" for="Body" />
+    برای ارتفاع دلخواه:
+    <partial name="_RichTextEditor" for="Body" view-data="@(new ViewDataDictionary(ViewData) { ["EditorHeight"] = 600 })" />
+
+    نکته: با ویژگی «for» مقدار و نام فیلد مستقیماً از مدلِ والد خوانده می‌شود؛
+    استفاده از model رشته‌ای باعث می‌شد مقدار موجود فیلد هرگز در ویرایشگر نمایش نیابد
+    و موقع ذخیره، مقدار خالی پست شود ( ModelState required → ذخیره بی‌صدا رد می‌شد).
+*@
+@model string
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix;
+    var height = ViewData["EditorHeight"] is int h && h >= 200 ? h : 420;
+}
+<div class="sn-richtext">
+    <textarea id="@fieldName" name="@fieldName" class="sn-tinymce" rows="12"
+              data-editor-height="@height">@Model</textarea>
+    <span class="text-danger small field-validation-valid" data-valmsg-for="@fieldName" data-valmsg-replace="true"></span>
+</div>

@@ -1,0 +1,109 @@
+@{
+    var roleTitle = User.HasClaim("PartnerRole", "1") || User.HasClaim("PartnerRole", "3") ? "پنل فروش" : "پنل فنی";
+    var isSales = User.HasClaim("PartnerRole", "1") || User.HasClaim("PartnerRole", "3");
+    var announcements = ViewBag.Announcements as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    string Money(long v) => v.ToString("N0");
+}
+
+<div class="row g-3 mb-4">
+    @if (isSales)
+    {
+        <div class="col-6 col-md-3">
+            <div class="sn-stat-card sn-stat-primary">
+                <i class="bi bi-funnel"></i>
+                <div><span class="sn-stat-value">@ViewBag.LeadCount</span><span class="sn-stat-label">لید ثبت‌شده</span></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="sn-stat-card sn-stat-warning">
+                <i class="bi bi-hourglass-split"></i>
+                <div><span class="sn-stat-value">@ViewBag.OpenLeadCount</span><span class="sn-stat-label">در جریان مذاکره</span></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="sn-stat-card sn-stat-info">
+                <i class="bi bi-file-earmark-text"></i>
+                <div><span class="sn-stat-value">@ViewBag.ContractCount</span><span class="sn-stat-label">قرارداد</span></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="sn-stat-card sn-stat-success">
+                <i class="bi bi-cash-coin"></i>
+                <div><span class="sn-stat-value">@Money((long)ViewBag.PaidAmount)</span><span class="sn-stat-label">فروش محقق (تومان)</span></div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="col-6 col-md-3">
+            <div class="sn-stat-card sn-stat-warning">
+                <i class="bi bi-kanban"></i>
+                <div><span class="sn-stat-value">@ViewBag.MyTaskCount</span><span class="sn-stat-label">تسک باز من</span></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="sn-stat-card sn-stat-success">
+                <i class="bi bi-check2-circle"></i>
+                <div><span class="sn-stat-value">@ViewBag.DoneTaskCount</span><span class="sn-stat-label">تسک انجام‌شده</span></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="sn-stat-card sn-stat-info">
+                <i class="bi bi-stopwatch"></i>
+                <div><span class="sn-stat-value">@(((int)ViewBag.WeekMinutes) / 60) ساعت</span><span class="sn-stat-label">کار این هفته</span></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="sn-stat-card sn-stat-primary">
+                <i class="bi bi-diagram-3"></i>
+                <div><span class="sn-stat-value">@ViewBag.ProjectCount</span><span class="sn-stat-label">پروژه فعال من</span></div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
+        <div class="sn-admin-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="bi bi-megaphone me-2 text-warning"></i>اطلاعیه‌های مدیر</h5>
+            </div>
+            @if (!announcements.Any())
+            {
+                <p class="text-muted mb-0">اطلاعیه‌ای وجود ندارد.</p>
+            }
+            @foreach (var a in announcements)
+            {
+                <div class="border rounded-3 p-3 mb-2 @(a.IsImportant ? "border-warning bg-warning bg-opacity-10" : "")">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <strong>@a.Title</strong>
+                        @if (a.IsImportant)
+                        {
+                            <span class="badge bg-warning text-dark">مهم</span>
+                        }
+                    </div>
+                    <p class="mb-0 mt-1 small text-muted">@a.Body</p>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="sn-admin-card h-100">
+            <h5 class="mb-3"><i class="bi bi-lightning me-2 text-success"></i>دسترسی سریع</h5>
+            @if (isSales)
+            {
+                <a href="/Partner/Sales/Create" class="btn btn-outline-primary w-100 mb-2 text-start"><i class="bi bi-plus-lg me-2"></i>ثبت لید جدید</a>
+                <a href="/Partner/Sales/Contracts" class="btn btn-outline-secondary w-100 mb-2 text-start"><i class="bi bi-file-earmark-text me-2"></i>وضعیت قراردادها و اقساط</a>
+                <a href="/Partner/Sales/Commissions" class="btn btn-outline-secondary w-100 mb-2 text-start"><i class="bi bi-cash-stack me-2"></i>پورسانت من</a>
+                <a href="/Partner/Sales/Tickets" class="btn btn-outline-secondary w-100 text-start"><i class="bi bi-life-preserver me-2"></i>ثبت درخواست بررسی فنی</a>
+            }
+            else
+            {
+                <a href="/Partner/Dev" class="btn btn-outline-primary w-100 mb-2 text-start"><i class="bi bi-kanban me-2"></i>برد تسک‌های من</a>
+                <a href="/Partner/Dev/TimeLogs" class="btn btn-outline-secondary w-100 mb-2 text-start"><i class="bi bi-stopwatch me-2"></i>ثبت زمان کار</a>
+                <a href="/Partner/Dev/Documents" class="btn btn-outline-secondary w-100 mb-2 text-start"><i class="bi bi-journal-code me-2"></i>مستندات فنی پروژه‌ها</a>
+                <a href="/Partner/Dev/Profile" class="btn btn-outline-secondary w-100 text-start"><i class="bi bi-person-vcard me-2"></i>پروفایل فنی</a>
+            }
+        </div>
+    </div>
+</div>

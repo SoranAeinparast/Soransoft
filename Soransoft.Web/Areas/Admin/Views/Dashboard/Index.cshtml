@@ -1,0 +1,450 @@
+@model Soransoft.Web.Models.Admin.DashboardViewModel
+@{
+    ViewData["Title"] = "داشبورد";
+}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-bag-check"></i></div>
+            <div>
+                <div class="sn-stat-value">@Model.TotalOrders</div>
+                <div class="sn-stat-label">کل سفارش‌ها</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div>
+                <div class="sn-stat-value">@Model.NewOrders</div>
+                <div class="sn-stat-label">سفارش‌های جدید</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-envelope"></i></div>
+            <div>
+                <div class="sn-stat-value">@Model.UnreadMessages</div>
+                <div class="sn-stat-label">پیام خوانده‌نشده</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-chat-dots"></i></div>
+            <div>
+                <div class="sn-stat-value">@Model.UnreadConsultations</div>
+                <div class="sn-stat-label">مشاوره خوانده‌نشده</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-journal-text"></i></div>
+            <div>
+                <div class="sn-stat-value">@Model.TotalArticles</div>
+                <div class="sn-stat-label">مقالات</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-collection"></i></div>
+            <div>
+                <div class="sn-stat-value">@Model.TotalPortfolios</div>
+                <div class="sn-stat-label">نمونه‌کارها</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="sn-admin-card sn-stat-card">
+            <div class="sn-stat-icon"><i class="bi bi-eye"></i></div>
+            <div>
+                <div class="sn-stat-value">@Model.TotalArticleVisits.ToString("N0")</div>
+                <div class="sn-stat-label">کل بازدید مقالات</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a href="/Admin/ErrorLogs" class="text-decoration-none">
+            <div class="sn-admin-card sn-stat-card @(Model.RecentErrors > 0 ? "sn-stat-danger" : "")">
+                <div class="sn-stat-icon"><i class="bi bi-bug"></i></div>
+                <div>
+                    <div class="sn-stat-value">@Model.RecentErrors</div>
+                    <div class="sn-stat-label">خطای امروز</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a href="/Admin/Services" class="text-decoration-none">
+            <div class="sn-admin-card sn-stat-card">
+                <div class="sn-stat-icon"><i class="bi bi-gear"></i></div>
+                <div>
+                    <div class="sn-stat-value">@Model.TotalServices</div>
+                    <div class="sn-stat-label">سرویس‌ها</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a href="/Admin/Tariffs" class="text-decoration-none">
+            <div class="sn-admin-card sn-stat-card">
+                <div class="sn-stat-icon"><i class="bi bi-cash-coin"></i></div>
+                <div>
+                    <div class="sn-stat-value">@Model.TotalTariffPackages</div>
+                    <div class="sn-stat-label">پکیج‌های تعرفه</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a href="/Admin/Sliders" class="text-decoration-none">
+            <div class="sn-admin-card sn-stat-card">
+                <div class="sn-stat-icon"><i class="bi bi-images"></i></div>
+                <div>
+                    <div class="sn-stat-value">@Model.TotalSliders</div>
+                    <div class="sn-stat-label">اسلایدهای صفحه اصلی</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a href="/Admin/TeamMembers" class="text-decoration-none">
+            <div class="sn-admin-card sn-stat-card">
+                <div class="sn-stat-icon"><i class="bi bi-people"></i></div>
+                <div>
+                    <div class="sn-stat-value">@Model.TotalTeamMembers</div>
+                    <div class="sn-stat-label">اعضای تیم</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a href="/Admin/SiteUsers" class="text-decoration-none">
+            <div class="sn-admin-card sn-stat-card">
+                <div class="sn-stat-icon"><i class="bi bi-person-badge"></i></div>
+                <div>
+                    <div class="sn-stat-value">@Model.TotalSiteUsers</div>
+                    <div class="sn-stat-label">کاربران سایت</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a href="/Admin/MediaLibrary" class="text-decoration-none">
+            <div class="sn-admin-card sn-stat-card">
+                <div class="sn-stat-icon"><i class="bi bi-folder2-open"></i></div>
+                <div>
+                    <div class="sn-stat-value">@Model.TotalMediaFiles.ToString("N0")</div>
+                    <div class="sn-stat-label">فایل‌های رسانه</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- نمودارها -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="sn-admin-card">
+            <h6 class="fw-bold mb-3">سفارش‌ها، پیام‌ها و مشاوره‌های ۳۰ روز اخیر</h6>
+            <div style="height:320px"><canvas id="ordersChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-8">
+        <div class="sn-admin-card">
+            <h6 class="fw-bold mb-3">بازدید مقالات و خطاهای ثبت‌شده (۳۰ روز اخیر)</h6>
+            <div style="height:280px"><canvas id="visitsChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="sn-admin-card">
+            <h6 class="fw-bold mb-3">توزیع سفارش‌ها بر اساس نوع پروژه</h6>
+            <div style="height:280px"><canvas id="orderTypesChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- پرتال همکاران: فروش ماهانه و پیشرفت پروژه‌ها -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-8">
+        <div class="sn-admin-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-graph-up-arrow me-1"></i>فروش ماهانه همکاران (۱۲ ماه اخیر — مبنای اقساط پرداخت‌شده)</h6>
+                <a href="/Admin/PortalLeads/Contracts" class="small">قراردادها</a>
+            </div>
+            @if (!Model.MonthlySales.Any(ms => ms.Total > 0))
+            {
+                <p class="text-muted small mb-2">هنوز قسطی پرداخت نشده است؛ با ثبت پرداخت اقساط قراردادها، این نمودار زنده پر می‌شود.</p>
+            }
+            <div style="height:320px"><canvas id="partnerSalesChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="sn-admin-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-kanban me-1"></i>پیشرفت پروژه‌های فنی</h6>
+                <a href="/Admin/PortalDev/Projects" class="small">پروژه‌ها</a>
+            </div>
+            @if (!Model.ProjectProgress.Any())
+            {
+                <p class="text-muted small mb-2">پروژه‌ای ثبت نشده است.</p>
+            }
+            <div style="height:320px"><canvas id="projectProgressChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="sn-admin-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 fw-bold">آخرین سفارش‌ها</h6>
+                <a href="/Admin/ProjectOrders" class="small">همه</a>
+            </div>
+            @if (!Model.LatestOrders.Any())
+            {
+                <p class="text-muted small mb-0">سفارشی ثبت نشده است.</p>
+            }
+            <div class="table-responsive">
+                <table class="table table-sm sn-admin-table align-middle">
+                    <thead><tr><th>نام</th><th>نوع</th><th>وضعیت</th><th>تاریخ</th></tr></thead>
+                    <tbody>
+                        @foreach (var order in Model.LatestOrders)
+                        {
+                            <tr>
+                                <td>@order.FullName</td>
+                                <td>@order.ProjectType.ToString()</td>
+                                <td><span class="badge bg-secondary">@order.Status.ToString()</span></td>
+                                <td class="small">@order.CreatedAt.ToString("MM/dd")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="sn-admin-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 fw-bold">آخرین پیام‌ها</h6>
+                <a href="/Admin/ContactMessages" class="small">همه</a>
+            </div>
+            @if (!Model.LatestMessages.Any())
+            {
+                <p class="text-muted small mb-0">پیامی وجود ندارد.</p>
+            }
+            <div class="table-responsive">
+                <table class="table table-sm sn-admin-table align-middle">
+                    <thead><tr><th>نام</th><th>موضوع</th><th>وضعیت</th><th>تاریخ</th></tr></thead>
+                    <tbody>
+                        @foreach (var msg in Model.LatestMessages)
+                        {
+                            <tr>
+                                <td>@msg.FullName</td>
+                                <td>@msg.Subject</td>
+                                <td><span class="badge bg-secondary">@msg.Status.ToString()</span></td>
+                                <td class="small">@msg.CreatedAt.ToString("MM/dd")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+        (function () {
+            'use strict';
+            var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Last30DaysLabels));
+
+            Chart.defaults.font.family = "Vazirmatn, Tahoma, sans-serif";
+            Chart.defaults.color = "#7a8a94";
+
+            // ---------- سفارش‌ها / پیام‌ها / مشاوره‌ها ----------
+            new Chart(document.getElementById('ordersChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'سفارش‌ها',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.OrdersPerDay)),
+                            borderColor: '#00b3a4',
+                            backgroundColor: 'rgba(0,179,164,.12)',
+                            fill: true,
+                            tension: .35,
+                            borderWidth: 2,
+                            pointRadius: 2
+                        },
+                        {
+                            label: 'پیام‌ها',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MessagesPerDay)),
+                            borderColor: '#4c7ef3',
+                            backgroundColor: 'rgba(76,126,243,.10)',
+                            fill: true,
+                            tension: .35,
+                            borderWidth: 2,
+                            pointRadius: 2
+                        },
+                        {
+                            label: 'مشاوره‌ها',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ConsultationsPerDay)),
+                            borderColor: '#f5a623',
+                            backgroundColor: 'rgba(245,166,35,.10)',
+                            fill: true,
+                            tension: .35,
+                            borderWidth: 2,
+                            pointRadius: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'bottom', rtl: true } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+
+            // ---------- بازدید / خطاها ----------
+            new Chart(document.getElementById('visitsChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'بازدید مقالات',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ArticleVisitsPerDay)),
+                            backgroundColor: 'rgba(0,179,164,.55)',
+                            borderRadius: 4
+                        },
+                        {
+                            type: 'line',
+                            label: 'خطاها',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ErrorsPerDay)),
+                            borderColor: '#e35d6a',
+                            backgroundColor: '#e35d6a',
+                            tension: .35,
+                            borderWidth: 2,
+                            pointRadius: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'bottom', rtl: true } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+
+            // ---------- پرتال همکاران: فروش ماهانه (ستونی انباشته + مجموع) ----------
+            var salesLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales.Select(m => m.Label)));
+            var partnerNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                Model.MonthlySales.SelectMany(m => m.ByPartner.Keys).Distinct().ToList()));
+            var partnerColors = ['#00b3a4', '#4c7ef3', '#f5a623', '#e35d6a', '#9b59b6', '#2ecc71', '#e67e22', '#16a085'];
+
+            new Chart(document.getElementById('partnerSalesChart'), {
+                type: 'bar',
+                data: {
+                    labels: salesLabels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'مجموع ماه',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales.Select(m => m.Total))),
+                            borderColor: '#1e2a32',
+                            backgroundColor: '#1e2a32',
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            tension: .3,
+                            order: 0
+                        },
+                        ...partnerNames.map(function (name, idx) {
+                            var perPartner = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales.Select(m => m.ByPartner)));
+                            return {
+                                type: 'bar',
+                                label: name,
+                                data: perPartner.map(function (dict) { return dict[name] || 0; }),
+                                backgroundColor: partnerColors[idx % partnerColors.length],
+                                stack: 'sales',
+                                borderRadius: 3,
+                                order: 1
+                            };
+                        })
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'bottom', rtl: true },
+                        tooltip: { rtl: true, callbacks: {
+                            label: function (ctx) { return ctx.dataset.label + ': ' + Number(ctx.parsed.y).toLocaleString('fa-IR') + ' تومان'; }
+                        } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: function (v) { return Number(v).toLocaleString('fa-IR'); } } },
+                        x: { stacked: true }
+                    }
+                }
+            });
+
+            // ---------- پرتال همکاران: پیشرفت پروژه‌ها (میله افقی انباشته) ----------
+            new Chart(document.getElementById('projectProgressChart'), {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProjectProgress.Select(p => p.Title))),
+                    datasets: [
+                        { label: 'انجام شده', data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProjectProgress.Select(p => p.Done))), backgroundColor: '#2ecc71' },
+                        { label: 'در تست', data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProjectProgress.Select(p => p.Testing))), backgroundColor: '#f5a623' },
+                        { label: 'در حال انجام', data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProjectProgress.Select(p => p.InProgress))), backgroundColor: '#4c7ef3' },
+                        { label: 'انجام نشده', data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProjectProgress.Select(p => p.ToDo))), backgroundColor: '#b8c4cc' }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'bottom', rtl: true } },
+                    scales: { x: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }, y: { stacked: true } }
+                }
+            });
+
+            // ---------- توزیع نوع سفارش ----------
+            var hasTypeData = @((Model.OrderTypeCounts.Count > 0).ToString().ToLower());
+            new Chart(document.getElementById('orderTypesChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.OrderTypeLabels)),
+                    datasets: [{
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.OrderTypeCounts)),
+                        backgroundColor: ['#00b3a4', '#4c7ef3', '#f5a623', '#e35d6a'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', rtl: true } }
+                }
+            });
+        })();
+    </script>
+}

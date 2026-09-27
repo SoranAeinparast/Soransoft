@@ -1,0 +1,76 @@
+@model List<ErrorLog>
+@{
+    ViewData["Title"] = "لاگ خطاها";
+    var severity = ViewBag.CurrentSeverity as string;
+    int page = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int total = ViewBag.TotalCount ?? 0;
+}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h5 class="mb-0">لاگ خطاهای برنامه <span class="badge bg-secondary">@total</span></h5>
+    <div class="d-flex gap-2">
+        <a href="/Admin/ErrorLogs" class="btn btn-sm @(string.IsNullOrEmpty(severity) ? "sn-btn-primary" : "btn-outline-secondary")">همه</a>
+        <a href="/Admin/ErrorLogs?severity=Error" class="btn btn-sm @(!string.IsNullOrEmpty(severity) && severity == "Error" ? "sn-btn-primary" : "btn-outline-secondary")">Error</a>
+        <a href="/Admin/ErrorLogs?severity=Warning" class="btn btn-sm @(!string.IsNullOrEmpty(severity) && severity == "Warning" ? "sn-btn-primary" : "btn-outline-secondary")">Warning</a>
+        <form method="post" action="/Admin/ErrorLogs/ClearAll" onsubmit="return confirm('همه لاگ‌ها پاک شوند؟')">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-sm btn-outline-danger">پاک کردن همه</button>
+        </form>
+    </div>
+</div>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted text-center my-4">لاگی ثبت نشده است. 🎉</p>
+    }
+    <div class="table-responsive">
+        <table class="table sn-admin-table align-middle">
+            <thead>
+                <tr><th>#</th><th>شدت</th><th>پیام</th><th>مسیر</th><th>روش</th><th>IP</th><th>تاریخ</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>
+                            <span class="badge @(item.Severity == "Error" ? "bg-danger" : item.Severity == "Warning" ? "bg-warning text-dark" : "bg-secondary")">
+                                @item.Severity
+                            </span>
+                        </td>
+                        <td class="small" style="max-width:340px">
+                            @(item.Message.Length > 100 ? item.Message[..100] + "…" : item.Message)
+                        </td>
+                        <td dir="ltr" class="small">@item.Path</td>
+                        <td class="small">@item.HttpMethod</td>
+                        <td dir="ltr" class="small">@item.IpAddress</td>
+                        <td class="small">@item.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                        <td class="text-nowrap">
+                            <a href="/Admin/ErrorLogs/Details/@item.Id" class="btn btn-sm btn-outline-primary">جزئیات</a>
+                            <form method="post" action="/Admin/ErrorLogs/Delete/@item.Id" class="d-inline"
+                                  onsubmit="return confirm('حذف شود؟')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == page ? "active" : "")">
+                        <a class="page-link" href="/Admin/ErrorLogs?page=@i@(string.IsNullOrEmpty(severity) ? "" : $"&severity={severity}")">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>

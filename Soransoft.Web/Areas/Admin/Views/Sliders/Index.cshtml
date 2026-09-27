@@ -1,0 +1,53 @@
+@model List<Slider>
+@{
+    ViewData["Title"] = "مدیریت اسلایدر";
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0">اسلایدر صفحه اصلی</h5>
+    <a href="/Admin/Sliders/Create" class="btn sn-btn-primary"><i class="bi bi-plus-lg me-1"></i> اسلاید جدید</a>
+</div>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted text-center my-4">اسلایدی ثبت نشده است.</p>
+    }
+    <div class="table-responsive">
+        <table class="table sn-admin-table align-middle">
+            <thead>
+                <tr><th>#</th><th>عنوان</th><th>زیرعنوان</th><th>تصویر</th><th>لینک</th><th>فعال</th><th>ترتیب</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Title</td>
+                        <td class="small text-muted">@item.SubTitle</td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(item.Image))
+                            {
+                                <img src="@item.Image" alt="" style="max-height:40px" class="rounded" />
+                            }
+                            else
+                            {
+                                <span class="text-muted small">—</span>
+                            }
+                        </td>
+                        <td dir="ltr" class="small">@(item.Link ?? "—")</td>
+                        <td>@(item.IsActive ? "بله" : "خیر")</td>
+                        <td>@item.DisplayOrder</td>
+                        <td class="text-nowrap">
+                            <a href="/Admin/Sliders/Edit/@item.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                            <form method="post" action="/Admin/Sliders/Delete/@item.Id" class="d-inline"
+                                  onsubmit="return confirm('حذف شود؟')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

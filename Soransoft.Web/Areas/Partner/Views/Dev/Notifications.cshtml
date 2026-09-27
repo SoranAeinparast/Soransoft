@@ -1,0 +1,33 @@
+@model List<Soransoft.Domain.Entities.Announcement>
+@{
+    ViewData["Title"] = "اطلاعیه‌ها";
+}
+
+<h5 class="mb-3"><i class="bi bi-megaphone me-2"></i>اطلاعیه‌های مدیر</h5>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted mb-0">اطلاعیه‌ای وجود ندارد.</p>
+    }
+    @foreach (var a in Model)
+    {
+        <div class="border rounded-3 p-3 mb-2 @(a.IsImportant ? "border-warning bg-warning bg-opacity-10" : "")">
+            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                <strong>@a.Title</strong>
+                <div class="d-flex gap-2 align-items-center">
+                    @if (a.IsImportant)
+                    {
+                        <span class="badge bg-warning text-dark">مهم</span>
+                    }
+                    <form asp-action="MarkRead" method="post">
+                        <input type="hidden" name="id" value="@a.Id" />
+                        <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check2"></i> خواندم</button>
+                    </form>
+                </div>
+            </div>
+            <p class="mb-1 mt-2">@a.Body</p>
+            <div class="small text-muted">@a.CreatedAt.ToString("yyyy/MM/dd HH:mm")</div>
+        </div>
+    }
+</div>

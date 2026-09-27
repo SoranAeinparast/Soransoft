@@ -1,0 +1,189 @@
+@model List<Soransoft.Domain.Entities.Partner>
+@{
+    ViewData["Title"] = "همکاران پرتال";
+    string RoleBadge(Soransoft.Domain.Entities.PartnerRole r) => r switch
+    {
+        Soransoft.Domain.Entities.PartnerRole.Sales => "bg-primary",
+        Soransoft.Domain.Entities.PartnerRole.SalesManager => "bg-primary bg-opacity-75",
+        Soransoft.Domain.Entities.PartnerRole.Developer => "bg-success",
+        _ => "bg-success bg-opacity-75"
+    };
+    string RoleTitle(Soransoft.Domain.Entities.PartnerRole r) => r switch
+    {
+        Soransoft.Domain.Entities.PartnerRole.Sales => "همکار فروش",
+        Soransoft.Domain.Entities.PartnerRole.SalesManager => "مدیر فروش",
+        Soransoft.Domain.Entities.PartnerRole.Developer => "توسعه‌دهنده",
+        _ => "مدیر فنی"
+    };
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-4">
+        <div class="sn-stat-card sn-stat-primary"><i class="bi bi-people"></i>
+            <div><span class="sn-stat-value">@Model.Count</span><span class="sn-stat-label">کل همکاران</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="sn-stat-card sn-stat-info"><i class="bi bi-graph-up"></i>
+            <div><span class="sn-stat-value">@ViewBag.SalesCount</span><span class="sn-stat-label">تیم فروش</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="sn-stat-card sn-stat-success"><i class="bi bi-code-slash"></i>
+            <div><span class="sn-stat-value">@ViewBag.DevCount</span><span class="sn-stat-label">تیم فنی</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-4">
+        <div class="sn-admin-card">
+            <h6 class="mb-3"><i class="bi bi-person-plus me-2"></i>ساخت حساب همکار جدید</h6>
+            <form asp-action="Create" method="post">
+                <div class="mb-2">
+                    <label class="form-label small">نام و نام خانوادگی *</label>
+                    <input name="FullName" class="form-control form-control-sm" required />
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label small">نام کاربری *</label>
+                        <input name="Username" class="form-control form-control-sm" dir="ltr" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">رمز عبور * (حداقل ۸)</label>
+                        <input name="Password" type="text" class="form-control form-control-sm" dir="ltr" required minlength="8" />
+                    </div>
+                </div>
+                <div class="row g-2 mt-0">
+                    <div class="col-6">
+                        <label class="form-label small">موبایل</label>
+                        <input name="Mobile" class="form-control form-control-sm" dir="ltr" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">ایمیل</label>
+                        <input name="Email" type="email" class="form-control form-control-sm" dir="ltr" />
+                    </div>
+                </div>
+                <div class="mb-2 mt-2">
+                    <label class="form-label small">نقش *</label>
+                    <select name="Role" class="form-select form-select-sm" id="partnerRoleSelect">
+                        <option value="1">همکار فروش</option>
+                        <option value="3">مدیر فروش (دیدن همه داده‌های فروش)</option>
+                        <option value="2">توسعه‌دهنده</option>
+                        <option value="4">مدیر فنی</option>
+                    </select>
+                </div>
+                <div class="form-check mb-2">
+                    <input type="checkbox" name="CanSeeAllSalesData" value="true" class="form-check-input" id="seeAllChk" />
+                    <label class="form-check-label small" for="seeAllChk">سطح ارشد: دیدن لیدها و قراردادهای همه همکاران فروش</label>
+                </div>
+                <div id="devFields" style="display:none">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small">سطح تخصص</label>
+                            <select name="TechLevel" class="form-select form-select-sm">
+                                <option value="">—</option>
+                                <option value="Junior">Junior</option>
+                                <option value="Mid">Mid-Level</option>
+                                <option value="Senior">Senior</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">مهارت‌ها</label>
+                            <input name="Skills" class="form-control form-control-sm" placeholder="C#, SQL Server" />
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <label class="form-label small">یادداشت مدیر</label>
+                    <input name="AdminNote" class="form-control form-control-sm" />
+                </div>
+                <button class="btn btn-primary btn-sm w-100 mt-3"><i class="bi bi-plus-lg me-1"></i>ساخت حساب</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-8">
+        <div class="sn-admin-card">
+            <h6 class="mb-3"><i class="bi bi-people me-2"></i>لیست همکاران (@Model.Count)</h6>
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">هنوز همکاری ثبت نشده است. از فرم کنار، اولین حساب را بسازید.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>همکار</th><th>نقش</th><th>دسترسی</th>
+                                <th>لید/قرارداد/تسک</th><th>آخرین ورود</th><th class="text-end">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model)
+                            {
+                                <tr class="@(p.IsActive ? "" : "table-light")">
+                                    <td>
+                                        <strong>@p.FullName</strong>
+                                        <div class="small text-muted" dir="ltr">@p.Username</div>
+                                    </td>
+                                    <td><span class="badge @RoleBadge(p.Role)">@RoleTitle(p.Role)</span></td>
+                                    <td class="small">
+                                        @if (p.CanSeeAllSalesData)
+                                        {
+                                            <span class="badge bg-warning text-dark">ارشد</span>
+                                        }
+                                        else if (p.Role == Soransoft.Domain.Entities.PartnerRole.Developer || p.Role == Soransoft.Domain.Entities.PartnerRole.TechManager)
+                                        {
+                                            <span class="text-muted">@p.TechLevel</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">داده خودش</span>
+                                        }
+                                    </td>
+                                    <td class="small">@p.Leads.Count / @p.Contracts.Count / @p.Tasks.Count</td>
+                                    <td class="small">@(p.LastLoginAt?.ToString("yyyy/MM/dd HH:mm") ?? "—")</td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1 align-items-center flex-wrap">
+                                            <form asp-action="Toggle" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@p.Id" />
+                                                <button class="btn btn-sm @(p.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(p.IsActive ? "غیرفعال کردن ورود" : "فعال کردن حساب")">
+                                                    @(p.IsActive ? "غیرفعال" : "فعال")
+                                                </button>
+                                            </form>
+                                            <form asp-action="ResetPassword" method="post" class="d-inline-flex gap-1">
+                                                <input type="hidden" name="id" value="@p.Id" />
+                                                <input name="password" class="form-control form-control-sm" dir="ltr" placeholder="رمز جدید" minlength="8" required style="width:120px" />
+                                                <button class="btn btn-sm btn-outline-primary" title="بازنشانی رمز"><i class="bi bi-key"></i></button>
+                                            </form>
+                                            <form asp-action="Delete" method="post" class="d-inline"
+                                                  onsubmit="return confirm('حساب @p.FullName حذف شود؟ سابقه لیدها و قراردادهایش حفظ می‌شود.')">
+                                                <input type="hidden" name="id" value="@p.Id" />
+                                                <button class="btn btn-sm btn-outline-danger" title="حذف"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+        <div class="alert alert-info small mt-2">
+            <i class="bi bi-shield-lock me-1"></i>
+            همکاران فقط از مسیر <a href="/Partner/Account/Login" target="_blank"><strong>پرتال همکاران</strong></a> وارد می‌شوند و با «ورود / عضویت» سایت امکان ورود ندارند.
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('partnerRoleSelect').addEventListener('change', function () {
+            var isDev = this.value === '2' || this.value === '4';
+            document.getElementById('devFields').style.display = isDev ? '' : 'none';
+        });
+    </script>
+}

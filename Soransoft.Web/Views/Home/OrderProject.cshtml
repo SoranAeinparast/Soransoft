@@ -1,0 +1,67 @@
+@model Soransoft.Application.ViewModels.OrderProjectViewModel
+@{
+    ViewData["Title"] = "سفارش پروژه";
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">سفــارش پروژه</h1>
+        <p class="sn-hero-text">فرم زیر را پر کنید تا کارشناسان ما در اسرع وقت با شما تماس بگیرند</p>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-7">
+                @if (TempData["Success"] is string success)
+                {
+                    <div class="alert alert-success text-center">@success</div>
+                }
+                <div class="sn-form-card">
+                    <form asp-action="OrderProject" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control sn-input" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Mobile" class="form-label"></label>
+                                <input asp-for="Mobile" class="form-control sn-input" dir="ltr" />
+                                <span asp-validation-for="Mobile" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control sn-input" dir="ltr" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="ProjectType" class="form-label"></label>
+                            <select asp-for="ProjectType" class="form-select sn-input" asp-items="Html.GetEnumSelectList<Soransoft.Domain.Enums.ServiceKind>()">
+                                <option value="">انتخاب کنید…</option>
+                            </select>
+                            <span asp-validation-for="ProjectType" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Budget" class="form-label"></label>
+                            <input asp-for="Budget" class="form-control sn-input" dir="ltr" />
+                            <span asp-validation-for="Budget" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control sn-input" rows="5"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                        <button type="submit" class="btn sn-btn-primary btn-lg w-100">ارسال سفارش</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

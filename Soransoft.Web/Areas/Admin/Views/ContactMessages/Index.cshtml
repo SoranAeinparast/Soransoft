@@ -1,0 +1,44 @@
+@model List<ContactMessage>
+@{
+    ViewData["Title"] = "پیام‌های تماس";
+}
+<h5 class="mb-4">پیام‌های تماس</h5>
+
+<div class="sn-admin-card">
+    <div class="table-responsive">
+        <table class="table sn-admin-table align-middle">
+            <thead>
+                <tr><th>#</th><th>نام</th><th>موبایل</th><th>موضوع</th><th>وضعیت</th><th>تاریخ</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr class="@(item.Status == MessageStatus.Unread ? "fw-bold" : "")">
+                        <td>@item.Id</td>
+                        <td>@item.FullName</td>
+                        <td dir="ltr">@item.Mobile</td>
+                        <td>@item.Subject</td>
+                        <td>
+                            <span class="badge @(item.Status == MessageStatus.Unread ? "bg-primary" : item.Status == MessageStatus.Answered ? "bg-success" : "bg-secondary")">
+                                @item.Status.ToString()
+                            </span>
+                        </td>
+                        <td class="small">@item.CreatedAt.ToString("yyyy/MM/dd")</td>
+                        <td class="text-nowrap">
+                            <a href="/Admin/ContactMessages/Details/@item.Id" class="btn btn-sm btn-outline-primary">مشاهده</a>
+                            <form method="post" action="/Admin/ContactMessages/Delete/@item.Id" class="d-inline"
+                                  onsubmit="return confirm('حذف شود؟')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <p class="text-muted text-center my-4">پیامی وجود ندارد.</p>
+    }
+</div>

@@ -1,0 +1,103 @@
+@model Soransoft.Application.ViewModels.ContactUsViewModel
+@{
+    ViewData["Title"] = "تماس با ما";
+    var settings = (IDictionary<string, string>)ViewBag.Settings;
+    string S(string key, string def = "") => settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : def;
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">تمــــــــاس بـــــا مـــــا</h1>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-12 col-lg-5">
+                <div class="sn-contact-info">
+                    <div class="d-flex align-items-start gap-3 mb-4">
+                        <i class="bi bi-geo-alt sn-contact-icon"></i>
+                        <div>
+                            <h5>آدرس</h5>
+                            <p class="mb-0 text-muted">@S("Address")</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3 mb-4">
+                        <i class="bi bi-telephone sn-contact-icon"></i>
+                        <div>
+                            <h5>تلفن ثابت</h5>
+                            <p class="mb-0" dir="ltr">@S("Phone")</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3 mb-4">
+                        <i class="bi bi-phone sn-contact-icon"></i>
+                        <div>
+                            <h5>موبایل</h5>
+                            <p class="mb-0" dir="ltr">@S("Mobile")</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3 mb-4">
+                        <i class="bi bi-envelope sn-contact-icon"></i>
+                        <div>
+                            <h5>ایمیل</h5>
+                            <p class="mb-0" dir="ltr">@S("Email")</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-clock sn-contact-icon"></i>
+                        <div>
+                            <h5>ساعات کاری</h5>
+                            <p class="mb-0 text-muted">@S("WorkingHours")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-7">
+                <div class="sn-form-card">
+                    <h4 class="mb-4 text-center">منتظر تماس شما هستیم</h4>
+                    @if (TempData["Success"] is string success)
+                    {
+                        <div class="alert alert-success text-center">@success</div>
+                    }
+                    <form asp-action="ContactUs" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="FullName" class="form-label"></label>
+                                <input asp-for="FullName" class="form-control sn-input" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Mobile" class="form-label"></label>
+                                <input asp-for="Mobile" class="form-control sn-input" dir="ltr" />
+                                <span asp-validation-for="Mobile" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control sn-input" dir="ltr" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Subject" class="form-label"></label>
+                                <input asp-for="Subject" class="form-control sn-input" />
+                                <span asp-validation-for="Subject" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Message" class="form-label"></label>
+                                <textarea asp-for="Message" class="form-control sn-input" rows="5"></textarea>
+                                <span asp-validation-for="Message" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn sn-btn-primary btn-lg w-100">ارسال پیام</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

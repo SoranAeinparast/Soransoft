@@ -1,0 +1,88 @@
+@model Soransoft.Web.Controllers.PanelViewModel
+@using Soransoft.Web.Models
+@{
+    ViewData["Title"] = "پنل کاربری";
+    var user = Model.User!;
+}
+<section class="sn-page-hero">
+    <div class="container text-center">
+        <h1 class="sn-hero-title">پنل کاربری</h1>
+        <p class="sn-hero-text">سلام @user.FullName 👋 سفارش‌های خود را از اینجا پیگیری کنید</p>
+    </div>
+</section>
+
+<section class="sn-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-12 col-lg-3">
+                <aside class="sn-sidebar">
+                    <div class="text-center mb-4">
+                        <div class="sn-team-avatar"><i class="bi bi-person-circle"></i></div>
+                        <h6 class="fw-bold mb-0">@user.FullName</h6>
+                        <small class="text-muted" dir="ltr">@user.Mobile</small>
+                    </div>
+                    <ul class="list-unstyled sn-cat-list">
+                        <li class="active"><a href="/Panel"><i class="bi bi-bag-check me-2"></i>سفارش‌های من</a></li>
+                        <li><a href="/Panel/Profile"><i class="bi bi-person me-2"></i>پروفایل</a></li>
+                        <li><a href="/Panel/ChangePassword"><i class="bi bi-shield-lock me-2"></i>تغییر رمز عبور</a></li>
+                        <li><a href="/OrderProject"><i class="bi bi-plus-circle me-2"></i>ثبت سفارش جدید</a></li>
+                        <li><a href="/Account/Logout"><i class="bi bi-box-arrow-right me-2"></i>خروج</a></li>
+                    </ul>
+                </aside>
+            </div>
+            <div class="col-12 col-lg-9">
+                <div class="sn-form-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                        <h5 class="mb-0 fw-bold">سفارش‌های من (@Model.Orders.Count)</h5>
+                        <a href="/OrderProject" class="btn sn-btn-primary btn-sm">سفارش جدید</a>
+                    </div>
+
+                    @if (!Model.Orders.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size:3rem;color:var(--sn-primary)"></i>
+                            <p class="text-muted mt-3 mb-3">هنوز سفارشی ثبت نکرده‌اید.</p>
+                            <a href="/OrderProject" class="btn sn-btn-primary">ثبت اولین سفارش</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>نوع پروژه</th>
+                                        <th>بودجه</th>
+                                        <th>وضعیت</th>
+                                        <th>تاریخ ثبت</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.Orders)
+                                    {
+                                        <tr>
+                                            <td>@order.Id</td>
+                                            <td>@PanelDisplay.OrderTypeTitle(order.ProjectType)</td>
+                                            <td>@(order.Budget?.ToString("N0") is string b ? b + " تومان" : "—")</td>
+                                            <td>
+                                                <span class="sn-badge @PanelDisplay.StatusBadgeClass(order.Status)">
+                                                    @PanelDisplay.StatusTitle(order.Status)
+                                                </span>
+                                            </td>
+                                            <td class="small">@order.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                            <td>
+                                                <a href="/Panel/OrderDetails/@order.Id" class="btn btn-sm sn-btn-outline">جزئیات</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
