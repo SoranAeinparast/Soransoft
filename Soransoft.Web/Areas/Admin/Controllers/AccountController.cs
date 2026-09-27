@@ -12,15 +12,19 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 {
     /// <summary>ورود/خروج ادمین (خارج از policy — بدون AdminBaseController)</summary>
     [Area("Admin")]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Roles = "Admin")]
     public class AccountController : Controller
     {
+        private const string Scheme = CookieAuthenticationDefaults.AuthenticationScheme;
         private readonly SoransoftDbContext _db;
         private readonly IPasswordHasher _hasher;
+        private readonly IConfiguration _configuration;
 
-        public AccountController(SoransoftDbContext db, IPasswordHasher hasher)
+        public AccountController(SoransoftDbContext db, IPasswordHasher hasher, IConfiguration configuration)
         {
             _db = db;
             _hasher = hasher;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -39,7 +43,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (!ModelState.IsValid) return View(model);
 
-            var admin = await _db.Admins.FirstOrDefaultAsync(a => a.Username == model.Username && !a.IsDeleted, ct);
+            var admin = await _db.Admins.FirstOrDefaultAsync(
+                a => a.Username == model.Username && !a.IsDeleted && a.IsActive, ct);
             if (admin is null || !_hasher.Verify(model.Password, admin.PasswordHash))
             {
                 ModelState.AddModelError(string.Empty, "نام کاربری یا رمز عبور اشتباه است");
@@ -55,17 +60,26 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 new(ClaimTypes.Name, admin.Username),
                 new(ClaimTypes.Role, "Admin"),
             };
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var initialPassword = _configuration["Security:InitialAdmin:Password"];
+            if (!string.IsNullOrWhiteSpace(initialPassword) && model.Password == initialPassword)
+                claims.Add(new Claim("MustChangePassword", "1"));
+
+            var identity = new ClaimsIdentity(claims, Scheme);
             await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
+                Scheme,
                 new ClaimsPrincipal(identity),
                 new AuthenticationProperties { IsPersistent = model.RememberMe });
+
+            if (claims.Any(c => c.Type == "MustChangePassword"))
+                return RedirectToAction(nameof(ChangePassword));
 
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
             return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -102,6 +116,15 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             admin.PasswordHash = _hasher.Hash(model.NewPassword);
             admin.UpdatedAt = DateTime.Now;
             await _db.SaveChangesAsync(ct);
+
+            var authentication = await HttpContext.AuthenticateAsync(Scheme);
+            var claims = User.Claims.Where(c => c.Type != "MustChangePassword").ToList();
+            var identity = new ClaimsIdentity(claims, Scheme);
+            await HttpContext.SignInAsync(
+                Scheme,
+                new ClaimsPrincipal(identity),
+                authentication.Properties ?? new AuthenticationProperties());
+
             TempData["Success"] = "رمز عبور با موفقیت تغییر کرد";
             return RedirectToAction(nameof(ChangePassword));
         }
@@ -115,7 +138,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public string CurrentPassword { get; set; } = string.Empty;
 
         [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "رمز جدید الزامی است")]
-        [System.ComponentModel.DataAnnotations.MinLength(8, ErrorMessage = "رمز جدید حداقل ۸ کاراکتر باشد")]
+        [System.ComponentModel.DataAnnotations.MinLength(12, ErrorMessage = "رمز جدید حداقل ۱۲ کاراکتر باشد")]
         [System.ComponentModel.DataAnnotations.DataType(System.ComponentModel.DataAnnotations.DataType.Password)]
         [System.ComponentModel.DataAnnotations.Display(Name = "رمز عبور جدید")]
         public string NewPassword { get; set; } = string.Empty;
