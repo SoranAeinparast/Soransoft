@@ -37,6 +37,7 @@
                         <div class="small text-muted">@t.Project?.Title @(t.Sprint != null ? $"· {t.Sprint.Title}" : "")</div>
                         <div class="d-flex justify-content-between align-items-center mt-2 gap-1 flex-wrap">
                             <form asp-action="Assign" method="post" class="d-inline-flex gap-1 align-items-center">
+                                @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@t.Id" />
                                 <select name="assigneeId" class="form-select form-select-sm" style="width:110px" title="تخصیص به" onchange="this.form.submit()">
                                     <option value="">— تخصیص —</option>
@@ -47,9 +48,97 @@
                                 </select>
                             </form>
                             <div class="d-inline-flex gap-1">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#taskEdit-@t.Id" title="ویرایش"><i class="bi bi-pencil"></i></button>
                                 <form asp-action="DeleteTask" method="post" class="d-inline" onsubmit="return confirm('تسک حذف شود؟')">
+                                    @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@t.Id" />
                                     <button class="btn btn-sm btn-outline-danger" title="حذف"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="taskEdit-@t.Id" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                                <form asp-action="EditTask" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Id" value="@t.Id" />
+                                    <div class="modal-header py-2">
+                                        <h6 class="modal-title">ویرایش تسک</h6>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row g-2">
+                                            <div class="col-12 col-md-8">
+                                                <label class="form-label small">عنوان *</label>
+                                                <input name="Title" value="@t.Title" class="form-control form-control-sm" required />
+                                            </div>
+                                            <div class="col-6 col-md-4">
+                                                <label class="form-label small">اولویت</label>
+                                                <select name="Priority" class="form-select form-select-sm">
+                                                    <option value="1" selected="@(t.Priority == Soransoft.Domain.Entities.TaskPriority.Low)">کم</option>
+                                                    <option value="2" selected="@(t.Priority == Soransoft.Domain.Entities.TaskPriority.Medium)">متوسط</option>
+                                                    <option value="3" selected="@(t.Priority == Soransoft.Domain.Entities.TaskPriority.High)">زیاد</option>
+                                                    <option value="4" selected="@(t.Priority == Soransoft.Domain.Entities.TaskPriority.Critical)">بحرانی</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label small">وضعیت</label>
+                                                <select name="Status" class="form-select form-select-sm">
+                                                    <option value="1" selected="@(t.Status == Soransoft.Domain.Entities.TaskStatus.ToDo)">انجام نشده</option>
+                                                    <option value="2" selected="@(t.Status == Soransoft.Domain.Entities.TaskStatus.InProgress)">در حال انجام</option>
+                                                    <option value="3" selected="@(t.Status == Soransoft.Domain.Entities.TaskStatus.Testing)">در حال تست</option>
+                                                    <option value="4" selected="@(t.Status == Soransoft.Domain.Entities.TaskStatus.Done)">انجام شده</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label small">پروژه</label>
+                                                <select name="ProjectId" class="form-select form-select-sm">
+                                                    <option value="">—</option>
+                                                    @foreach (var p in projects)
+                                                    {
+                                                        <option value="@p.Id" selected="@(t.ProjectId == p.Id)">@p.Title</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label small">اسپرینت</label>
+                                                <select name="SprintId" class="form-select form-select-sm">
+                                                    <option value="">—</option>
+                                                    @foreach (var s in sprints)
+                                                    {
+                                                        <option value="@s.Id" selected="@(t.SprintId == s.Id)">@s.Title</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label small">تخصیص به</label>
+                                                <select name="AssigneeId" class="form-select form-select-sm">
+                                                    <option value="">—</option>
+                                                    @foreach (var d in devs)
+                                                    {
+                                                        <option value="@d.Id" selected="@(t.PartnerId == d.Id)">@d.FullName</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label small">موعد</label>
+                                                <input name="DueDate" type="text" data-persian-date value="@PersianDisplay.Date(t.DueDate)" class="form-control form-control-sm" />
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label small">ترتیب</label>
+                                                <input name="DisplayOrder" type="number" value="@t.DisplayOrder" class="form-control form-control-sm" />
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small">توضیحات</label>
+                                                <textarea name="Description" class="form-control form-control-sm" rows="2">@t.Description</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer py-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                                        <button type="submit" class="btn btn-sm btn-primary">ذخیره تغییرات</button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -67,6 +156,7 @@
 <div class="sn-admin-card">
     <h6 class="mb-3"><i class="bi bi-plus-circle me-2"></i>ساخت تسک جدید</h6>
     <form asp-action="CreateTask" method="post" class="row g-2 align-items-end">
+        @Html.AntiForgeryToken()
         <div class="col-12 col-md-4">
             <label class="form-label small">عنوان *</label>
             <input name="Title" class="form-control form-control-sm" required placeholder="مثلاً: افزودن ماژول پیامک به SugarShop" />
@@ -112,7 +202,7 @@
         </div>
         <div class="col-9 col-md-1">
             <label class="form-label small">موعد</label>
-            <input name="DueDate" type="date" class="form-control form-control-sm" />
+            <input name="DueDate" type="text" data-persian-date class="form-control form-control-sm" />
         </div>
         <div class="col-12 col-md-12 mt-2">
             <input name="Description" class="form-control form-control-sm" placeholder="توضیحات تسک (اختیاری)" />

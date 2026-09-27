@@ -9,6 +9,7 @@
         <div class="sn-admin-card">
             <h6 class="mb-3"><i class="bi bi-megaphone me-2"></i>ارسال اطلاعیه</h6>
             <form asp-action="Send" method="post">
+                @Html.AntiForgeryToken()
                 <div class="mb-2">
                     <label class="form-label small">عنوان *</label>
                     <input name="Title" class="form-control form-control-sm" required />
@@ -66,14 +67,46 @@
                             {
                                 <span class="badge bg-warning text-dark">مهم</span>
                             }
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-1" data-bs-toggle="modal" data-bs-target="#editAnnouncement-@a.Id" title="ویرایش"><i class="bi bi-pencil"></i></button>
                         </div>
                         <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('اطلاعیه حذف شود؟')">
+                            @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@a.Id" />
                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                         </form>
                     </div>
                     <div class="small text-muted mt-1">@a.Body</div>
-                    <div class="small text-muted mt-1">@a.CreatedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                    <div class="small text-muted mt-1">@PersianDisplay.DateTimeText(a.CreatedAt)</div>
+                </div>
+                <div class="modal fade" id="editAnnouncement-@a.Id" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <form asp-action="Edit" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="Id" value="@a.Id" />
+                                <div class="modal-header py-2"><h6 class="modal-title">ویرایش اطلاعیه</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                                <div class="modal-body">
+                                    <div class="mb-2"><label class="form-label small">عنوان *</label><input name="Title" value="@a.Title" class="form-control form-control-sm" required /></div>
+                                    <div class="mb-2"><label class="form-label small">متن *</label><textarea name="Body" class="form-control form-control-sm" rows="4" required>@a.Body</textarea></div>
+                                    <div class="row g-2">
+                                        <div class="col-7"><label class="form-label small">مخاطب</label><select name="Audience" class="form-select form-select-sm"><option value="All" selected="@(a.Audience == "All")">همه همکاران</option><option value="Sales" selected="@(a.Audience == "Sales")">تیم فروش</option><option value="Dev" selected="@(a.Audience == "Dev")">تیم فنی</option></select></div>
+                                        <div class="col-5">
+                                            <label class="form-label small">یا یک نفر خاص</label>
+                                            <select name="PartnerId" class="form-select form-select-sm">
+                                                <option value="">—</option>
+                                                @foreach (var p in partners)
+                                                {
+                                                    <option value="@p.Id" selected="@(a.PartnerId == p.Id)">@p.FullName</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-check mt-2"><input type="hidden" name="IsImportant" value="false" /><input type="checkbox" name="IsImportant" value="true" class="form-check-input" id="editImp-@a.Id" @(a.IsImportant ? "checked" : "") /><label class="form-check-label small" for="editImp-@a.Id">مهم</label></div>
+                                </div>
+                                <div class="modal-footer py-2"><button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">انصراف</button><button class="btn btn-sm btn-primary">ذخیره تغییرات</button></div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             }
         </div>
