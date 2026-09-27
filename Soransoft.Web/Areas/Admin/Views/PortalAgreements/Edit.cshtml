@@ -1,0 +1,85 @@
+@model Soransoft.Web.Areas.Admin.Controllers.AgreementFormModel
+@{
+    ViewData["Title"] = "ویرایش پیش‌نویس قرارداد";
+    var partners = ViewBag.Partners as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>ویرایش پیش‌نویس قرارداد @Model.AgreementNo</h5>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+
+<div class="sn-admin-card">
+    <form asp-action="Save" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+        <div class="row g-2">
+            <div class="col-6 col-md-3">
+                <label asp-for="PartnerId" class="form-label small">همکار *</label>
+                <select asp-for="PartnerId" class="form-select form-select-sm" required>
+                    <option value="">— انتخاب —</option>
+                    @foreach (var p in partners)
+                    {
+                        <option value="@p.Id">@p.FullName (@(Convert.ToInt32(p.Role) == 1 || Convert.ToInt32(p.Role) == 3 ? "فروش" : "فنی"))</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label asp-for="Kind" class="form-label small">نوع *</label>
+                <select asp-for="Kind" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<Soransoft.Domain.Entities.AgreementKind>()"></select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label asp-for="Title" class="form-label small">عنوان *</label>
+                <input asp-for="Title" class="form-control form-control-sm" required />
+            </div>
+            <div class="col-6 col-md-3">
+                <label asp-for="Subject" class="form-label small">موضوع *</label>
+                <input asp-for="Subject" class="form-control form-control-sm" required />
+            </div>
+            <div class="col-6 col-md-3">
+                <label asp-for="StartDate" class="form-label small">تاریخ شروع *</label>
+                <input asp-for="StartDate" type="text" data-persian-date class="form-control form-control-sm" required />
+            </div>
+            <div class="col-6 col-md-3">
+                <label asp-for="EndDate" class="form-label small">تاریخ پایان</label>
+                <input asp-for="EndDate" type="text" data-persian-date class="form-control form-control-sm" />
+            </div>
+            <div class="col-6 col-md-3">
+                <label asp-for="TotalAmount" class="form-label small">مبلغ کل/سقف</label>
+                <input asp-for="TotalAmount" type="number" min="0" class="form-control form-control-sm" />
+            </div>
+            <div class="col-12 col-md-3 d-flex align-items-end">
+                <div class="form-check mb-1"><input asp-for="IsUnlimitedAmount" class="form-check-input" /><label asp-for="IsUnlimitedAmount" class="form-check-label small">سقف نامحدود</label></div>
+            </div>
+            <div class="col-6 col-md-3">
+                <label asp-for="CommissionMethod" class="form-label small">روش پورسانت</label>
+                <select asp-for="CommissionMethod" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<Soransoft.Domain.Entities.CommissionMethod>()"></select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label asp-for="CommissionValue" class="form-label small">درصد/مبلغ</label>
+                <input asp-for="CommissionValue" type="number" min="0" step="0.1" class="form-control form-control-sm" />
+            </div>
+            <div class="col-6 col-md-3">
+                <label asp-for="MonthlySalary" class="form-label small">حقوق ماهانه</label>
+                <input asp-for="MonthlySalary" type="number" min="0" class="form-control form-control-sm" />
+            </div>
+            <div class="col-6 col-md-3">
+                <label asp-for="SettlementTerms" class="form-label small">نحوه تسویه</label>
+                <input asp-for="SettlementTerms" class="form-control form-control-sm" />
+            </div>
+            <div class="col-6 col-md-3"><label asp-for="BankName" class="form-label small">بانک</label><input asp-for="BankName" class="form-control form-control-sm" /></div>
+            <div class="col-6 col-md-4"><label asp-for="BankAccountIban" class="form-label small">شماره شبا</label><input asp-for="BankAccountIban" class="form-control form-control-sm" dir="ltr" /></div>
+            <div class="col-12 col-md-5"><label asp-for="BankAccountHolder" class="form-label small">به نام</label><input asp-for="BankAccountHolder" class="form-control form-control-sm" /></div>
+            <div class="col-12"><label asp-for="Terms" class="form-label small">شرح مفاد و تعهدات</label><textarea asp-for="Terms" class="form-control form-control-sm" rows="5"></textarea></div>
+            <div class="col-12"><label asp-for="AdminNote" class="form-label small">یادداشت مدیر</label><input asp-for="AdminNote" class="form-control form-control-sm" /></div>
+        </div>
+        <div class="form-check mt-2">
+            <input asp-for="BasedOnPaidStages" class="form-check-input" />
+            <label asp-for="BasedOnPaidStages" class="form-check-label small">پورسانت فقط بر مراحل پرداخت‌شده مشتری محاسبه شود</label>
+        </div>
+        <button class="btn btn-primary btn-sm mt-3"><i class="bi bi-save me-1"></i>ذخیره پیش‌نویس</button>
+    </form>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

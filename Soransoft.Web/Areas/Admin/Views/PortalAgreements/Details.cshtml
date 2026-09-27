@@ -28,7 +28,7 @@
                 <dt class="col-4">شماره:</dt><dd class="col-8" dir="ltr">@Model.AgreementNo</dd>
                 <dt class="col-4">همکار:</dt><dd class="col-8">@Model.Partner.FullName (@(Model.Partner.Role == Soransoft.Domain.Entities.PartnerRole.Sales || Model.Partner.Role == Soransoft.Domain.Entities.PartnerRole.SalesManager ? "فروش" : "فنی"))</dd>
                 <dt class="col-4">موضوع:</dt><dd class="col-8">@Model.Subject</dd>
-                <dt class="col-4">مدت:</dt><dd class="col-8">@Model.StartDate.ToString("yyyy/MM/dd") تا @(Model.EndDate?.ToString("yyyy/MM/dd") ?? "بدون پایان")</dd>
+                <dt class="col-4">مدت:</dt><dd class="col-8">@PersianDisplay.Date(Model.StartDate) تا @(PersianDisplay.Date(Model.EndDate) ?? "بدون پایان")</dd>
                 <dt class="col-4">مبلغ کل/سقف:</dt><dd class="col-8">@(Model.IsUnlimitedAmount ? "نامحدود (بدون سقف)" : (Model.TotalAmount?.ToString("N0") ?? "—") + " تومان")</dd>
                 @if (Model.Kind == Soransoft.Domain.Entities.AgreementKind.Sales)
                 {
@@ -48,13 +48,13 @@
                     @(Model.BankName ?? "—") — <span dir="ltr">@(Model.BankAccountIban ?? "—")</span>
                     @(string.IsNullOrWhiteSpace(Model.BankAccountHolder) ? "" : $"به نام {Model.BankAccountHolder}")
                 </dd>
-                <dt class="col-4">تاریخ انعقاد:</dt><dd class="col-8">@Model.SignedAt.ToString("yyyy/MM/dd")</dd>
+                <dt class="col-4">تاریخ انعقاد:</dt><dd class="col-8">@PersianDisplay.Date(Model.SignedAt)</dd>
             </dl>
             @if (!string.IsNullOrWhiteSpace(Model.Terms))
             {
                 <hr />
                 <h6>شرح مفاد و تعهدات</h6>
-                <div class="small">@Html.Raw(Model.Terms)</div>
+                <div class="small">@Html.Raw(SafeHtml.Sanitize(Model.Terms))</div>
             }
             @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
             {
@@ -71,6 +71,7 @@
                 <a href="@Model.ContractFile" target="_blank" class="btn btn-outline-primary btn-sm w-100 mb-2"><i class="bi bi-eye me-1"></i>مشاهده PDF فعلی</a>
             }
             <form asp-action="UploadPdf" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.Id" />
                 <input type="file" name="file" accept=".pdf" class="form-control form-control-sm" required />
                 <button class="btn btn-primary btn-sm w-100 mt-2"><i class="bi bi-upload me-1"></i>بارگذاری PDF امضاشده</button>
@@ -82,6 +83,7 @@
             @if (Model.Status == Soransoft.Domain.Entities.AgreementStatus.Draft)
             {
                 <form asp-action="Activate" method="post">
+                    @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.Id" />
                     <button class="btn btn-success btn-sm w-100" @(string.IsNullOrWhiteSpace(Model.ContractFile) ? "disabled title=\"ابتدا PDF را بارگذاری کنید\"" : "")>
                         <i class="bi bi-check2-circle me-1"></i>فعال‌سازی (ملاک طرفین)
@@ -91,6 +93,7 @@
             @if (Model.Status == Soransoft.Domain.Entities.AgreementStatus.Active)
             {
                 <form asp-action="Terminate" method="post" class="mb-2">
+                    @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.Id" />
                     <input name="note" class="form-control form-control-sm mb-2" placeholder="دلیل فسخ (ثبت در یادداشت)" />
                     <button class="btn btn-warning btn-sm w-100"><i class="bi bi-x-circle me-1"></i>فسخ قرارداد</button>
@@ -99,6 +102,7 @@
             @if (Model.Status != Soransoft.Domain.Entities.AgreementStatus.Active)
             {
                 <form asp-action="Delete" method="post" onsubmit="return confirm('قرارداد حذف شود؟')">
+                    @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.Id" />
                     <button class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-trash me-1"></i>حذف</button>
                 </form>

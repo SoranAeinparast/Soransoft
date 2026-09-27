@@ -22,6 +22,7 @@
 <div class="sn-admin-card mb-3">
     <h6 class="mb-3"><i class="bi bi-plus-circle me-2"></i>ثبت قرارداد جدید</h6>
     <form asp-action="Save" method="post" id="agreementForm">
+        @Html.AntiForgeryToken()
         <div class="row g-2">
             <div class="col-6 col-md-3">
                 <label class="form-label small">همکار *</label>
@@ -51,11 +52,11 @@
 
             <div class="col-6 col-md-3">
                 <label class="form-label small">تاریخ شروع *</label>
-                <input name="StartDate" type="date" class="form-control form-control-sm" required />
+                <input name="StartDate" type="text" data-persian-date class="form-control form-control-sm" required />
             </div>
             <div class="col-6 col-md-3">
                 <label class="form-label small">تاریخ پایان</label>
-                <input name="EndDate" type="date" class="form-control form-control-sm" />
+                <input name="EndDate" type="text" data-persian-date class="form-control form-control-sm" />
             </div>
             <div class="col-6 col-md-3">
                 <label class="form-label small">مبلغ کل/سقف (تومان)</label>
@@ -155,7 +156,13 @@
                                     <a href="@a.ContractFile" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-pdf"></i></a>
                                 }
                             </td>
-                            <td class="text-end"><a href="/Admin/PortalAgreements/Details/@a.Id" class="btn btn-sm btn-outline-secondary">مدیریت</a></td>
+                            <td class="text-end">
+                                @if (a.Status == Soransoft.Domain.Entities.AgreementStatus.Draft)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                                }
+                                <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary">مدیریت</a>
+                            </td>
                         </tr>
                     }
                 </tbody>
