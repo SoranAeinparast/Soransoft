@@ -53,7 +53,7 @@
                         </td>
                         <td><span class="badge bg-secondary">@r.Partner.Role</span></td>
                         <td class="small">@(!string.IsNullOrWhiteSpace(r.Message) ? r.Message : "—")</td>
-                        <td class="small">@r.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                        <td class="small">@PersianDisplay.DateTimeText(r.CreatedAt)</td>
                         <td>
                             @switch (r.Status)
                             {
@@ -72,6 +72,7 @@
                             @if (r.Status == PasswordResetStatus.Pending)
                             {
                                 <form asp-action="ApproveReset" method="post" class="d-flex gap-1 align-items-center flex-wrap mb-1">
+                                    @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@r.Id" />
                                     <input name="password" type="text" class="form-control form-control-sm" dir="ltr"
                                            placeholder="رمز جدید (min ۸)" minlength="8" required style="width:150px" />
@@ -79,6 +80,7 @@
                                     <button class="btn btn-sm btn-success"><i class="bi bi-key me-1"></i>تایید و بازنشانی</button>
                                 </form>
                                 <form asp-action="RejectReset" method="post" class="d-flex gap-1 align-items-center">
+                                    @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@r.Id" />
                                     <input name="response" class="form-control form-control-sm" placeholder="دلیل رد" style="width:150px" />
                                     <button class="btn btn-sm btn-outline-danger">رد</button>
@@ -86,7 +88,7 @@
                             }
                             else
                             {
-                                <span class="small text-muted">تاریخ تصمیم: @(r.DecidedAt?.ToString("yyyy/MM/dd HH:mm") ?? "—")</span>
+                                <span class="small text-muted">تاریخ تصمیم: @(PersianDisplay.DateTimeText(r.DecidedAt) ?? "—")</span>
                                 @if (!string.IsNullOrWhiteSpace(r.AdminResponse))
                                 {
                                     <div class="small text-muted">یادداشت: @r.AdminResponse</div>

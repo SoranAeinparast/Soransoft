@@ -40,6 +40,7 @@
         <div class="sn-admin-card">
             <h6 class="mb-3"><i class="bi bi-person-plus me-2"></i>ساخت حساب همکار جدید</h6>
             <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
                 <div class="mb-2">
                     <label class="form-label small">نام و نام خانوادگی *</label>
                     <input name="FullName" class="form-control form-control-sm" required />
@@ -50,7 +51,7 @@
                         <input name="Username" class="form-control form-control-sm" dir="ltr" required />
                     </div>
                     <div class="col-6">
-                        <label class="form-label small">رمز عبور * (حداقل ۸)</label>
+                        <label class="form-label small">رمز عبور * (حداقل ۱۲)</label>
                         <input name="Password" type="text" class="form-control form-control-sm" dir="ltr" required minlength="8" />
                     </div>
                 </div>
@@ -144,22 +145,26 @@
                                         }
                                     </td>
                                     <td class="small">@p.Leads.Count / @p.Contracts.Count / @p.Tasks.Count</td>
-                                    <td class="small">@(p.LastLoginAt?.ToString("yyyy/MM/dd HH:mm") ?? "—")</td>
+                                    <td class="small">@(PersianDisplay.DateTimeText(p.LastLoginAt) ?? "—")</td>
                                     <td class="text-end">
                                         <div class="d-inline-flex gap-1 align-items-center flex-wrap">
+                                            <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary" title="ویرایش"><i class="bi bi-pencil"></i></a>
                                             <form asp-action="Toggle" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@p.Id" />
                                                 <button class="btn btn-sm @(p.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(p.IsActive ? "غیرفعال کردن ورود" : "فعال کردن حساب")">
                                                     @(p.IsActive ? "غیرفعال" : "فعال")
                                                 </button>
                                             </form>
                                             <form asp-action="ResetPassword" method="post" class="d-inline-flex gap-1">
+                                                @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@p.Id" />
                                                 <input name="password" class="form-control form-control-sm" dir="ltr" placeholder="رمز جدید" minlength="8" required style="width:120px" />
                                                 <button class="btn btn-sm btn-outline-primary" title="بازنشانی رمز"><i class="bi bi-key"></i></button>
                                             </form>
                                             <form asp-action="Delete" method="post" class="d-inline"
                                                   onsubmit="return confirm('حساب @p.FullName حذف شود؟ سابقه لیدها و قراردادهایش حفظ می‌شود.')">
+                                                @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@p.Id" />
                                                 <button class="btn btn-sm btn-outline-danger" title="حذف"><i class="bi bi-trash"></i></button>
                                             </form>

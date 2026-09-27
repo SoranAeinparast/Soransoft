@@ -1,8 +1,8 @@
 @model Soransoft.Domain.Entities.ContractPaymentStage?
 @{
     var s = Model;
-    var dueDate = s?.DueDate?.ToString("yyyy-MM-dd");
-    var chequeDue = s?.ChequeDueDate?.ToString("yyyy-MM-dd");
+    var dueDate = PersianDisplay.Date(s?.DueDate);
+    var chequeDue = PersianDisplay.Date(s?.ChequeDueDate);
 }
 
 <div class="row g-2">
@@ -26,7 +26,7 @@
     </div>
     <div class="col-12 col-md-5">
         <label class="form-label small">موعد پرداخت</label>
-        <input name="DueDate" type="date" class="form-control form-control-sm" value="@dueDate" />
+        <input name="DueDate" type="text" data-persian-date class="form-control form-control-sm" value="@dueDate" />
     </div>
 
     <div class="col-12">
@@ -44,7 +44,7 @@
     </div>
     <div class="col-6 col-md-3">
         <label class="form-label small">سررسید چک</label>
-        <input name="ChequeDueDate" type="date" class="form-control form-control-sm" value="@chequeDue" />
+        <input name="ChequeDueDate" type="text" data-persian-date class="form-control form-control-sm" value="@chequeDue" />
     </div>
 
     <div class="col-12">

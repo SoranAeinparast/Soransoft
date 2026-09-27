@@ -1,0 +1,72 @@
+@model Soransoft.Web.Areas.Admin.Controllers.PartnerEditModel
+@{
+    ViewData["Title"] = $"ویرایش همکار — {Model.FullName}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h5 class="mb-0"><i class="bi bi-person-gear me-2"></i>ویرایش حساب همکار</h5>
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
+
+<div class="sn-admin-card">
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <label asp-for="FullName" class="form-label small">نام و نام خانوادگی *</label>
+                <input asp-for="FullName" class="form-control form-control-sm" />
+                <span asp-validation-for="FullName" class="text-danger small"></span>
+            </div>
+            <div class="col-12 col-md-4">
+                <label asp-for="Username" class="form-label small">نام کاربری *</label>
+                <input asp-for="Username" class="form-control form-control-sm" dir="ltr" />
+                <span asp-validation-for="Username" class="text-danger small"></span>
+            </div>
+            <div class="col-6 col-md-2">
+                <label asp-for="Mobile" class="form-label small">موبایل</label>
+                <input asp-for="Mobile" class="form-control form-control-sm" dir="ltr" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label asp-for="Email" class="form-label small">ایمیل</label>
+                <input asp-for="Email" type="email" class="form-control form-control-sm" dir="ltr" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <div class="col-12 col-md-4">
+                <label asp-for="Role" class="form-label small">نقش *</label>
+                <select asp-for="Role" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<Soransoft.Domain.Entities.PartnerRole>()"></select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label asp-for="TechLevel" class="form-label small">سطح تخصص</label>
+                <input asp-for="TechLevel" class="form-control form-control-sm" placeholder="Junior / Mid / Senior" />
+            </div>
+            <div class="col-12 col-md-4">
+                <label asp-for="Skills" class="form-label small">مهارت‌ها</label>
+                <input asp-for="Skills" class="form-control form-control-sm" placeholder="C#, SQL Server" />
+            </div>
+            <div class="col-12">
+                <label asp-for="AdminNote" class="form-label small">یادداشت مدیر</label>
+                <textarea asp-for="AdminNote" class="form-control form-control-sm" rows="3"></textarea>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-4 mt-3">
+            <div class="form-check">
+                <input asp-for="CanSeeAllSalesData" class="form-check-input" />
+                <label asp-for="CanSeeAllSalesData" class="form-check-label small">دیدن همه داده‌های فروش</label>
+            </div>
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label small">حساب فعال و قابل ورود</label>
+            </div>
+        </div>
+        <div class="alert alert-light border small mt-3 mb-0">
+            رمز عبور در این فرم تغییر نمی‌کند؛ برای آن از عملیات «بازنشانی رمز» در فهرست همکاران استفاده کنید.
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm mt-3"><i class="bi bi-save me-1"></i>ذخیره تغییرات</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
