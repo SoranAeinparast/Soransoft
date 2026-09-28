@@ -1323,6 +1323,183 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.ToTable("ProjectOrders", (string)null);
                 });
 
+            modelBuilder.Entity("Soransoft.Domain.Entities.SellableProject", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive", "DisplayOrder");
+
+                    b.ToTable("SellableProjects", (string)null);
+                });
+
+            modelBuilder.Entity("Soransoft.Domain.Entities.SellableProjectComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("SellableProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SellableProjectId", "CreatedAt");
+
+                    b.ToTable("SellableProjectComments", (string)null);
+                });
+
+            modelBuilder.Entity("Soransoft.Domain.Entities.SellableProjectDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExternalUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("SellableProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StoredPath")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SellableProjectId", "DisplayOrder");
+
+                    b.ToTable("SellableProjectDocuments", (string)null);
+                });
+
+            modelBuilder.Entity("Soransoft.Domain.Entities.SellableProjectPartner", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SellableProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.HasIndex("SellableProjectId", "PartnerId")
+                        .IsUnique();
+
+                    b.ToTable("SellableProjectPartners", (string)null);
+                });
+
             modelBuilder.Entity("Soransoft.Domain.Entities.Service", b =>
                 {
                     b.Property<int>("Id")
@@ -2332,6 +2509,47 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.Navigation("SiteUser");
                 });
 
+            modelBuilder.Entity("Soransoft.Domain.Entities.SellableProjectComment", b =>
+                {
+                    b.HasOne("Soransoft.Domain.Entities.SellableProject", "Project")
+                        .WithMany("Comments")
+                        .HasForeignKey("SellableProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Soransoft.Domain.Entities.SellableProjectDocument", b =>
+                {
+                    b.HasOne("Soransoft.Domain.Entities.SellableProject", "Project")
+                        .WithMany("Documents")
+                        .HasForeignKey("SellableProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Soransoft.Domain.Entities.SellableProjectPartner", b =>
+                {
+                    b.HasOne("Soransoft.Domain.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Soransoft.Domain.Entities.SellableProject", "Project")
+                        .WithMany("PartnerAccess")
+                        .HasForeignKey("SellableProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Partner");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Soransoft.Domain.Entities.ServiceFeature", b =>
                 {
                     b.HasOne("Soransoft.Domain.Entities.Service", "Service")
@@ -2496,6 +2714,15 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.Navigation("ThirdPartyCosts");
 
                     b.Navigation("Tickets");
+                });
+
+            modelBuilder.Entity("Soransoft.Domain.Entities.SellableProject", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Documents");
+
+                    b.Navigation("PartnerAccess");
                 });
 
             modelBuilder.Entity("Soransoft.Domain.Entities.Service", b =>
