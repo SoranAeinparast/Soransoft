@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
 using SkiaSharp;
+using SkiaSharp.HarfBuzz;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
 using System.Globalization;
@@ -29,53 +30,54 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             var partner = await _db.Partners.AsNoTracking().FirstOrDefaultAsync(p => p.Id == PartnerId, ct);
             if (partner is null) return Forbidden();
 
-            var templatePath = Path.Combine(_environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot"), "card-templates", "partner-id-card.jpg");
+            var templatePath = Path.Combine(_environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot"), "card-templates", "partner-id-card.png");
             if (!System.IO.File.Exists(templatePath))
             {
-                ViewData["TemplatePath"] = "Soransoft.Web/wwwroot/card-templates/partner-id-card.jpg";
+                ViewData["TemplatePath"] = "Soransoft.Web/wwwroot/card-templates/partner-id-card.png";
                 return View("TemplateMissing");
             }
 
-            var agreementEndDate = await _db.CooperationAgreements.AsNoTracking()
-                .Where(a => a.PartnerId == partner.Id && !a.IsDeleted)
-                .OrderByDescending(a => a.EndDate ?? DateTime.MaxValue)
-                .ThenByDescending(a => a.CreatedAt)
-                .Select(a => a.EndDate)
-                .FirstOrDefaultAsync(ct);
-
             var personnelCode = PersonnelCode(partner.Id);
             var verificationUrl = VerificationUrl(personnelCode);
-            var output = RenderCard(partner, personnelCode, agreementEndDate, verificationUrl, templatePath);
-            return File(output, "image/jpeg", $"soransoft-id-card-{personnelCode}.jpg");
+            var output = RenderCard(partner, personnelCode, verificationUrl, templatePath);
+            return File(output, "image/png", $"soransoft-id-card-{personnelCode}.png");
         }
 
-        private byte[] RenderCard(PartnerEntity partner, string personnelCode, DateTime? agreementEndDate, string verificationUrl, string templatePath)
+        private byte[] RenderCard(PartnerEntity partner, string personnelCode, string verificationUrl, string templatePath)
         {
             using var template = SKBitmap.Decode(templatePath) ?? throw new InvalidOperationException("قالب کارت قابل خواندن نیست.");
             using var canvas = new SKCanvas(template);
-            using var textPaint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
-            using var typeface = SKTypeface.FromFamilyName("Arial");
-            using var font = new SKFont(typeface, template.Height * .055f);
+            using var textPaint = new SKPaint { Color = new SKColor(0x00, 0x1D, 0x43), IsAntialias = true };
+            using var regularTypeface = LoadTypeface("Vazirmatn-Regular.ttf");
+            using var boldTypeface = LoadTypeface("Vazirmatn-Bold.ttf");
+            using var shaper = new SKShaper(regularTypeface);
+            using var boldShaper = new SKShaper(boldTypeface);
+            using var nameFont = new SKFont(boldTypeface, 31);
+            using var roleFont = new SKFont(regularTypeface, 27);
+            using var valueFont = new SKFont(regularTypeface, 18);
 
             var width = template.Width;
             var height = template.Height;
-            var photoBox = new SKRect(width * .07f, height * .18f, width * .29f, height * .78f);
-            var qrBox = new SKRect(width * .77f, height * .62f, width * .96f, height * .91f);
+            var scaleX = width / 528f;
+            var scaleY = height / 802f;
+            var photoBox = CardRect(52, 229, 224, 410, scaleX, scaleY);
+            var qrBox = CardRect(340, 584, 475, 718, scaleX, scaleY);
 
             var photoPath = ResolvePrivatePath(partner.PersonalPhotoPath);
             if (photoPath is not null && System.IO.File.Exists(photoPath))
             {
                 using var photo = SKBitmap.Decode(photoPath);
-                if (photo is not null) canvas.DrawBitmap(photo, photoBox);
+                if (photo is not null) DrawImageCover(canvas, photo, photoBox);
             }
 
-            font.Size = height * .055f;
-            DrawText(canvas, textPaint, font, partner.FullName, width * .34f, height * .32f);
-            font.Size = height * .038f;
-            DrawText(canvas, textPaint, font, $"کد پرسنلی: {personnelCode}", width * .34f, height * .42f);
-            DrawText(canvas, textPaint, font, $"تماس: {partner.Mobile ?? "ثبت نشده"}", width * .34f, height * .49f);
-            DrawText(canvas, textPaint, font, $"ایمیل: {partner.Email ?? "ثبت نشده"}", width * .34f, height * .56f);
-            DrawText(canvas, textPaint, font, $"اعتبار تا: {PersianDate(agreementEndDate)}", width * .34f, height * .63f);
+            var rightText = 491 * scaleX;
+            DrawText(canvas, boldShaper, textPaint, nameFont, partner.FullName, rightText, 295 * scaleY, SKTextAlign.Right);
+            DrawText(canvas, shaper, textPaint, roleFont, RoleTitle(partner.Role), rightText, 340 * scaleY, SKTextAlign.Right);
+
+            var valueX = 207 * scaleX;
+            DrawText(canvas, shaper, textPaint, valueFont, personnelCode, valueX, 468 * scaleY, SKTextAlign.Left);
+            DrawText(canvas, shaper, textPaint, valueFont, partner.Mobile ?? "ثبت نشده", valueX, 503 * scaleY, SKTextAlign.Left);
+            DrawText(canvas, shaper, textPaint, valueFont, partner.Email ?? "ثبت نشده", valueX, 541 * scaleY, SKTextAlign.Left);
 
             using var qrData = new QRCodeGenerator().CreateQrCode(verificationUrl, QRCodeGenerator.ECCLevel.Q);
             var qrBytes = new PngByteQRCode(qrData).GetGraphic(12);
@@ -83,12 +85,45 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             if (qr is not null) canvas.DrawBitmap(qr, qrBox);
 
             using var image = SKImage.FromBitmap(template);
-            using var encoded = image.Encode(SKEncodedImageFormat.Jpeg, 94);
+            using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
             return encoded.ToArray();
         }
 
-        private static void DrawText(SKCanvas canvas, SKPaint paint, SKFont font, string text, float x, float y) =>
-            canvas.DrawText(text, x, y, SKTextAlign.Left, font, paint);
+        private SKTypeface LoadTypeface(string fileName)
+        {
+            var fontsRoot = Path.Combine(_environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot"), "fonts");
+            var path = Path.Combine(fontsRoot, fileName);
+            return SKTypeface.FromFile(path) ?? SKTypeface.FromFamilyName("DejaVu Sans") ?? throw new InvalidOperationException("فونت کارت شناسایی قابل بارگذاری نیست.");
+        }
+
+        private static void DrawText(SKCanvas canvas, SKShaper shaper, SKPaint paint, SKFont font, string? text, float x, float y, SKTextAlign align)
+        {
+            if (!string.IsNullOrWhiteSpace(text)) canvas.DrawShapedText(shaper, text.Trim(), x, y, align, font, paint);
+        }
+
+        private static SKRect CardRect(float left, float top, float right, float bottom, float scaleX, float scaleY) =>
+            new(left * scaleX, top * scaleY, right * scaleX, bottom * scaleY);
+
+        private static void DrawImageCover(SKCanvas canvas, SKBitmap image, SKRect destination)
+        {
+            var sourceRatio = image.Width / (float)image.Height;
+            var destinationRatio = destination.Width / destination.Height;
+            SKRect source;
+            if (sourceRatio > destinationRatio)
+            {
+                var sourceWidth = image.Height * destinationRatio;
+                var left = (image.Width - sourceWidth) / 2;
+                source = new SKRect(left, 0, left + sourceWidth, image.Height);
+            }
+            else
+            {
+                var sourceHeight = image.Width / destinationRatio;
+                var top = (image.Height - sourceHeight) / 2;
+                source = new SKRect(0, top, image.Width, top + sourceHeight);
+            }
+
+            canvas.DrawBitmap(image, source, destination);
+        }
 
         private string VerificationUrl(string personnelCode) =>
             $"{(_configuration["CardVerificationBaseUrl"] ?? "https://verify.soransoft.ir").TrimEnd('/')}/card/{Uri.EscapeDataString(personnelCode)}";
@@ -108,6 +143,14 @@ namespace Soransoft.Web.Areas.Partner.Controllers
 
         private static string PersonnelCode(int id) => $"P-{id.ToString("D5", CultureInfo.InvariantCulture)}";
 
-        private static string PersianDate(DateTime? value) => value is null ? "ثبت نشده" : value.Value.ToString("yyyy/MM/dd", CultureInfo.GetCultureInfo("fa-IR"));
+        private static string RoleTitle(PartnerRole role) => role switch
+        {
+            PartnerRole.Sales => "کارشناس فروش",
+            PartnerRole.SalesManager => "مدیر فروش",
+            PartnerRole.Developer => "توسعه‌دهنده",
+            PartnerRole.TechManager => "مدیر فنی",
+            _ => "همکار سوران‌سافت",
+        };
+
     }
 }
