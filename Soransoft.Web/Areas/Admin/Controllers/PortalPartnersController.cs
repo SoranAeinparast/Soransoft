@@ -23,6 +23,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [Required(ErrorMessage = "نام کامل الزامی است")]
         public string FullName { get; set; } = string.Empty;
         public string? Mobile { get; set; }
+        public string? NationalId { get; set; }
         [EmailAddress(ErrorMessage = "ایمیل معتبر نیست")]
         public string? Email { get; set; }
         public PartnerRole Role { get; set; } = PartnerRole.Sales;
@@ -46,6 +47,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public string FullName { get; set; } = string.Empty;
 
         public string? Mobile { get; set; }
+
+        public string? NationalId { get; set; }
 
         [EmailAddress(ErrorMessage = "ایمیل معتبر نیست")]
         public string? Email { get; set; }
@@ -117,6 +120,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 Username = partner.Username,
                 FullName = partner.FullName,
                 Mobile = partner.Mobile,
+                NationalId = partner.NationalId,
                 Email = partner.Email,
                 Role = partner.Role,
                 CanSeeAllSalesData = partner.CanSeeAllSalesData,
@@ -151,6 +155,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             partner.Username = username;
             partner.FullName = model.FullName.Trim();
             partner.Mobile = string.IsNullOrWhiteSpace(model.Mobile) ? null : model.Mobile.Trim();
+            partner.NationalId = string.IsNullOrWhiteSpace(model.NationalId) ? null : model.NationalId.Trim();
             partner.Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim();
             partner.Role = model.Role;
             partner.CanSeeAllSalesData = model.CanSeeAllSalesData;
@@ -235,6 +240,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 PasswordHash = _hasher.Hash(model.Password),
                 FullName = model.FullName.Trim(),
                 Mobile = string.IsNullOrWhiteSpace(model.Mobile) ? null : model.Mobile.Trim(),
+                NationalId = string.IsNullOrWhiteSpace(model.NationalId) ? null : model.NationalId.Trim(),
                 Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim(),
                 Role = model.Role,
                 CanSeeAllSalesData = model.CanSeeAllSalesData,

@@ -5,6 +5,7 @@ using Soransoft.Application.Interfaces;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace Soransoft.Web.Areas.Admin.Controllers
@@ -61,6 +62,9 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             _portal = portal;
         }
 
+        private int? CurrentAdminId =>
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+
         public async Task<IActionResult> Index(CancellationToken ct)
         {
             var leads = await _db.Leads.AsNoTracking()
@@ -90,6 +94,49 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             if (lead is null) { TempData["Error"] = "لید یافت نشد."; return RedirectToAction(nameof(Index)); }
             var result = await _portal.UpdateLeadStageAsync(id, stage, note, ct);
             TempData[result.Success ? "Success" : "Error"] = result.Message;
+            return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>ثبت نتیجه رسمی بررسی فرم معرفی مشتری</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Review(int id, LeadReviewStatus status, bool? existingCustomer, string? customerCode, string? note, CancellationToken ct)
+        {
+            if (!Enum.IsDefined(status))
+            {
+                TempData["Error"] = "نتیجه بررسی معتبر نیست.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var lead = await _db.Leads.FirstOrDefaultAsync(l => l.Id == id && !l.IsDeleted, ct);
+            if (lead is null) { TempData["Error"] = "لید یافت نشد."; return RedirectToAction(nameof(Index)); }
+            if (lead.Stage == LeadStage.Contracted)
+            {
+                TempData["Error"] = "لید تبدیل‌شده به قرارداد قابل بازبینی نیست.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var oldStatus = lead.ReviewStatus;
+            lead.ReviewStatus = status;
+            lead.ExistingCustomer = existingCustomer;
+            lead.CustomerCode = string.IsNullOrWhiteSpace(customerCode) ? null : customerCode.Trim();
+            lead.SystemCustomerNo = lead.CustomerCode;
+            lead.ReviewNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+            lead.ReviewedAt = DateTime.Now;
+            lead.ReviewedByAdminId = CurrentAdminId;
+            lead.History.Add(new LeadHistory
+            {
+                LeadId = lead.Id,
+                FromStage = lead.Stage,
+                ToStage = lead.Stage,
+                Action = "Review",
+                FromReviewStatus = oldStatus,
+                ToReviewStatus = status,
+                AdminId = CurrentAdminId,
+                Note = lead.ReviewNote ?? "نتیجه بررسی ثبت شد."
+            });
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "نتیجه بررسی فرم ثبت شد.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -126,6 +173,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             var lead = await _db.Leads.FirstOrDefaultAsync(l => l.Id == model.LeadId && !l.IsDeleted, ct);
             if (lead is null) { TempData["Error"] = "لید یافت نشد."; return RedirectToAction(nameof(Index)); }
             if (lead.Stage == LeadStage.Contracted) { TempData["Error"] = "این لید قبلاً به قرارداد تبدیل شده است."; return RedirectToAction(nameof(Index)); }
+            if (lead.ReviewStatus != LeadReviewStatus.Approved)
+            {
+                TempData["Error"] = "پیش از تبدیل، نتیجه بررسی لید باید «تایید شد» باشد.";
+                return RedirectToAction(nameof(Index));
+            }
 
             var contract = await _portal.ConvertLeadToContractAsync(model.LeadId, model.TotalAmount, model.Title, ct);
             if (contract is null) { TempData["Error"] = "تبدیل لید ناموفق بود."; return RedirectToAction(nameof(Index)); }

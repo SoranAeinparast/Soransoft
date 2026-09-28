@@ -7,6 +7,7 @@ using Soransoft.Infrastructure.Persistence;
 using Soransoft.Web.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Security.Claims;
 
 namespace Soransoft.Web.Areas.Admin.Controllers
 {
@@ -84,10 +85,15 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             _docs = docs;
         }
 
+        private int? CurrentAdminId =>
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+
         public async Task<IActionResult> Index(CancellationToken ct)
         {
             var items = await _db.CooperationAgreements.AsNoTracking()
                 .Include(a => a.Partner)
+                .Include(a => a.CancellationRequests.OrderByDescending(r => r.CreatedAt))
+                    .ThenInclude(r => r.Partner)
                 .OrderBy(a => a.Status).ThenByDescending(a => a.CreatedAt)
                 .ToListAsync(ct);
 
@@ -208,7 +214,9 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 await SyncSellableProjectAccessAsync(previousPartnerId.Value, Array.Empty<int>(), ct);
             await SyncSellableProjectAccessAsync(
                 model.PartnerId,
-                model.Kind == AgreementKind.Sales ? model.SellableProjectIds : Array.Empty<int>(),
+                model.Kind == AgreementKind.Sales && agreement.Status != AgreementStatus.Terminated
+                    ? model.SellableProjectIds
+                    : Array.Empty<int>(),
                 ct);
             TempData["Success"] = model.Id == 0
                 ? $"قرارداد {agreement.AgreementNo} به‌عنوان پیش‌نویس ثبت شد؛ پس از آپلود PDF و فعال‌سازی، ملاک طرفین می‌شود."
@@ -220,6 +228,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         {
             var agreement = await _db.CooperationAgreements.AsNoTracking()
                 .Include(a => a.Partner)
+                .Include(a => a.CancellationRequests.OrderByDescending(r => r.CreatedAt))
                 .FirstOrDefaultAsync(a => a.Id == id, ct);
             if (agreement is null) { TempData["Error"] = "قرارداد یافت نشد."; return RedirectToAction(nameof(Index)); }
             return View(agreement);
@@ -276,12 +285,61 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             if (agreement.Status != AgreementStatus.Active) { TempData["Error"] = "فقط قرارداد فعال قابل فسخ است."; return RedirectToAction(nameof(Details), new { id }); }
 
             agreement.Status = AgreementStatus.Terminated;
-            agreement.AdminNote = string.IsNullOrWhiteSpace(note)
-                ? agreement.AdminNote
-                : (agreement.AdminNote is null ? "" : agreement.AdminNote + "\n") + $"[فسخ {PersianDisplay.Date(DateTime.Now)}] " + note.Trim();
+            AppendTerminationNote(agreement, note);
+            var pendingRequests = await _db.AgreementCancellationRequests
+                .Where(r => r.AgreementId == agreement.Id && r.Status == AgreementCancellationStatus.Pending)
+                .ToListAsync(ct);
+            foreach (var request in pendingRequests)
+            {
+                request.Status = AgreementCancellationStatus.Approved;
+                request.AdminResponse = "قرارداد به‌صورت مستقیم توسط مدیر خاتمه یافت.";
+                request.DecidedAt = DateTime.Now;
+                request.DecidedByAdminId = CurrentAdminId;
+            }
+            await DisablePartnerProjectAccessAsync(agreement.PartnerId, ct);
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "قرارداد فسخ شد.";
             return RedirectToAction(nameof(Details), new { id });
+        }
+
+        /// <summary>بررسی درخواست فسخ همکار و در صورت تایید، بستن قرارداد و دسترسی‌های وابسته</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReviewCancellation(int id, bool approve, string? response, CancellationToken ct)
+        {
+            var request = await _db.AgreementCancellationRequests
+                .Include(r => r.Agreement)
+                .Include(r => r.Partner)
+                .FirstOrDefaultAsync(r => r.Id == id, ct);
+            if (request is null) { TempData["Error"] = "درخواست فسخ یافت نشد."; return RedirectToAction(nameof(Index)); }
+            if (request.Status != AgreementCancellationStatus.Pending)
+            {
+                TempData["Error"] = "این درخواست قبلاً بررسی شده است.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            request.Status = approve ? AgreementCancellationStatus.Approved : AgreementCancellationStatus.Rejected;
+            request.AdminResponse = string.IsNullOrWhiteSpace(response) ? null : response.Trim();
+            request.DecidedAt = DateTime.Now;
+            request.DecidedByAdminId = CurrentAdminId;
+
+            if (approve)
+            {
+                if (request.Agreement.Status != AgreementStatus.Active)
+                {
+                    TempData["Error"] = "قرارداد دیگر فعال نیست و درخواست قابل تایید نیست.";
+                    return RedirectToAction(nameof(Index));
+                }
+                request.Agreement.Status = AgreementStatus.Terminated;
+                AppendTerminationNote(request.Agreement, request.AdminResponse ?? request.Reason);
+                await DisablePartnerProjectAccessAsync(request.PartnerId, ct);
+            }
+
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = approve
+                ? "درخواست فسخ تایید شد؛ قرارداد خاتمه یافت و دسترسی پروژه‌های وابسته مسدود شد."
+                : "درخواست فسخ رد شد.";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -357,6 +415,21 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 }));
             }
             await _db.SaveChangesAsync(ct);
+        }
+
+        private async Task DisablePartnerProjectAccessAsync(int partnerId, CancellationToken ct)
+        {
+            var accesses = await _db.SellableProjectPartners
+                .Where(x => x.PartnerId == partnerId && x.IsActive)
+                .ToListAsync(ct);
+            foreach (var access in accesses) access.IsActive = false;
+        }
+
+        private static void AppendTerminationNote(CooperationAgreement agreement, string? note)
+        {
+            if (string.IsNullOrWhiteSpace(note)) return;
+            agreement.AdminNote = (agreement.AdminNote is null ? "" : agreement.AdminNote + "\n")
+                + $"[فسخ {PersianDisplay.Date(DateTime.Now)}] {note.Trim()}";
         }
     }
 }

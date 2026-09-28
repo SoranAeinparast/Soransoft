@@ -40,7 +40,7 @@ public sealed class PortalProjectsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SaveProject(int id, string title, string? description, int displayOrder, bool isActive, CancellationToken ct)
+    public async Task<IActionResult> SaveProject(int id, string title, string? description, int displayOrder, bool isActive, IFormFile? featuredImage, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -57,12 +57,49 @@ public sealed class PortalProjectsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        project.Title = title.Trim();
-        project.Description = SafeHtml.Sanitize(description ?? string.Empty);
-        project.DisplayOrder = Math.Max(0, displayOrder);
-        project.IsActive = isActive;
-        if (id == 0) _db.SellableProjects.Add(project);
-        await _db.SaveChangesAsync(ct);
+        var previousImage = project.FeaturedImage;
+        string? newImagePath = null;
+        try
+        {
+            project.Title = title.Trim();
+            project.Description = SafeHtml.Sanitize(description ?? string.Empty);
+            project.DisplayOrder = Math.Max(0, displayOrder);
+            project.IsActive = isActive;
+            if (featuredImage is { Length: > 0 })
+            {
+                project.FeaturedImage = await _storage.SaveImageAsync(featuredImage, "partners/sellable-projects/images", ct);
+                newImagePath = project.FeaturedImage;
+            }
+            if (id == 0) _db.SellableProjects.Add(project);
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (ArgumentException e)
+        {
+            TempData["Error"] = e.Message;
+            return RedirectToAction(nameof(Index));
+        }
+        catch (InvalidOperationException e)
+        {
+            TempData["Error"] = e.Message;
+            return RedirectToAction(nameof(Index));
+        }
+        catch (IOException e)
+        {
+            _logger.LogError(e, "خطا در ذخیره تصویر شاخص پروژه {ProjectId}", id);
+            if (!string.IsNullOrWhiteSpace(newImagePath)) await _storage.DeleteAsync(newImagePath, CancellationToken.None);
+            TempData["Error"] = "ذخیره تصویر انجام نشد؛ دسترسی پوشه ذخیره‌سازی را بررسی کنید.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateException e)
+        {
+            _logger.LogError(e, "خطای دیتابیس هنگام ذخیره پروژه {ProjectId}", id);
+            if (!string.IsNullOrWhiteSpace(newImagePath)) await _storage.DeleteAsync(newImagePath, CancellationToken.None);
+            TempData["Error"] = "اطلاعات پروژه در دیتابیس ذخیره نشد.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (!string.IsNullOrWhiteSpace(previousImage) && !string.Equals(previousImage, project.FeaturedImage, StringComparison.Ordinal))
+            await _storage.DeleteAsync(previousImage, ct);
 
         TempData["Success"] = id == 0 ? "پروژه قابل ارائه ایجاد شد." : "پروژه قابل ارائه ویرایش شد.";
         return RedirectToAction(nameof(Index));
@@ -88,12 +125,28 @@ public sealed class PortalProjectsController : Controller
             document.DeletedAt = DateTime.Now;
             await _storage.DeleteAsync(document.StoredPath, ct);
         }
+        await _storage.DeleteAsync(project.FeaturedImage, ct);
         project.IsDeleted = true;
         project.DeletedAt = DateTime.Now;
         _db.SellableProjectPartners.RemoveRange(project.PartnerAccess);
         await _db.SaveChangesAsync(ct);
 
         TempData["Success"] = "پروژه و دسترسی‌های آن حذف شد.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteFeaturedImage(int id, CancellationToken ct)
+    {
+        var project = await _db.SellableProjects.FirstOrDefaultAsync(p => p.Id == id, ct);
+        if (project is null) { TempData["Error"] = "پروژه یافت نشد."; return RedirectToAction(nameof(Index)); }
+
+        var previousImage = project.FeaturedImage;
+        project.FeaturedImage = null;
+        await _db.SaveChangesAsync(ct);
+        await _storage.DeleteAsync(previousImage, ct);
+        TempData["Success"] = "تصویر شاخص حذف شد.";
         return RedirectToAction(nameof(Index));
     }
 
