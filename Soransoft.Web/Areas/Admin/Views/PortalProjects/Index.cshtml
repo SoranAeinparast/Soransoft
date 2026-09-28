@@ -77,7 +77,7 @@
                     <div class="col-6 col-md-1"><label class="form-label small">ترتیب</label><input name="displayOrder" value="@project.DisplayOrder" type="number" min="0" class="form-control form-control-sm" /></div>
                     <div class="col-6 col-md-1"><div class="form-check form-switch mb-1"><input type="checkbox" name="isActive" value="true" class="form-check-input" @(project.IsActive ? "checked" : "") id="project-active-@project.Id" /><input type="hidden" name="isActive" value="false" /><label class="form-check-label small" for="project-active-@project.Id">فعال</label></div></div>
                     <div class="col-6 col-md-1"><button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-save me-1"></i>ذخیره</button></div>
-                    <div class="col-6 col-md-1"><button type="submit" formaction="/Admin/PortalProjects/DeleteProject" name="id" value="@project.Id" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('پروژه و دسترسی‌های آن حذف شود؟')"><i class="bi bi-trash"></i></button></div>
+                    <div class="col-6 col-md-1"><button type="submit" formaction="/Admin/PortalProjects/DeleteProject" name="id" value="@project.Id" class="btn btn-sm btn-outline-danger w-100" data-swal-confirm="پروژه و دسترسی‌های آن حذف شود؟"><i class="bi bi-trash"></i></button></div>
                 </form>
                 <div class="small text-muted mt-2">شرح کامل پروژه را در کادر زیر وارد کنید. تصاویر معرفی را می‌توانید در بخش مستندات به‌صورت فایل اضافه کنید.</div>
                 <form asp-action="SaveProject" method="post" class="mt-2">
@@ -127,7 +127,7 @@
                                     <div class="col-12 d-flex justify-content-between align-items-center"><div class="small text-muted">@(document.OriginalFileName ?? document.ExternalUrl ?? "بدون فایل") · @Size(document.SizeBytes)</div><div class="d-flex gap-2 align-items-center"><label class="small"><input type="checkbox" name="isActive" value="true" @(document.IsActive ? "checked" : "") /> فعال</label><input type="hidden" name="isActive" value="false" /><button class="btn btn-sm btn-outline-primary"><i class="bi bi-save me-1"></i>ذخیره</button></div></div>
                                 </div>
                             </form>
-                            <form asp-action="DeleteDocument" method="post" class="d-inline" onsubmit="return confirm('این مستند حذف شود؟')">
+                            <form asp-action="DeleteDocument" method="post" class="d-inline" data-swal-confirm="این مستند حذف شود؟">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@document.Id" />
                                 <button class="btn btn-sm btn-link text-danger p-0 mb-2">حذف مستند</button>
@@ -157,7 +157,7 @@
                         <h6><i class="bi bi-chat-left-text me-1"></i>دستورالعمل و کامنت داخلی</h6>
                         @foreach (var comment in project.Comments)
                         {
-                            <div class="border rounded p-2 mb-2 small"><div>@comment.Body</div><div class="d-flex justify-content-between mt-1"><span class="text-muted">@PersianDisplay.DateTimeText(comment.CreatedAt)</span><form asp-action="DeleteComment" method="post" onsubmit="return confirm('حذف شود؟')">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@comment.Id" /><button class="btn btn-sm btn-link text-danger p-0">حذف</button></form></div></div>
+                            <div class="border rounded p-2 mb-2 small"><div>@comment.Body</div><div class="d-flex justify-content-between mt-1"><span class="text-muted">@PersianDisplay.DateTimeText(comment.CreatedAt)</span><form asp-action="DeleteComment" method="post" data-swal-confirm="حذف شود؟">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@comment.Id" /><button class="btn btn-sm btn-link text-danger p-0">حذف</button></form></div></div>
                         }
                         <form asp-action="SaveComment" method="post">
                             @Html.AntiForgeryToken()

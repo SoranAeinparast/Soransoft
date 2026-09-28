@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
     <link rel="stylesheet" href="~/lib/tinymce/skins/ui/oxide/skin.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.3/dist/sweetalert2.min.css" />
     @* توکن ضد جعل درخواست برای آپلود تصویر ویرایشگر *@
     <meta name="csrf-token" content="@afToken" />
 </head>
@@ -99,11 +100,11 @@
             <div class="sn-admin-content">
                 @if (TempData["Success"] is string success)
                 {
-                    <div class="alert alert-success">@success</div>
+                    <div class="d-none" data-swal-alert data-swal-icon="success" data-swal-title="@success"></div>
                 }
                 @if (TempData["Error"] is string error)
                 {
-                    <div class="alert alert-danger">@error</div>
+                    <div class="d-none" data-swal-alert data-swal-icon="error" data-swal-title="@error"></div>
                 }
                 @RenderBody()
             </div>
@@ -112,6 +113,8 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.3"></script>
+    <script src="~/js/sweetalert.js" asp-append-version="true"></script>
     <script src="~/js/persian-ui.js" asp-append-version="true"></script>
     @if (loadTinyMce)
     {

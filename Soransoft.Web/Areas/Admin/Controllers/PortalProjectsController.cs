@@ -17,18 +17,20 @@ public sealed class PortalProjectsController : Controller
 {
     private readonly SoransoftDbContext _db;
     private readonly IFileStorage _storage;
+    private readonly ILogger<PortalProjectsController> _logger;
 
-    public PortalProjectsController(SoransoftDbContext db, IFileStorage storage)
+    public PortalProjectsController(SoransoftDbContext db, IFileStorage storage, ILogger<PortalProjectsController> logger)
     {
         _db = db;
         _storage = storage;
+        _logger = logger;
     }
 
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         var projects = await _db.SellableProjects
-            .Include(p => p.Documents.OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
-            .Include(p => p.Comments.OrderByDescending(c => c.CreatedAt))
+            .Include(p => p.Documents.Where(d => !d.IsDeleted).OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
+            .Include(p => p.Comments.Where(c => !c.IsDeleted).OrderByDescending(c => c.CreatedAt))
             .Include(p => p.PartnerAccess).ThenInclude(a => a.Partner)
             .OrderBy(p => p.DisplayOrder).ThenBy(p => p.Title)
             .ToListAsync(ct);
@@ -136,57 +138,80 @@ public sealed class PortalProjectsController : Controller
         }
 
         var previousPath = document.StoredPath;
-        document.Title = title.Trim();
-        document.Category = category.Trim();
-        document.Kind = kind;
-        document.DisplayOrder = Math.Max(0, displayOrder);
-        document.IsActive = isActive;
+        string? newFilePath = null;
+        try
+        {
+            document.Title = title.Trim();
+            document.Category = category.Trim();
+            document.Kind = kind;
+            document.DisplayOrder = Math.Max(0, displayOrder);
+            document.IsActive = isActive;
 
-        if (kind == SellableDocumentKind.Link)
-        {
-            if (!IsSafeExternalUrl(externalUrl))
+            if (kind == SellableDocumentKind.Link)
             {
-                TempData["Error"] = "لینک مستند باید با http یا https شروع شود.";
-                return RedirectToAction(nameof(Index));
+                if (!IsSafeExternalUrl(externalUrl))
+                {
+                    TempData["Error"] = "لینک مستند باید با http یا https شروع شود.";
+                    return RedirectToAction(nameof(Index));
+                }
+                document.ExternalUrl = externalUrl!.Trim();
+                document.StoredPath = null;
+                document.OriginalFileName = null;
+                document.ContentType = null;
+                document.SizeBytes = null;
             }
-            document.ExternalUrl = externalUrl!.Trim();
-            document.StoredPath = null;
-            document.OriginalFileName = null;
-            document.ContentType = null;
-            document.SizeBytes = null;
-        }
-        else
-        {
-            if (file is not null && file.Length > 0)
+            else
             {
-                try
+                if (file is not null && file.Length > 0)
                 {
                     document.StoredPath = await _storage.SaveDocumentAsync(file, "partners/sellable-projects", ct);
+                    newFilePath = document.StoredPath;
+                    document.OriginalFileName = Path.GetFileName(file.FileName);
+                    document.ContentType = file.ContentType;
+                    document.SizeBytes = file.Length;
                 }
-                catch (ArgumentException e)
+                if (string.IsNullOrWhiteSpace(document.StoredPath))
                 {
-                    TempData["Error"] = e.Message;
+                    TempData["Error"] = "برای مستند آپلودی یک فایل انتخاب کنید.";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (InvalidOperationException e)
-                {
-                    TempData["Error"] = e.Message;
-                    return RedirectToAction(nameof(Index));
-                }
-                document.OriginalFileName = Path.GetFileName(file.FileName);
-                document.ContentType = file.ContentType;
-                document.SizeBytes = file.Length;
+                document.ExternalUrl = null;
             }
-            if (string.IsNullOrWhiteSpace(document.StoredPath))
-            {
-                TempData["Error"] = "برای مستند آپلودی یک فایل انتخاب کنید.";
-                return RedirectToAction(nameof(Index));
-            }
-            document.ExternalUrl = null;
+
+            if (id == 0) _db.SellableProjectDocuments.Add(document);
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (ArgumentException e)
+        {
+            TempData["Error"] = e.Message;
+            return RedirectToAction(nameof(Index));
+        }
+        catch (InvalidOperationException e)
+        {
+            TempData["Error"] = e.Message;
+            return RedirectToAction(nameof(Index));
+        }
+        catch (IOException e)
+        {
+            _logger.LogError(e, "خطا در ذخیره فایل مستند پروژه {ProjectId}", projectId);
+            TempData["Error"] = "ذخیره فایل انجام نشد؛ دسترسی پوشه ذخیره‌سازی را بررسی کنید.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            _logger.LogError(e, "عدم دسترسی به مسیر فایل مستند پروژه {ProjectId}", projectId);
+            TempData["Error"] = "دسترسی به پوشه ذخیره‌سازی فایل مجاز نیست.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateException e)
+        {
+            _logger.LogError(e, "خطای دیتابیس هنگام ذخیره مستند پروژه {ProjectId}", projectId);
+            if (!string.IsNullOrWhiteSpace(newFilePath))
+                await _storage.DeleteAsync(newFilePath, CancellationToken.None);
+            TempData["Error"] = "اطلاعات مستند در دیتابیس ذخیره نشد.";
+            return RedirectToAction(nameof(Index));
         }
 
-        if (id == 0) _db.SellableProjectDocuments.Add(document);
-        await _db.SaveChangesAsync(ct);
         if (!string.IsNullOrWhiteSpace(previousPath) && !string.Equals(previousPath, document.StoredPath, StringComparison.Ordinal))
             await _storage.DeleteAsync(previousPath, ct);
 
