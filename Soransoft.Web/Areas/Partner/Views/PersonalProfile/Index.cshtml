@@ -1,71 +1,165 @@
 @model Soransoft.Web.Areas.Partner.Controllers.PersonalProfileViewModel
-@{ ViewData["Title"] = "پروفایل شخصی"; }
+@{
+    ViewData["Title"] = "پروفایل شخصی";
+    var photoPreviewUrl = string.IsNullOrWhiteSpace(Model.PersonalPhotoPath)
+        ? null
+        : $"{Model.PersonalPhotoPath}{(Model.PersonalPhotoPath.Contains('?') ? "&" : "?")}inline=true";
+    var profileCompletion = (int)Math.Round(new[]
+    {
+        Model.FullName,
+        Model.Mobile,
+        Model.NationalId,
+        Model.BirthDate?.ToString(),
+        Model.Address,
+        Model.PersonalPhotoPath,
+    }.Count(value => !string.IsNullOrWhiteSpace(value)) * 100d / 6d);
+    var profileCompletionLabel = profileCompletion == 100 ? "کامل" : "نیازمند تکمیل";
+}
 
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <div><h5 class="mb-1"><i class="bi bi-person-vcard me-2"></i>پروفایل شخصی و مدارک شناسایی</h5><div class="small text-muted">اطلاعات این صفحه فقط برای شما و مدیران مجاز قابل مشاهده است.</div></div>
-    <a href="/Partner/Dashboard" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>داشبورد</a>
-</div>
-
-<div class="alert alert-warning small"><i class="bi bi-shield-lock me-1"></i>مدارک در فضای خصوصی برنامه ذخیره می‌شوند و لینک مستقیم عمومی ندارند.</div>
-<div asp-validation-summary="All" class="alert alert-danger small"></div>
-
-<form asp-action="Save" method="post" enctype="multipart/form-data">
-    @Html.AntiForgeryToken()
-    <div class="row g-3">
-        <div class="col-12 col-xl-8">
-            <div class="sn-admin-card mb-3">
-                <h6 class="mb-3"><i class="bi bi-person-lines-fill me-2"></i>مشخصات شناسنامه‌ای</h6>
-                <div class="row g-3">
-                    <div class="col-12 col-md-6"><label asp-for="FullName" class="form-label small">نام و نام خانوادگی *</label><input asp-for="FullName" class="form-control" /></div>
-                    <div class="col-12 col-md-6"><label asp-for="FatherName" class="form-label small">نام پدر</label><input asp-for="FatherName" class="form-control" /></div>
-                    <div class="col-12 col-md-4"><label asp-for="NationalId" class="form-label small">کد ملی</label><input asp-for="NationalId" class="form-control" dir="ltr" maxlength="20" /></div>
-                    <div class="col-12 col-md-4"><label asp-for="BirthCertificateNumber" class="form-label small">شماره شناسنامه</label><input asp-for="BirthCertificateNumber" class="form-control" dir="ltr" /></div>
-                    <div class="col-12 col-md-4"><label asp-for="BirthPlace" class="form-label small">محل تولد</label><input asp-for="BirthPlace" class="form-control" /></div>
-                    <div class="col-12 col-md-4"><label asp-for="BirthDate" class="form-label small">تاریخ تولد</label><input asp-for="BirthDate" type="text" data-persian-date class="form-control" /></div>
-                </div>
-            </div>
-            <div class="sn-admin-card mb-3">
-                <h6 class="mb-3"><i class="bi bi-telephone me-2"></i>راه‌های ارتباطی و نشانی</h6>
-                <div class="row g-3">
-                    <div class="col-12 col-md-4"><label asp-for="Mobile" class="form-label small">شماره موبایل *</label><input asp-for="Mobile" class="form-control" dir="ltr" /></div>
-                    <div class="col-12 col-md-4"><label asp-for="Landline" class="form-label small">تلفن ثابت</label><input asp-for="Landline" class="form-control" dir="ltr" /></div>
-                    <div class="col-12 col-md-4"><label asp-for="Email" class="form-label small">ایمیل</label><input asp-for="Email" class="form-control" dir="ltr" /></div>
-                    <div class="col-12 col-md-4"><label asp-for="PostalCode" class="form-label small">کد پستی</label><input asp-for="PostalCode" class="form-control" dir="ltr" /></div>
-                    <div class="col-12"><label asp-for="Address" class="form-label small">آدرس کامل</label><textarea asp-for="Address" class="form-control" rows="3"></textarea></div>
-                </div>
-            </div>
+<div class="sn-profile-page">
+    <div class="sn-profile-hero">
+        <div>
+            <span class="sn-eyebrow"><i class="bi bi-shield-check"></i> حساب همکار</span>
+            <h2>پروفایل شخصی و مدارک</h2>
+            <p>اطلاعات هویتی و مدارک شما در فضای خصوصی و فقط برای افراد مجاز نگهداری می‌شود.</p>
         </div>
-        <div class="col-12 col-xl-4">
-            <div class="sn-admin-card mb-3">
-                <h6 class="mb-3"><i class="bi bi-camera me-2"></i>عکس پرسنلی</h6>
-                @if (!string.IsNullOrWhiteSpace(Model.PersonalPhotoPath)) { <a href="@Model.PersonalPhotoPath" target="_blank" rel="noopener" class="small d-block mb-2">مشاهده عکس فعلی</a> }
-                <input asp-for="PersonalPhoto" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
-                <div class="form-text">JPG، PNG یا WEBP تا سقف ۲۰ مگابایت.</div>
-            </div>
-            <div class="sn-admin-card">
-                <h6 class="mb-3"><i class="bi bi-card-heading me-2"></i>مدارک شناسایی</h6>
-                <div class="mb-3"><label asp-for="NationalCardFront" class="form-label small">روی کارت ملی @if (!string.IsNullOrWhiteSpace(Model.NationalCardFrontPath)) { <a href="@Model.NationalCardFrontPath" target="_blank" rel="noopener" class="text-decoration-none">(مشاهده)</a> } else { <span class="text-muted">(ثبت نشده)</span> }</label><input asp-for="NationalCardFront" type="file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.webp" /></div>
-                <div class="mb-3"><label asp-for="NationalCardBack" class="form-label small">پشت کارت ملی @if (!string.IsNullOrWhiteSpace(Model.NationalCardBackPath)) { <a href="@Model.NationalCardBackPath" target="_blank" rel="noopener" class="text-decoration-none">(مشاهده)</a> } else { <span class="text-muted">(ثبت نشده)</span> }</label><input asp-for="NationalCardBack" type="file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.webp" /></div>
-                <div class="mb-3"><label asp-for="BirthCertificate" class="form-label small">تصویر شناسنامه @if (!string.IsNullOrWhiteSpace(Model.BirthCertificatePath)) { <a href="@Model.BirthCertificatePath" target="_blank" rel="noopener" class="text-decoration-none">(مشاهده)</a> } else { <span class="text-muted">(ثبت نشده)</span> }</label><input asp-for="BirthCertificate" type="file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.webp" /></div>
-                <div><label asp-for="IdentityDocument" class="form-label small">سایر مدرک شناسایی اصلی @if (!string.IsNullOrWhiteSpace(Model.IdentityDocumentPath)) { <a href="@Model.IdentityDocumentPath" target="_blank" rel="noopener" class="text-decoration-none">(مشاهده)</a> } else { <span class="text-muted">(ثبت نشده)</span> }</label><input asp-for="IdentityDocument" type="file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.webp" /></div>
-            </div>
-        </div>
-        <div class="col-12">
-            <div class="sn-admin-card">
-                <h6 class="mb-1"><i class="bi bi-paperclip me-2"></i>سایر مدارک</h6>
-                <p class="small text-muted">عنوان مدرک را دقیق بنویسید؛ سپس فایل همان مدرک را انتخاب کنید. مثال: کارت پایان خدمت، مدرک تحصیلی یا گواهی مهارت.</p>
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-5"><label asp-for="OtherDocumentTitle" class="form-label small">این مدرک چیست؟</label><input asp-for="OtherDocumentTitle" class="form-control" placeholder="مثلاً: مدرک تحصیلی کارشناسی" /></div>
-                    <div class="col-12 col-md-7"><label asp-for="OtherDocument" class="form-label small">فایل مدرک</label><input asp-for="OtherDocument" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" /></div>
-                </div>
-                @if (Model.Documents.Any())
-                {
-                    <div class="table-responsive mt-3"><table class="table table-sm align-middle mb-0"><thead><tr><th>عنوان مدرک</th><th>تاریخ</th><th class="text-end">عملیات</th></tr></thead><tbody>@foreach (var document in Model.Documents) { <tr><td>@document.Title</td><td>@PersianDisplay.Date(document.CreatedAt)</td><td class="text-end"><a href="@document.StoredPath" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i></a><form asp-action="DeleteDocument" method="post" class="d-inline" data-swal-confirm="این مدرک حذف شود؟">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@document.Id" /><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td></tr> }</tbody></table></div>
-                }
-            </div>
+        <div class="sn-profile-hero-actions">
+            <a href="/Partner/IdentityCard/Download" class="btn btn-light"><i class="bi bi-person-badge me-1"></i>صدور کارت</a>
+            <a href="/Partner/Dashboard" class="btn btn-outline-light"><i class="bi bi-arrow-right me-1"></i>داشبورد</a>
         </div>
     </div>
-    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary"><i class="bi bi-save me-1"></i>ذخیره پروفایل و مدارک</button><a href="/Partner/Dashboard" class="btn btn-outline-secondary">انصراف</a></div>
-</form>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+    <div asp-validation-summary="All" class="alert alert-danger small"></div>
+    <div class="sn-profile-private-note"><i class="bi bi-lock-fill"></i><span>مدارک مستقیماً از پوشه عمومی وب سرو نمی‌شوند و دسترسی به آن‌ها با احراز هویت کنترل می‌شود.</span></div>
+
+    <form asp-action="Save" method="post" enctype="multipart/form-data" id="personalProfileForm">
+        @Html.AntiForgeryToken()
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-xl-4">
+                <aside class="sn-profile-card sn-profile-identity-card">
+                    <div class="sn-profile-avatar @(photoPreviewUrl is null ? "is-empty" : "")">
+                        @if (photoPreviewUrl is not null)
+                        {
+                            <img src="@photoPreviewUrl" alt="عکس پرسنلی @Model.FullName" />
+                        }
+                        else
+                        {
+                            <i class="bi bi-person"></i>
+                        }
+                        <span class="sn-profile-avatar-status" title="پروفایل فعال"><i class="bi bi-check"></i></span>
+                    </div>
+                    <h3>@(string.IsNullOrWhiteSpace(Model.FullName) ? "نام همکار" : Model.FullName)</h3>
+                    <p class="sn-profile-muted">اطلاعات هویتی همکار</p>
+                    <div class="sn-profile-contact-list">
+                        <div><i class="bi bi-phone"></i><span dir="ltr">@(string.IsNullOrWhiteSpace(Model.Mobile) ? "شماره ثبت نشده" : Model.Mobile)</span></div>
+                        <div><i class="bi bi-envelope"></i><span dir="ltr">@(string.IsNullOrWhiteSpace(Model.Email) ? "ایمیل ثبت نشده" : Model.Email)</span></div>
+                    </div>
+
+                    <label class="sn-upload-dropzone" for="PersonalPhotoInput">
+                        <span class="sn-upload-icon"><i class="bi bi-camera"></i></span>
+                        <span><strong>تغییر عکس پرسنلی</strong><small>JPG، PNG یا WEBP تا ۲۰ مگابایت</small></span>
+                        <i class="bi bi-chevron-left"></i>
+                    </label>
+                    <input asp-for="PersonalPhoto" id="PersonalPhotoInput" type="file" class="sn-file-input" accept=".jpg,.jpeg,.png,.webp" data-file-target="PersonalPhotoName" />
+                    <div id="PersonalPhotoName" class="sn-selected-file" aria-live="polite"></div>
+                    @if (photoPreviewUrl is not null)
+                    {
+                        <a href="@Model.PersonalPhotoPath" target="_blank" rel="noopener" class="sn-current-file"><i class="bi bi-box-arrow-up-left"></i>دریافت عکس فعلی</a>
+                    }
+                </aside>
+
+                <div class="sn-profile-card sn-profile-completion">
+                    <div class="d-flex justify-content-between align-items-center mb-2"><strong>تکمیل پروفایل</strong><span class="sn-profile-completion-value">@profileCompletionLabel</span></div>
+                    <div class="progress" role="progressbar" aria-label="وضعیت پروفایل" aria-valuenow="@profileCompletion" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: @profileCompletion%"></div></div>
+                    <small>با تکمیل مدارک، صدور کارت شناسایی سریع‌تر انجام می‌شود.</small>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-8">
+                <section class="sn-profile-card mb-4">
+                    <div class="sn-profile-section-heading"><span class="sn-section-icon"><i class="bi bi-person-lines-fill"></i></span><div><h3>مشخصات شناسنامه‌ای</h3><p>اطلاعات باید مطابق مدرک شناسایی اصلی وارد شود.</p></div></div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6"><label asp-for="FullName" class="form-label">نام و نام خانوادگی <b>*</b></label><input asp-for="FullName" class="form-control" placeholder="مثلاً: علی رضایی" /></div>
+                        <div class="col-12 col-md-6"><label asp-for="FatherName" class="form-label">نام پدر</label><input asp-for="FatherName" class="form-control" placeholder="نام پدر" /></div>
+                        <div class="col-12 col-md-4"><label asp-for="NationalId" class="form-label">کد ملی</label><input asp-for="NationalId" class="form-control" dir="ltr" maxlength="20" placeholder="۰۰۱۲۳۴۵۶۷۸" /></div>
+                        <div class="col-12 col-md-4"><label asp-for="BirthCertificateNumber" class="form-label">شماره شناسنامه</label><input asp-for="BirthCertificateNumber" class="form-control" dir="ltr" /></div>
+                        <div class="col-12 col-md-4"><label asp-for="BirthPlace" class="form-label">محل تولد</label><input asp-for="BirthPlace" class="form-control" /></div>
+                        <div class="col-12 col-md-4"><label asp-for="BirthDate" class="form-label">تاریخ تولد</label><input asp-for="BirthDate" type="text" data-persian-date class="form-control" placeholder="۱۴۰۴/۰۱/۰۱" /></div>
+                    </div>
+                </section>
+
+                <section class="sn-profile-card mb-4">
+                    <div class="sn-profile-section-heading"><span class="sn-section-icon is-blue"><i class="bi bi-telephone"></i></span><div><h3>راه‌های ارتباطی و نشانی</h3><p>برای ارتباط و ارسال اطلاعیه‌ها، این اطلاعات را به‌روز نگه دارید.</p></div></div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4"><label asp-for="Mobile" class="form-label">شماره موبایل <b>*</b></label><input asp-for="Mobile" class="form-control" dir="ltr" placeholder="۰۹۱۲۱۲۳۴۵۶۷" /></div>
+                        <div class="col-12 col-md-4"><label asp-for="Landline" class="form-label">تلفن ثابت</label><input asp-for="Landline" class="form-control" dir="ltr" /></div>
+                        <div class="col-12 col-md-4"><label asp-for="Email" class="form-label">ایمیل</label><input asp-for="Email" class="form-control" dir="ltr" placeholder="name@example.com" /></div>
+                        <div class="col-12 col-md-4"><label asp-for="PostalCode" class="form-label">کد پستی</label><input asp-for="PostalCode" class="form-control" dir="ltr" /></div>
+                        <div class="col-12"><label asp-for="Address" class="form-label">آدرس کامل</label><textarea asp-for="Address" class="form-control" rows="3" placeholder="استان، شهر، خیابان، پلاک و واحد"></textarea></div>
+                    </div>
+                </section>
+
+                <section class="sn-profile-card mb-4">
+                    <div class="sn-profile-section-heading"><span class="sn-section-icon is-amber"><i class="bi bi-folder2-open"></i></span><div><h3>مدارک شناسایی</h3><p>هر فایل باید خوانا و حداکثر ۲۰ مگابایت باشد.</p></div></div>
+                    <div class="sn-document-upload-grid">
+                        <div class="sn-document-upload-item"><span class="sn-document-icon"><i class="bi bi-credit-card-2-front"></i></span><div class="sn-document-upload-copy"><strong>روی کارت ملی</strong><small>@(string.IsNullOrWhiteSpace(Model.NationalCardFrontPath) ? "فایلی ثبت نشده" : "فایل ثبت شده است")</small></div><label for="NationalCardFrontInput" class="sn-file-trigger">انتخاب</label><input asp-for="NationalCardFront" id="NationalCardFrontInput" type="file" class="sn-file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" data-file-target="NationalCardFrontName" /><span id="NationalCardFrontName" class="sn-selected-file"></span></div>
+                        <div class="sn-document-upload-item"><span class="sn-document-icon"><i class="bi bi-credit-card"></i></span><div class="sn-document-upload-copy"><strong>پشت کارت ملی</strong><small>@(string.IsNullOrWhiteSpace(Model.NationalCardBackPath) ? "فایلی ثبت نشده" : "فایل ثبت شده است")</small></div><label for="NationalCardBackInput" class="sn-file-trigger">انتخاب</label><input asp-for="NationalCardBack" id="NationalCardBackInput" type="file" class="sn-file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" data-file-target="NationalCardBackName" /><span id="NationalCardBackName" class="sn-selected-file"></span></div>
+                        <div class="sn-document-upload-item"><span class="sn-document-icon"><i class="bi bi-file-earmark-person"></i></span><div class="sn-document-upload-copy"><strong>تصویر شناسنامه</strong><small>@(string.IsNullOrWhiteSpace(Model.BirthCertificatePath) ? "فایلی ثبت نشده" : "فایل ثبت شده است")</small></div><label for="BirthCertificateInput" class="sn-file-trigger">انتخاب</label><input asp-for="BirthCertificate" id="BirthCertificateInput" type="file" class="sn-file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" data-file-target="BirthCertificateName" /><span id="BirthCertificateName" class="sn-selected-file"></span></div>
+                        <div class="sn-document-upload-item"><span class="sn-document-icon"><i class="bi bi-file-earmark-check"></i></span><div class="sn-document-upload-copy"><strong>سایر مدرک اصلی</strong><small>@(string.IsNullOrWhiteSpace(Model.IdentityDocumentPath) ? "فایلی ثبت نشده" : "فایل ثبت شده است")</small></div><label for="IdentityDocumentInput" class="sn-file-trigger">انتخاب</label><input asp-for="IdentityDocument" id="IdentityDocumentInput" type="file" class="sn-file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" data-file-target="IdentityDocumentName" /><span id="IdentityDocumentName" class="sn-selected-file"></span></div>
+                    </div>
+                    <div class="sn-profile-existing-files">
+                        @if (!string.IsNullOrWhiteSpace(Model.NationalCardFrontPath)) { <a href="@Model.NationalCardFrontPath" target="_blank" rel="noopener">مشاهده روی کارت ملی</a> }
+                        @if (!string.IsNullOrWhiteSpace(Model.NationalCardBackPath)) { <a href="@Model.NationalCardBackPath" target="_blank" rel="noopener">مشاهده پشت کارت ملی</a> }
+                        @if (!string.IsNullOrWhiteSpace(Model.BirthCertificatePath)) { <a href="@Model.BirthCertificatePath" target="_blank" rel="noopener">مشاهده شناسنامه</a> }
+                        @if (!string.IsNullOrWhiteSpace(Model.IdentityDocumentPath)) { <a href="@Model.IdentityDocumentPath" target="_blank" rel="noopener">مشاهده مدرک اصلی</a> }
+                    </div>
+                </section>
+
+                <section class="sn-profile-card">
+                    <div class="sn-profile-section-heading"><span class="sn-section-icon is-purple"><i class="bi bi-paperclip"></i></span><div><h3>سایر مدارک</h3><p>عنوان مدرک را بنویسید و فایل مرتبط را انتخاب کنید.</p></div></div>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-5"><label asp-for="OtherDocumentTitle" class="form-label">عنوان مدرک</label><input asp-for="OtherDocumentTitle" class="form-control" placeholder="مثلاً: مدرک تحصیلی کارشناسی" /></div>
+                        <div class="col-12 col-md-7"><label asp-for="OtherDocument" class="form-label">فایل مدرک</label><div class="sn-file-inline"><label for="OtherDocumentInput" class="sn-file-trigger"><i class="bi bi-upload me-1"></i>انتخاب فایل</label><span id="OtherDocumentName" class="sn-selected-file">فایلی انتخاب نشده</span></div><input asp-for="OtherDocument" id="OtherDocumentInput" type="file" class="sn-file-input" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" data-file-target="OtherDocumentName" /></div>
+                    </div>
+                    @if (Model.Documents.Any())
+                    {
+                        <div class="sn-profile-document-list mt-4">
+                            @foreach (var document in Model.Documents)
+                            {
+                                <div class="sn-profile-document-row"><span class="sn-document-icon is-purple"><i class="bi bi-file-earmark-text"></i></span><div><strong>@document.Title</strong><small>@PersianDisplay.Date(document.CreatedAt)</small></div><a href="@document.StoredPath" target="_blank" rel="noopener" class="btn btn-sm btn-light" title="دریافت"><i class="bi bi-download"></i></a><button type="submit" class="btn btn-sm btn-outline-danger" title="حذف" data-swal-confirm="این مدرک حذف شود؟" formaction="/Partner/PersonalProfile/DeleteDocument" formmethod="post" name="id" value="@document.Id" formnovalidate><i class="bi bi-trash"></i></button></div>
+                            }
+                        </div>
+                    }
+                </section>
+            </div>
+        </div>
+
+        <div class="sn-profile-submit-bar"><div><strong>اطلاعات آماده ذخیره است؟</strong><span>پس از ذخیره، مدارک برای دسترسی مجاز ثبت می‌شوند.</span></div><div class="d-flex gap-2"><a href="/Partner/Dashboard" class="btn btn-light">انصراف</a><button class="btn btn-primary px-4"><i class="bi bi-check2-circle me-1"></i>ذخیره اطلاعات</button></div></div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelectorAll('.sn-file-input').forEach(function (input) {
+            input.addEventListener('change', function () {
+                var target = document.getElementById(input.dataset.fileTarget);
+                if (!target) return;
+                var file = input.files && input.files[0];
+                target.textContent = file ? file.name : (target.dataset.empty || 'فایلی انتخاب نشده');
+                target.classList.toggle('has-file', !!file);
+                if (input.id === 'PersonalPhotoInput' && file && file.type.indexOf('image/') === 0) {
+                    var avatar = document.querySelector('.sn-profile-avatar');
+                    var preview = avatar && avatar.querySelector('img');
+                    if (avatar && !preview) {
+                        preview = document.createElement('img');
+                        preview.alt = 'پیش‌نمایش عکس پرسنلی';
+                        avatar.insertBefore(preview, avatar.firstChild);
+                        avatar.classList.remove('is-empty');
+                    }
+                    if (preview) preview.src = URL.createObjectURL(file);
+                }
+            });
+        });
+    </script>
+}

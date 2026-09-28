@@ -15,6 +15,13 @@ namespace Soransoft.Web.Areas.Partner.Controllers
         {
             var pid = PartnerId;
 
+            var partner = await _db.Partners.AsNoTracking()
+                .Where(p => p.Id == pid && !p.IsDeleted)
+                .Select(p => new { p.FullName, p.PersonalPhotoPath })
+                .FirstOrDefaultAsync(ct);
+            ViewBag.PartnerFullName = partner?.FullName ?? User.Identity?.Name ?? "همکار";
+            ViewBag.PartnerPhotoPath = partner?.PersonalPhotoPath;
+
             // اطلاعیه‌های مرتبط با این همکار (همگانی + اختصاصی + مخاطب نقش)
             var audienceKey = IsSalesSide ? "Sales" : "Dev";
             var announcements = await _db.Announcements.AsNoTracking()

@@ -30,7 +30,7 @@ namespace Soransoft.Web.Controllers
         }
 
         [HttpGet("download")]
-        public async Task<IActionResult> Download(string? path, CancellationToken ct)
+        public async Task<IActionResult> Download(string? path, bool inline = false, CancellationToken ct = default)
         {
             if (User.HasClaim("MustChangePassword", "1"))
                 return Forbid();
@@ -48,7 +48,9 @@ namespace Soransoft.Web.Controllers
                 : "application/octet-stream";
             Response.Headers.CacheControl = "no-store";
             Response.Headers.Pragma = "no-cache";
-            return PhysicalFile(fullPath, contentType, Path.GetFileName(fullPath), enableRangeProcessing: true);
+            return inline
+                ? File(System.IO.File.OpenRead(fullPath), contentType, enableRangeProcessing: true)
+                : PhysicalFile(fullPath, contentType, Path.GetFileName(fullPath), enableRangeProcessing: true);
         }
 
         [HttpGet("sellable-project/{id:int}")]

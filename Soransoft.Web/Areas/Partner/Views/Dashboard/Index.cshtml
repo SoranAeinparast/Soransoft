@@ -2,8 +2,32 @@
     var roleTitle = User.HasClaim("PartnerRole", "1") || User.HasClaim("PartnerRole", "3") ? "پنل فروش" : "پنل فنی";
     var isSales = User.HasClaim("PartnerRole", "1") || User.HasClaim("PartnerRole", "3");
     var announcements = ViewBag.Announcements as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var partnerPhotoPath = ViewBag.PartnerPhotoPath as string;
+    var partnerPhotoUrl = string.IsNullOrWhiteSpace(partnerPhotoPath)
+        ? null
+        : $"{partnerPhotoPath}{(partnerPhotoPath.Contains('?') ? "&" : "?")}inline=true";
+    var partnerFullName = ViewBag.PartnerFullName as string ?? "همکار";
     string Money(long v) => v.ToString("N0");
 }
+
+<div class="sn-dashboard-profile mb-4">
+    <div class="sn-dashboard-profile-avatar @(partnerPhotoUrl is null ? "is-empty" : "")">
+        @if (partnerPhotoUrl is not null)
+        {
+            <img src="@partnerPhotoUrl" alt="عکس @partnerFullName" />
+        }
+        else
+        {
+            <i class="bi bi-person"></i>
+        }
+    </div>
+    <div class="sn-dashboard-profile-copy">
+        <span class="sn-eyebrow">پرتال همکاران</span>
+        <h2>سلام، @partnerFullName</h2>
+        <p>از اینجا می‌توانید وضعیت فعالیت، اطلاعیه‌ها و اطلاعات شخصی خود را مدیریت کنید.</p>
+    </div>
+    <a href="/Partner/PersonalProfile" class="btn btn-outline-primary"><i class="bi bi-person-vcard me-1"></i>ویرایش پروفایل</a>
+</div>
 
 <div class="row g-3 mb-4">
     @if (isSales)

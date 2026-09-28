@@ -63,12 +63,24 @@
     }
 
     function parseDate(value) {
-        var raw = normalizeDigits(value).trim().replace(/[.-]/g, '/');
-        var parts = raw.split('/').map(Number);
+        var raw = normalizeDigits(value).trim();
+        if (!raw) return null;
+        var datePart = raw.split(/[T ]/)[0].replace(/[.-]/g, '/');
+        var parts = datePart.split('/').map(Number);
         if (parts.length !== 3 || parts.some(function (part) { return !Number.isFinite(part); })) return null;
-        if (parts[0] >= 1700) return [parts[0], parts[1], parts[2]];
-        if (parts[0] < 1200 || parts[0] > 1600 || parts[1] < 1 || parts[1] > 12 || parts[2] < 1 || parts[2] > 31) return null;
-        return jalaliToGregorian(parts[0], parts[1], parts[2]);
+
+        var year = parts[0];
+        var month = parts[1];
+        var day = parts[2];
+        if (year >= 1700) {
+            var gregorianDate = new Date(Date.UTC(year, month - 1, day));
+            return gregorianDate.getUTCFullYear() === year && gregorianDate.getUTCMonth() === month - 1 && gregorianDate.getUTCDate() === day
+                ? [year, month, day]
+                : null;
+        }
+
+        if (year < 1200 || year > 1600 || month < 1 || month > 12 || day < 1 || day > jalaliDaysInMonth(year, month)) return null;
+        return jalaliToGregorian(year, month, day);
     }
 
     function toIso(value) {
@@ -130,11 +142,12 @@
     function setupPersianDatePicker(input) {
         if (input.dataset.persianDateReady === 'true') return;
         input.dataset.persianDateReady = 'true';
+        var isDateTime = input.hasAttribute('data-persian-datetime');
         input.inputMode = 'numeric';
         input.autocomplete = 'off';
-        input.placeholder = input.placeholder || '۱۴۰۴/۰۱/۰۱';
+        input.placeholder = input.placeholder || (isDateTime ? '۱۴۰۴/۰۱/۰۱ ۱۲:۰۰' : '۱۴۰۴/۰۱/۰۱');
         input.dir = 'ltr';
-        showJalali(input);
+        if (isDateTime) showJalaliDateTime(input); else showJalali(input);
 
         var wrapper = document.createElement('div');
         wrapper.className = 'sn-persian-date-control';
@@ -164,7 +177,9 @@
             if (!activeDatePicker) return;
             var rect = input.getBoundingClientRect();
             picker.style.top = Math.round(rect.bottom + 6) + 'px';
-            picker.style.right = Math.max(8, Math.round(window.innerWidth - rect.right)) + 'px';
+            var right = Math.max(8, Math.round(window.innerWidth - rect.right));
+            if (right + 292 > window.innerWidth - 8) right = 8;
+            picker.style.right = right + 'px';
         }
 
         function renderPicker() {
@@ -228,7 +243,9 @@
                 }
                 (function (selectedDay) {
                     dayButton.addEventListener('click', function () {
-                        input.value = toPersianDigits(String(state.year).padStart(4, '0') + '/' + String(state.month).padStart(2, '0') + '/' + String(selectedDay).padStart(2, '0'));
+                        var dateValue = String(state.year).padStart(4, '0') + '/' + String(state.month).padStart(2, '0') + '/' + String(selectedDay).padStart(2, '0');
+                        var currentDateTime = isDateTime ? splitDateTime(input.value) : null;
+                        input.value = toPersianDigits(dateValue) + (currentDateTime && currentDateTime.time ? ' ' + currentDateTime.time : '');
                         input.dispatchEvent(new Event('change', { bubbles: true }));
                         closeDatePicker();
                     });
@@ -260,6 +277,10 @@
                 return;
             }
             closeDatePicker();
+            var selected = parseDate(input.value);
+            selectedJalali = selected ? gregorianToJalali(selected[0], selected[1], selected[2]) : null;
+            state.year = selectedJalali ? selectedJalali[0] : currentJalali[0];
+            state.month = selectedJalali ? selectedJalali[1] : currentJalali[1];
             activeDatePicker = { node: picker, wrapper: wrapper };
             document.body.appendChild(picker);
             renderPicker();
@@ -267,12 +288,29 @@
         }
 
         button.addEventListener('click', openPicker);
-        input.addEventListener('blur', function () { showJalali(input); });
+        input.addEventListener('click', openPicker);
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === 'ArrowDown') openPicker(event);
+        });
+        input.addEventListener('blur', function () {
+            if (isDateTime) showJalaliDateTime(input); else showJalali(input);
+        });
         window.addEventListener('resize', positionPicker);
         window.addEventListener('scroll', positionPicker, true);
     }
 
-    document.querySelectorAll('input[data-persian-date]').forEach(setupPersianDatePicker);
+    document.querySelectorAll('input[data-persian-date], input[data-persian-datetime]').forEach(setupPersianDatePicker);
+    if (window.MutationObserver) {
+        new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node.nodeType !== 1) return;
+                    if (node.matches && node.matches('input[data-persian-date], input[data-persian-datetime]')) setupPersianDatePicker(node);
+                    node.querySelectorAll && node.querySelectorAll('input[data-persian-date], input[data-persian-datetime]').forEach(setupPersianDatePicker);
+                });
+            });
+        }).observe(document.body, { childList: true, subtree: true });
+    }
 
     document.addEventListener('click', function (event) {
         if (activeDatePicker && !activeDatePicker.wrapper.contains(event.target) && !activeDatePicker.node.contains(event.target)) {
@@ -364,16 +402,6 @@
 
     setupWebsiteToggle();
     setupIranLocations();
-
-    document.querySelectorAll('input[data-persian-datetime]').forEach(function (input) {
-        input.inputMode = 'numeric';
-        input.placeholder = input.placeholder || '۱۴۰۴/۰۱/۰۱ ۱۲:۰۰';
-        input.dir = 'ltr';
-        showJalaliDateTime(input);
-        input.addEventListener('blur', function () {
-            showJalaliDateTime(input);
-        });
-    });
 
     document.querySelectorAll('form').forEach(function (form) {
         form.addEventListener('submit', function () {
