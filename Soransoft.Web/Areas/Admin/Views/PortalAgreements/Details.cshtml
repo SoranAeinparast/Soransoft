@@ -64,6 +64,19 @@
             {
                 <div class="alert alert-light border small mt-3 mb-0">یادداشت مدیر: @Model.AdminNote</div>
             }
+            @if (Model.CancellationRequests.Any())
+            {
+                <hr />
+                <h6 class="small">تاریخچه درخواست‌های فسخ</h6>
+                @foreach (var request in Model.CancellationRequests.OrderByDescending(r => r.CreatedAt))
+                {
+                    <div class="border rounded p-2 small mb-2">
+                        <div><strong>@(request.Status == Soransoft.Domain.Entities.AgreementCancellationStatus.Pending ? "در انتظار بررسی" : request.Status == Soransoft.Domain.Entities.AgreementCancellationStatus.Approved ? "تایید شده" : "رد شده")</strong> · تاریخ پیشنهادی: @PersianDisplay.Date(request.RequestedTerminationDate)</div>
+                        <div class="mt-1" style="white-space:pre-line">@request.Reason</div>
+                        @if (!string.IsNullOrWhiteSpace(request.AdminResponse)) { <div class="text-muted mt-1">پاسخ مدیر: @request.AdminResponse</div> }
+                    </div>
+                }
+            }
         </div>
     </div>
 
@@ -100,7 +113,7 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.Id" />
                     <input name="note" class="form-control form-control-sm mb-2" placeholder="دلیل فسخ (ثبت در یادداشت)" />
-                    <button class="btn btn-warning btn-sm w-100"><i class="bi bi-x-circle me-1"></i>فسخ قرارداد</button>
+                    <button class="btn btn-warning btn-sm w-100" data-swal-confirm="قرارداد فسخ شود؟ دسترسی پروژه‌های وابسته هم مسدود می‌شود."><i class="bi bi-x-circle me-1"></i>فسخ قرارداد</button>
                 </form>
             }
             @if (Model.Status != Soransoft.Domain.Entities.AgreementStatus.Active)

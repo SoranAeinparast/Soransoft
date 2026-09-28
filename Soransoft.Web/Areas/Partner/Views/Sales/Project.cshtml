@@ -103,7 +103,7 @@
 
 <div class="sales-project-page">
     <div class="sales-project-hero mb-4">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 position-relative" style="z-index:1">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 position-relative" style="z-index:1">
             <div class="d-flex align-items-center gap-3">
                 <span class="sales-project-icon"><i class="bi bi-briefcase"></i></span>
                 <div>
@@ -112,6 +112,11 @@
                     <div class="small text-muted">محتوای آماده برای معرفی و ارائه حرفه‌ای</div>
                 </div>
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.FeaturedImage))
+            {
+                <img src="@Model.FeaturedImage" alt="تصویر @Model.Title" class="img-fluid rounded-4 mt-4 position-relative" style="max-height:260px;width:100%;object-fit:cover;z-index:1" />
+            }
             <div class="d-flex gap-2">
                 <a asp-action="Catalog" class="btn btn-sm btn-light border"><i class="bi bi-arrow-right me-1"></i>فهرست پروژه‌ها</a>
                 <a href="/Partner/Dashboard" class="btn btn-sm btn-outline-secondary"><i class="bi bi-house me-1"></i>داشبورد</a>

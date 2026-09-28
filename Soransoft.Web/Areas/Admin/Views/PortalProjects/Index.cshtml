@@ -22,7 +22,7 @@
 
 <div class="sn-admin-card mb-3">
     <h6 class="mb-3"><i class="bi bi-plus-circle me-2"></i>ایجاد پروژه جدید</h6>
-    <form asp-action="SaveProject" method="post" class="row g-2 align-items-end">
+    <form asp-action="SaveProject" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
         @Html.AntiForgeryToken()
         <input type="hidden" name="id" value="0" />
         <div class="col-12 col-md-4">
@@ -33,6 +33,7 @@
             <label class="form-label small">توضیح کوتاه</label>
             <input name="description" class="form-control form-control-sm" placeholder="برای معرفی سریع پروژه" />
         </div>
+        <div class="col-12 col-md-8"><label class="form-label small">تصویر شاخص پروژه</label><input name="featuredImage" type="file" accept=".jpg,.jpeg,.png,.webp,.gif" class="form-control form-control-sm" /></div>
         <div class="col-6 col-md-1">
             <label class="form-label small">ترتیب</label>
             <input name="displayOrder" type="number" class="form-control form-control-sm" value="0" min="0" />
@@ -69,7 +70,7 @@
 
         <div class="collapse mt-3" id="project-@project.Id">
             <div class="border rounded p-3 bg-light mb-3">
-                <form asp-action="SaveProject" method="post" class="row g-2 align-items-end">
+                 <form asp-action="SaveProject" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@project.Id" />
                     <div class="col-12 col-md-4"><label class="form-label small">عنوان</label><input name="title" value="@project.Title" class="form-control form-control-sm" required /></div>
@@ -77,8 +78,21 @@
                     <div class="col-6 col-md-1"><label class="form-label small">ترتیب</label><input name="displayOrder" value="@project.DisplayOrder" type="number" min="0" class="form-control form-control-sm" /></div>
                     <div class="col-6 col-md-1"><div class="form-check form-switch mb-1"><input type="checkbox" name="isActive" value="true" class="form-check-input" @(project.IsActive ? "checked" : "") id="project-active-@project.Id" /><input type="hidden" name="isActive" value="false" /><label class="form-check-label small" for="project-active-@project.Id">فعال</label></div></div>
                     <div class="col-6 col-md-1"><button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-save me-1"></i>ذخیره</button></div>
-                    <div class="col-6 col-md-1"><button type="submit" formaction="/Admin/PortalProjects/DeleteProject" name="id" value="@project.Id" class="btn btn-sm btn-outline-danger w-100" data-swal-confirm="پروژه و دسترسی‌های آن حذف شود؟"><i class="bi bi-trash"></i></button></div>
-                </form>
+                     <div class="col-6 col-md-1"><button type="submit" formaction="/Admin/PortalProjects/DeleteProject" name="id" value="@project.Id" class="btn btn-sm btn-outline-danger w-100" data-swal-confirm="پروژه و دسترسی‌های آن حذف شود؟"><i class="bi bi-trash"></i></button></div>
+                     <div class="col-12 col-md-8"><label class="form-label small">تعویض تصویر شاخص</label><input name="featuredImage" type="file" accept=".jpg,.jpeg,.png,.webp,.gif" class="form-control form-control-sm" /></div>
+                 </form>
+                 @if (!string.IsNullOrWhiteSpace(project.FeaturedImage))
+                 {
+                     <div class="d-flex align-items-center gap-2 mt-2 small">
+                         <img src="@project.FeaturedImage" alt="تصویر شاخص @project.Title" style="width:88px;height:58px;object-fit:cover;border-radius:8px;border:1px solid #dee2e6" />
+                         <span class="text-muted">تصویر شاخص فعلی در کاتالوگ همکاران نمایش داده می‌شود.</span>
+                         <form asp-action="DeleteFeaturedImage" method="post" class="ms-auto" data-swal-confirm="تصویر شاخص حذف شود؟">
+                             @Html.AntiForgeryToken()
+                             <input type="hidden" name="id" value="@project.Id" />
+                             <button class="btn btn-sm btn-outline-danger">حذف تصویر</button>
+                         </form>
+                     </div>
+                 }
                 <div class="small text-muted mt-2">شرح کامل پروژه را در کادر زیر وارد کنید. تصاویر معرفی را می‌توانید در بخش مستندات به‌صورت فایل اضافه کنید.</div>
                 <form asp-action="SaveProject" method="post" class="mt-2">
                     @Html.AntiForgeryToken()

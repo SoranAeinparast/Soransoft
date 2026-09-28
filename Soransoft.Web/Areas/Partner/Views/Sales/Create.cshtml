@@ -1,34 +1,89 @@
 @model Soransoft.Web.Areas.Partner.Controllers.LeadInputModel
 @{
-    ViewData["Title"] = "ثبت لید جدید";
+    ViewData["Title"] = "ثبت فرم معرفی مشتری";
+    var agreement = ViewBag.ActiveAgreement as Soransoft.Domain.Entities.CooperationAgreement;
 }
-<h5 class="mb-3"><i class="bi bi-person-plus me-2"></i>ثبت مشتری احتمالی</h5>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h5 class="mb-1"><i class="bi bi-person-plus me-2"></i>فرم رسمی معرفی مشتری و ثبت سرنخ فروش</h5>
+        <div class="small text-muted">اطلاعات فرم برای بررسی و تایید نماینده تیم توسعه ثبت می‌شود.</div>
+    </div>
+    <a href="/Partner/Sales" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت</a>
+</div>
 
-<div class="sn-admin-card" style="max-width:640px">
+<div class="alert @(agreement is null ? "alert-warning" : "alert-info") small">
+    <i class="bi bi-info-circle me-1"></i>
+    همکار فروش: <strong>@User.Identity?.Name</strong>
+    @if (agreement is not null)
+    {
+        <span> · قرارداد همکاری: <strong dir="ltr">@agreement.AgreementNo</strong> · حساب تسویه: <strong dir="ltr">@(agreement.BankAccountIban ?? "ثبت نشده")</strong></span>
+    }
+    else
+    {
+        <span> · قرارداد فعال فروش برای snapshot این فرم پیدا نشد.</span>
+    }
+</div>
+
+<div class="sn-admin-card">
     <div asp-validation-summary="All" class="text-danger small mb-3"></div>
     <form asp-action="Create" method="post">
-        <div class="row g-3">
-            <div class="col-12 col-md-6">
-                <label class="form-label">نام مشتری *</label>
-                <input asp-for="CustomerName" class="form-control" />
-            </div>
-            <div class="col-12 col-md-6">
-                <label class="form-label">شماره موبایل مشتری *</label>
-                <input asp-for="CustomerMobile" class="form-control" dir="ltr" placeholder="09xxxxxxxxx" />
-            </div>
-            <div class="col-12">
-                <label class="form-label">نیاز / شرح درخواست *</label>
-                <textarea asp-for="Requirement" class="form-control" rows="4" placeholder="مثلاً: سایت فروشگاهی شیرینی با درگاه پرداخت..."></textarea>
-            </div>
-            <div class="col-12 col-md-6">
-                <label class="form-label">مبلغ تخمینی فروش (تومان)</label>
-                <input asp-for="EstimatedAmount" type="number" class="form-control" min="0" step="1000000" />
+        @Html.AntiForgeryToken()
+        <div class="border-bottom pb-3 mb-3">
+            <h6><i class="bi bi-file-earmark-text me-1"></i>مشخصات فرم</h6>
+            <div class="row g-3">
+                <div class="col-12 col-md-3"><label asp-for="SalesPartnerNationalId" class="form-label small">کد ملی همکار فروش *</label><input asp-for="SalesPartnerNationalId" class="form-control" dir="ltr" maxlength="10" /></div>
+                <div class="col-12 col-md-3"><label asp-for="IntroducedAt" class="form-label small">تاریخ معرفی</label><input asp-for="IntroducedAt" type="text" data-persian-date class="form-control" /></div>
+                <div class="col-12 col-md-3"><label class="form-label small d-block">نوع معرفی</label><div class="form-check form-check-inline"><input asp-for="IsFollowUp" class="form-check-input" /><label asp-for="IsFollowUp" class="form-check-label">پیگیری</label></div><span class="small text-muted">در غیر این صورت «جدید» ثبت می‌شود.</span></div>
+                <div class="col-12 col-md-3"><label class="form-label small">شماره فرم</label><input class="form-control" value="توسط سیستم تولید می‌شود" disabled /></div>
             </div>
         </div>
-        <div class="mt-4 d-flex gap-2">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>ثبت لید</button>
-            <a href="/Partner/Sales" class="btn btn-outline-secondary">انصراف</a>
+
+        <div class="border-bottom pb-3 mb-3">
+            <h6><i class="bi bi-person-vcard me-1"></i>مشخصات کامل مشتری</h6>
+            <div class="row g-3">
+                <div class="col-12 col-md-6"><label asp-for="CustomerName" class="form-label small">نام و نام خانوادگی / نام شرکت *</label><input asp-for="CustomerName" class="form-control" /></div>
+                <div class="col-12 col-md-6"><label asp-for="BusinessName" class="form-label small">نام فروشگاه / قنادی / مجموعه</label><input asp-for="BusinessName" class="form-control" /></div>
+                <div class="col-12 col-md-4"><label asp-for="DecisionMakerName" class="form-label small">نام مدیر / تصمیم‌گیرنده</label><input asp-for="DecisionMakerName" class="form-control" /></div>
+                <div class="col-12 col-md-4"><label asp-for="DecisionMakerRole" class="form-label small">سمت تصمیم‌گیرنده</label><input asp-for="DecisionMakerRole" class="form-control" /></div>
+                <div class="col-12 col-md-4"><label asp-for="CustomerMobile" class="form-label small">شماره همراه *</label><input asp-for="CustomerMobile" class="form-control" dir="ltr" placeholder="09xxxxxxxxx" /></div>
+                <div class="col-12 col-md-4"><label asp-for="CustomerLandline" class="form-label small">شماره تماس ثابت</label><input asp-for="CustomerLandline" class="form-control" dir="ltr" /></div>
+                <div class="col-12 col-md-4"><label asp-for="CustomerEmail" class="form-label small">ایمیل</label><input asp-for="CustomerEmail" type="email" class="form-control" dir="ltr" /></div>
+                <div class="col-12 col-md-4"><label asp-for="CurrentWebsite" class="form-label small">وب‌سایت فعلی</label><input asp-for="CurrentWebsite" class="form-control" dir="ltr" placeholder="https://" /></div>
+                <div class="col-12 col-md-3"><label asp-for="Province" class="form-label small">استان</label><input asp-for="Province" class="form-control" /></div>
+                <div class="col-12 col-md-3"><label asp-for="City" class="form-label small">شهرستان / شهر</label><input asp-for="City" class="form-control" /></div>
+                <div class="col-12 col-md-6"><label asp-for="SocialMedia" class="form-label small">اینستاگرام / شبکه‌های اجتماعی</label><input asp-for="SocialMedia" class="form-control" dir="ltr" /></div>
+                <div class="col-12"><label asp-for="FullAddress" class="form-label small">آدرس کامل</label><textarea asp-for="FullAddress" class="form-control" rows="2"></textarea></div>
+            </div>
         </div>
+
+        <div class="border-bottom pb-3 mb-3">
+            <h6><i class="bi bi-shop me-1"></i>نوع و وضعیت کسب‌وکار</h6>
+            <div class="row g-3">
+                <div class="col-12 col-md-4"><label asp-for="BusinessType" class="form-label small">نوع فعالیت</label><input asp-for="BusinessType" class="form-control" placeholder="قنادی، شیرینی‌فروشی، کارگاه، زنجیره‌ای یا سایر" /></div>
+                <div class="col-12 col-md-4"><label asp-for="CurrentSystem" class="form-label small">نام سیستم فعلی</label><input asp-for="CurrentSystem" class="form-control" /></div>
+                <div class="col-12 col-md-4"><label asp-for="BudgetAmount" class="form-label small">بودجه تقریبی (تومان)</label><input asp-for="BudgetAmount" type="number" min="0" class="form-control" /></div>
+                <div class="col-12 col-md-4"><label class="form-label small d-block">وب‌سایت دارد؟</label><label class="form-check form-check-inline"><input asp-for="HasWebsite" value="true" class="form-check-input" type="radio" /> بله</label><label class="form-check form-check-inline"><input asp-for="HasWebsite" value="false" class="form-check-input" type="radio" /> خیر</label></div>
+                <div class="col-12 col-md-4"><label class="form-label small d-block">پلتفرم مشابه دارد؟</label><label class="form-check form-check-inline"><input asp-for="HasSimilarPlatform" value="true" class="form-check-input" type="radio" /> بله</label><label class="form-check form-check-inline"><input asp-for="HasSimilarPlatform" value="false" class="form-check-input" type="radio" /> خیر</label></div>
+                <div class="col-12 col-md-4"><label asp-for="ExpectedStartDate" class="form-label small">زمان احتمالی شروع</label><input asp-for="ExpectedStartDate" type="text" data-persian-date class="form-control" /></div>
+            </div>
+        </div>
+
+        <div class="border-bottom pb-3 mb-3">
+            <h6><i class="bi bi-list-check me-1"></i>نیازها و مذاکره</h6>
+            <div class="row g-3">
+                <div class="col-12"><label asp-for="Requirement" class="form-label small">نیاز / شرح درخواست اصلی *</label><textarea asp-for="Requirement" class="form-control" rows="3"></textarea></div>
+                <div class="col-12"><label asp-for="SecondaryRequirements" class="form-label small">امکانات ثانویه مورد نیاز</label><textarea asp-for="SecondaryRequirements" class="form-control" rows="3" placeholder="علاوه بر امکانات استاندارد نسخه پایه..."></textarea></div>
+                <div class="col-12 col-md-4"><label asp-for="IntroductionMethod" class="form-label small">نحوه آشنایی / معرفی</label><input asp-for="IntroductionMethod" class="form-control" placeholder="تماس مستقیم، حضوری، شبکه اجتماعی، معرفی شخص ثالث، تبلیغات یا سایر" /></div>
+                <div class="col-12 col-md-4"><label asp-for="FirstContactDate" class="form-label small">تاریخ اولین ارتباط</label><input asp-for="FirstContactDate" type="text" data-persian-date class="form-control" /></div>
+                <div class="col-12 col-md-4"><label asp-for="EstimatedAmount" class="form-label small">مبلغ تخمینی فروش (تومان)</label><input asp-for="EstimatedAmount" type="number" min="0" class="form-control" /></div>
+                <div class="col-12 col-md-4"><label class="form-label small d-block">تصمیم‌گیرنده تایید شده؟</label><label class="form-check form-check-inline"><input asp-for="DecisionMakerConfirmed" value="true" class="form-check-input" type="radio" /> بله</label><label class="form-check form-check-inline"><input asp-for="DecisionMakerConfirmed" value="false" class="form-check-input" type="radio" /> خیر</label></div>
+                <div class="col-12 col-md-4"><label asp-for="NegotiationLevel" class="form-label small">میزان مذاکره</label><select asp-for="NegotiationLevel" class="form-select"><option value="">انتخاب کنید</option><option value="1">اولیه</option><option value="2">متوسط</option><option value="3">جدی</option></select></div>
+                <div class="col-12 col-md-4"><label class="form-label small d-block">در آستانه قرارداد؟</label><label class="form-check form-check-inline"><input asp-for="NearContract" value="true" class="form-check-input" type="radio" /> بله</label><label class="form-check form-check-inline"><input asp-for="NearContract" value="false" class="form-check-input" type="radio" /> خیر</label></div>
+            </div>
+        </div>
+
+        <div class="alert alert-light border small">پس از ثبت، فرم در وضعیت «در انتظار بررسی» قرار می‌گیرد و نتیجه بررسی مدیر و تاریخچه آن در فهرست لیدها قابل مشاهده است.</div>
+        <div class="mt-3 d-flex gap-2"><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>ثبت فرم و ارسال برای بررسی</button><a href="/Partner/Sales" class="btn btn-outline-secondary">انصراف</a></div>
     </form>
 </div>
 

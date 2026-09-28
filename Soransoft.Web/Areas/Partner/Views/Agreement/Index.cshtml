@@ -64,5 +64,28 @@
                 <a href="@a.ContractFile" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-pdf me-1"></i>مشاهده متن قرارداد (PDF)</a>
             </div>
         }
+        @if (a.CancellationRequests.Any())
+        {
+            var latestRequest = a.CancellationRequests.OrderByDescending(r => r.CreatedAt).First();
+            <div class="alert @(latestRequest.Status == Soransoft.Domain.Entities.AgreementCancellationStatus.Pending ? "alert-warning" : latestRequest.Status == Soransoft.Domain.Entities.AgreementCancellationStatus.Approved ? "alert-success" : "alert-secondary") small mt-3 mb-0">
+                <strong>درخواست فسخ:</strong>
+                @(latestRequest.Status == Soransoft.Domain.Entities.AgreementCancellationStatus.Pending ? "در انتظار بررسی مدیر" : latestRequest.Status == Soransoft.Domain.Entities.AgreementCancellationStatus.Approved ? "تایید شد" : "رد شد")
+                · تاریخ پیشنهادی: @PersianDisplay.Date(latestRequest.RequestedTerminationDate)
+                @if (!string.IsNullOrWhiteSpace(latestRequest.AdminResponse)) { <div class="mt-1">پاسخ مدیر: @latestRequest.AdminResponse</div> }
+            </div>
+        }
+        @if (a.Status == Soransoft.Domain.Entities.AgreementStatus.Active && !a.CancellationRequests.Any(r => r.Status == Soransoft.Domain.Entities.AgreementCancellationStatus.Pending))
+        {
+            <div class="border-top mt-3 pt-3">
+                <h6 class="small"><i class="bi bi-x-circle me-1"></i>درخواست فسخ قرارداد</h6>
+                <form asp-action="RequestCancellation" method="post" class="row g-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@a.Id" />
+                    <div class="col-12 col-md-4"><label class="form-label small">تاریخ پیشنهادی فسخ *</label><input name="requestedTerminationDate" type="text" data-persian-date class="form-control form-control-sm" required /></div>
+                    <div class="col-12 col-md-8"><label class="form-label small">دلیل فسخ *</label><textarea name="reason" class="form-control form-control-sm" rows="2" minlength="10" required placeholder="دلیل درخواست فسخ را توضیح دهید..."></textarea></div>
+                    <div class="col-12"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-send me-1"></i>ارسال درخواست برای بررسی مدیر</button></div>
+                </form>
+            </div>
+        }
     </div>
 }

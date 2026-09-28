@@ -29,6 +29,10 @@
                 <input asp-for="Mobile" class="form-control form-control-sm" dir="ltr" />
             </div>
             <div class="col-6 col-md-2">
+                <label asp-for="NationalId" class="form-label small">کد ملی</label>
+                <input asp-for="NationalId" class="form-control form-control-sm" dir="ltr" maxlength="10" />
+            </div>
+            <div class="col-6 col-md-2">
                 <label asp-for="Email" class="form-label small">ایمیل</label>
                 <input asp-for="Email" type="email" class="form-control form-control-sm" dir="ltr" />
                 <span asp-validation-for="Email" class="text-danger small"></span>

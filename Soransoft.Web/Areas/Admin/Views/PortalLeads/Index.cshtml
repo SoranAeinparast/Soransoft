@@ -15,6 +15,20 @@
         Soransoft.Domain.Entities.LeadStage.Contracted => "قرارداد بسته شده",
         _ => "منصرف شده"
     };
+    string ReviewBadge(Soransoft.Domain.Entities.LeadReviewStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.LeadReviewStatus.Approved => "bg-success",
+        Soransoft.Domain.Entities.LeadReviewStatus.NeedsMoreReview => "bg-warning text-dark",
+        Soransoft.Domain.Entities.LeadReviewStatus.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
+    string ReviewTitle(Soransoft.Domain.Entities.LeadReviewStatus s) => s switch
+    {
+        Soransoft.Domain.Entities.LeadReviewStatus.Approved => "تایید شد",
+        Soransoft.Domain.Entities.LeadReviewStatus.NeedsMoreReview => "بررسی بیشتر",
+        Soransoft.Domain.Entities.LeadReviewStatus.Rejected => "رد شد",
+        _ => "در انتظار بررسی"
+    };
 }
 
 <h5 class="mb-3"><i class="bi bi-funnel me-2"></i>قیف فروش لیدهای همکاران (@Model.Count)</h5>
@@ -31,7 +45,7 @@
                 <thead>
                     <tr>
                         <th>مشتری</th><th>همکار فروش</th><th>نیاز</th><th>مبلغ تخمینی</th>
-                        <th>وضعیت</th><th>تاریخچه</th><th class="text-end">عملیات</th>
+                         <th>وضعیت</th><th>بررسی رسمی</th><th>تاریخچه</th><th class="text-end">عملیات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,14 +60,26 @@
                             <td class="small" style="max-width:220px">@l.Requirement</td>
                             <td>@(l.EstimatedAmount?.ToString("N0") ?? "—")</td>
                             <td><span class="badge @StageBadge(l.Stage)">@StageTitle(l.Stage)</span></td>
+                            <td>
+                                <span class="badge @ReviewBadge(l.ReviewStatus)">@ReviewTitle(l.ReviewStatus)</span>
+                                @if (l.ReviewedAt is not null) { <div class="small text-muted mt-1">@PersianDisplay.DateTimeText(l.ReviewedAt.Value)</div> }
+                            </td>
                             <td class="small text-muted">@l.History.Count مرحله</td>
                             <td class="text-end">
                                 @if (l.Stage != Soransoft.Domain.Entities.LeadStage.Contracted)
                                 {
-                                    <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
-                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#convertModal-@l.Id">
-                                            <i class="bi bi-arrow-left-right me-1"></i>تبدیل به قرارداد
-                                        </button>
+                                     <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                                         <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#reviewModal-@l.Id">
+                                             <i class="bi bi-clipboard-check me-1"></i>بررسی فرم
+                                         </button>
+                                         @if (l.ReviewStatus == Soransoft.Domain.Entities.LeadReviewStatus.Approved)
+                                         {
+                                             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#convertModal-@l.Id"><i class="bi bi-arrow-left-right me-1"></i>تبدیل به قرارداد</button>
+                                         }
+                                         else
+                                         {
+                                             <span class="small text-muted align-self-center">پس از تایید فرم، تبدیل به قرارداد فعال می‌شود.</span>
+                                         }
                                         <form asp-action="ChangeStage" method="post" class="d-inline-flex gap-1">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@l.Id" />
@@ -140,6 +166,50 @@
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
                         <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg me-1"></i>تایید و تبدیل</button>
                     </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@foreach (var l in Model.Where(x => x.Stage != Soransoft.Domain.Entities.LeadStage.Contracted))
+{
+    <div class="modal fade" id="reviewModal-@l.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="Review" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@l.Id" />
+                    <div class="modal-header py-2"><h6 class="modal-title">بررسی فرم «@l.CustomerName»</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body">
+                        <div class="border rounded p-2 mb-3 small bg-light">
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3"><strong>شماره فرم:</strong> @l.FormNo</div><div class="col-6 col-md-3"><strong>تاریخ معرفی:</strong> @PersianDisplay.Date(l.IntroducedAt)</div><div class="col-6 col-md-3"><strong>نوع:</strong> @(l.IsFollowUp ? "پیگیری" : "جدید")</div><div class="col-6 col-md-3"><strong>کد مشتری:</strong> @l.CustomerCode</div>
+                                <div class="col-12"><strong>همکار:</strong> @l.Partner?.FullName · کد ملی <span dir="ltr">@l.SalesPartnerNationalId</span> · قرارداد <span dir="ltr">@l.SalesPartnerAgreementNo</span> · حساب <span dir="ltr">@l.SalesPartnerBankAccount</span></div>
+                                <div class="col-12 col-md-6"><strong>مشتری:</strong> @l.CustomerName / @l.BusinessName · @l.CustomerMobile</div><div class="col-12 col-md-6"><strong>تصمیم‌گیرنده:</strong> @l.DecisionMakerName · @l.DecisionMakerRole</div>
+                                <div class="col-12"><strong>آدرس:</strong> @l.Province، @l.City، @l.FullAddress</div>
+                                <div class="col-12 col-md-6"><strong>کسب‌وکار:</strong> @l.BusinessType · سیستم فعلی: @l.CurrentSystem</div><div class="col-12 col-md-6"><strong>ارتباط:</strong> @l.IntroductionMethod · اولین تماس: @PersianDisplay.Date(l.FirstContactDate)</div>
+                                <div class="col-12"><strong>نیاز اصلی:</strong> @l.Requirement</div><div class="col-12"><strong>نیاز ثانویه:</strong> @l.SecondaryRequirements</div>
+                            </div>
+                        </div>
+                        <details class="small mb-3">
+                            <summary class="fw-semibold">تاریخچه تغییرات (@l.History.Count)</summary>
+                            <div class="border rounded p-2 mt-2">
+                                @foreach (var history in l.History.OrderByDescending(h => h.CreatedAt))
+                                {
+                                    <div class="border-bottom py-1"><span class="text-muted">@PersianDisplay.DateTimeText(history.CreatedAt)</span> · @history.Action · @history.Note</div>
+                                }
+                            </div>
+                        </details>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4"><label class="form-label small">نتیجه بررسی *</label><select name="status" class="form-select form-select-sm" required><option value="1">در انتظار بررسی</option><option value="2">تایید شد</option><option value="3">نیازمند بررسی بیشتر</option><option value="4">رد شد</option></select></div>
+                            <div class="col-12 col-md-4"><label class="form-label small">قبلاً در سوابق وجود داشته؟</label><select name="existingCustomer" class="form-select form-select-sm"><option value="">نامشخص</option><option value="true">بله</option><option value="false">خیر</option></select></div>
+                            <div class="col-12 col-md-4"><label class="form-label small">شماره ثبت مشتری در سیستم</label><input name="customerCode" class="form-control form-control-sm" value="@l.CustomerCode" /></div>
+                            <div class="col-12"><label class="form-label small">توضیحات نماینده تیم توسعه</label><textarea name="note" class="form-control form-control-sm" rows="3">@l.ReviewNote</textarea></div>
+                        </div>
+                        <div class="alert alert-light border small mt-3 mb-0">ثبت نتیجه، نام مدیر، تاریخ و یادداشت را در تاریخچه این لید نگه می‌دارد.</div>
+                    </div>
+                    <div class="modal-footer py-2"><button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">انصراف</button><button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-save me-1"></i>ثبت نتیجه بررسی</button></div>
                 </form>
             </div>
         </div>

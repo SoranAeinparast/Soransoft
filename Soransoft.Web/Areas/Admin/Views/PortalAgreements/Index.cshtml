@@ -3,6 +3,7 @@
     ViewData["Title"] = "قراردادهای همکاری فی‌مابین";
     var partners = ViewBag.Partners as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
     var sellableProjects = ViewBag.SellableProjects as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var pendingCancellations = Model.SelectMany(a => a.CancellationRequests.Where(r => r.Status == Soransoft.Domain.Entities.AgreementCancellationStatus.Pending)).ToList();
     string KindTitle(Soransoft.Domain.Entities.AgreementKind k) => k == Soransoft.Domain.Entities.AgreementKind.Sales ? "فروش" : "فنی";
     string StatusBadge(Soransoft.Domain.Entities.AgreementStatus s) => s switch
     {
@@ -19,6 +20,29 @@
 }
 
 <h5 class="mb-3"><i class="bi bi-journal-bookmark me-2"></i>قراردادهای همکاری (@Model.Count)</h5>
+
+@if (pendingCancellations.Any())
+{
+    <div class="sn-admin-card border-warning mb-3">
+        <h6 class="text-warning-emphasis"><i class="bi bi-exclamation-triangle me-1"></i>درخواست‌های فسخ در انتظار بررسی (@pendingCancellations.Count)</h6>
+        @foreach (var request in pendingCancellations)
+        {
+            <div class="border rounded p-2 mt-2">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div><strong>@request.Agreement.Partner.FullName</strong> · قرارداد <span dir="ltr">@request.Agreement.AgreementNo</span><div class="small text-muted">تاریخ پیشنهادی: @PersianDisplay.Date(request.RequestedTerminationDate)</div></div>
+                    <span class="badge bg-warning text-dark">در انتظار بررسی</span>
+                </div>
+                <div class="small mt-2" style="white-space:pre-line">@request.Reason</div>
+                <form asp-action="ReviewCancellation" method="post" class="row g-2 mt-1">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@request.Id" />
+                    <div class="col-12 col-md-7"><input name="response" class="form-control form-control-sm" placeholder="پاسخ یا توضیح مدیر (اختیاری)" /></div>
+                    <div class="col-12 col-md-5 d-flex gap-2 justify-content-end"><button name="approve" value="false" class="btn btn-sm btn-outline-danger" data-swal-confirm="این درخواست فسخ رد شود؟">رد درخواست</button><button name="approve" value="true" class="btn btn-sm btn-success" data-swal-confirm="درخواست تایید و قرارداد خاتمه داده شود؟ دسترسی پروژه‌های وابسته هم مسدود می‌شود.">تایید و خاتمه قرارداد</button></div>
+                </form>
+            </div>
+        }
+    </div>
+}
 
 <div class="sn-admin-card mb-3">
     <h6 class="mb-3"><i class="bi bi-plus-circle me-2"></i>ثبت قرارداد جدید</h6>
