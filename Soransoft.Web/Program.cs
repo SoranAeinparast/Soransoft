@@ -189,8 +189,8 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         startupLogger.LogError(ex, "خطا در اجرای Migration/Seed دیتابیس");
-        if (ex is RequiredSetupException)
-            throw;
+        // ادامه‌ی اجرای برنامه با schema قدیمی، خطای گمراه‌کننده‌ای مثل نبودن ستون در Login ایجاد می‌کند.
+        throw;
     }
 }
 
