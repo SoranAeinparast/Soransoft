@@ -56,7 +56,7 @@
                 <div class="sn-admin-nav-group">پرتال همکاران</div>
                 <a href="/Admin/PortalPartners" class="@(controller == "PortalPartners" ? "active" : "")"><i class="bi bi-briefcase"></i> همکاران پرتال</a>
                 <a href="/Admin/PortalLeads" class="@(controller == "PortalLeads" ? "active" : "")"><i class="bi bi-funnel"></i> لیدهای همکاران</a>
-                <a href="/Admin/PortalLeads/Contracts" class="@(controller == "PortalLeads" && action == "Contracts" ? "active" : "")"><i class="bi bi-file-earmark-text"></i> قراردادها و پورسانت</a>
+                <a href="/Admin/PortalLeads/Contracts" class="@(controller == "PortalLeads" && (action == "Contracts" || action == "Manage") ? "active" : "")"><i class="bi bi-file-earmark-text"></i> قراردادها و پورسانت</a>
                 <a href="/Admin/PortalDev" class="@(controller == "PortalDev" ? "active" : "")"><i class="bi bi-kanban"></i> برد تسک‌های فنی</a>
                  <a href="/Admin/PortalDev/Projects" class="@(controller == "PortalDev" && action == "Projects" ? "active" : "")"><i class="bi bi-diagram-3"></i> پروژه‌های فنی</a>
                  <a href="/Admin/PortalProjects" class="@(controller == "PortalProjects" ? "active" : "")"><i class="bi bi-briefcase"></i> پروژه‌های آماده ارائه به مشتری</a>
