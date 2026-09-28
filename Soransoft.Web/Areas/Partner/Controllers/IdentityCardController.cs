@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
 using SkiaSharp;
-using SkiaSharp.HarfBuzz;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
+using Soransoft.Web.Services;
 using System.IO.Compression;
 using System.Globalization;
 using PartnerEntity = Soransoft.Domain.Entities.Partner;
@@ -51,8 +51,6 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             using var textPaint = new SKPaint { Color = new SKColor(0x00, 0x1D, 0x43), IsAntialias = true };
             using var regularTypeface = LoadTypeface("Vazirmatn-Regular.ttf.gz");
             using var boldTypeface = LoadTypeface("Vazirmatn-Bold.ttf.gz");
-            using var shaper = new SKShaper(regularTypeface);
-            using var boldShaper = new SKShaper(boldTypeface);
             using var nameFont = new SKFont(boldTypeface, 31);
             using var roleFont = new SKFont(regularTypeface, 27);
             using var valueFont = new SKFont(regularTypeface, 18);
@@ -72,13 +70,13 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             }
 
             var rightText = 491 * scaleX;
-            DrawText(canvas, boldShaper, textPaint, nameFont, partner.FullName, rightText, 295 * scaleY, SKTextAlign.Right);
-            DrawText(canvas, shaper, textPaint, roleFont, RoleTitle(partner.Role), rightText, 340 * scaleY, SKTextAlign.Right);
+            DrawText(canvas, textPaint, nameFont, PersianTextShaper.Shape(partner.FullName), rightText, 295 * scaleY, SKTextAlign.Right);
+            DrawText(canvas, textPaint, roleFont, PersianTextShaper.Shape(RoleTitle(partner.Role)), rightText, 340 * scaleY, SKTextAlign.Right);
 
             var valueX = 207 * scaleX;
-            DrawText(canvas, shaper, textPaint, valueFont, personnelCode, valueX, 468 * scaleY, SKTextAlign.Left);
-            DrawText(canvas, shaper, textPaint, valueFont, partner.Mobile ?? "ثبت نشده", valueX, 503 * scaleY, SKTextAlign.Left);
-            DrawText(canvas, shaper, textPaint, valueFont, partner.Email ?? "ثبت نشده", valueX, 541 * scaleY, SKTextAlign.Left);
+            DrawText(canvas, textPaint, valueFont, personnelCode, valueX, 468 * scaleY, SKTextAlign.Left);
+            DrawText(canvas, textPaint, valueFont, partner.Mobile ?? "ثبت نشده", valueX, 503 * scaleY, SKTextAlign.Left);
+            DrawText(canvas, textPaint, valueFont, partner.Email ?? "ثبت نشده", valueX, 541 * scaleY, SKTextAlign.Left);
 
             using var qrData = new QRCodeGenerator().CreateQrCode(verificationUrl, QRCodeGenerator.ECCLevel.Q);
             var qrBytes = new PngByteQRCode(qrData).GetGraphic(12);
@@ -107,9 +105,9 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             return SKTypeface.FromFile(path) ?? SKTypeface.FromFamilyName("DejaVu Sans") ?? throw new InvalidOperationException("فونت کارت شناسایی قابل بارگذاری نیست.");
         }
 
-        private static void DrawText(SKCanvas canvas, SKShaper shaper, SKPaint paint, SKFont font, string? text, float x, float y, SKTextAlign align)
+        private static void DrawText(SKCanvas canvas, SKPaint paint, SKFont font, string? text, float x, float y, SKTextAlign align)
         {
-            if (!string.IsNullOrWhiteSpace(text)) canvas.DrawShapedText(shaper, text.Trim(), x, y, align, font, paint);
+            if (!string.IsNullOrWhiteSpace(text)) canvas.DrawText(text.Trim(), x, y, align, font, paint);
         }
 
         private static SKRect CardRect(float left, float top, float right, float bottom, float scaleX, float scaleY) =>
