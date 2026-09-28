@@ -44,8 +44,23 @@
     }
 </div>
 
+@if (Model.Any())
+{
+    var firstSectionId = Model.First().Id;
+    <ul class="nav nav-tabs sn-admin-tabs mb-3" role="tablist">
+        @foreach (var tab in Model)
+        {
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(tab.Id == firstSectionId ? "active" : "")" data-bs-toggle="tab" data-bs-target="#tariff-section-@tab.Id" type="button" role="tab">
+                    <i class="bi bi-tag me-1"></i>@tab.Title
+                </button>
+            </li>
+        }
+    </ul>
+    <div class="tab-content">
 @foreach (var sec in Model)
 {
+    <div class="tab-pane fade @(sec.Id == firstSectionId ? "show active" : "")" id="tariff-section-@sec.Id" role="tabpanel">
     <div class="sn-admin-card mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <h6 class="fw-bold mb-0">
@@ -204,7 +219,7 @@
                                         </form>
                                         <form method="post" action="/Admin/Tariffs/DeleteItem/@item.Id" class="d-flex align-items-center">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-link p-0 text-danger" title="حذف ردیف" onsubmit="return confirm('حذف شود؟')"><i class="bi bi-x"></i></button>
+                                            <button type="submit" class="btn btn-sm btn-link p-0 text-danger" title="حذف ردیف" onclick="return confirm('حذف شود؟')"><i class="bi bi-x"></i></button>
                                         </form>
                                     }
                                     <form asp-action="AddItem" method="post" class="d-flex align-items-center gap-1">
@@ -224,6 +239,9 @@
         {
             <p class="text-muted small text-center my-2">هنوز پکیجی در این بخش ثبت نشده است.</p>
         }
+    </div>
+    </div>
+}
     </div>
 }
 @if (!Model.Any())

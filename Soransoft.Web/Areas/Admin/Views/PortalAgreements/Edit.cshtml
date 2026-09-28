@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "ویرایش پیش‌نویس قرارداد";
     var partners = ViewBag.Partners as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var sellableProjects = ViewBag.SellableProjects as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -25,10 +26,18 @@
                     }
                 </select>
             </div>
-            <div class="col-6 col-md-2">
-                <label asp-for="Kind" class="form-label small">نوع *</label>
-                <select asp-for="Kind" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<Soransoft.Domain.Entities.AgreementKind>()"></select>
-            </div>
+             <div class="col-6 col-md-2">
+                 <label asp-for="Kind" class="form-label small">نوع *</label>
+                 <select asp-for="Kind" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<Soransoft.Domain.Entities.AgreementKind>()"></select>
+             </div>
+             <div class="col-12 col-md-4">
+                 <label class="form-label small">شماره قرارداد *</label>
+                 <div class="d-flex gap-3 small mb-1">
+                     <label><input type="radio" name="UseSystemNumber" value="true" @(Model.UseSystemNumber ? "checked" : "") data-number-mode="system" /> تولید سیستمی</label>
+                     <label><input type="radio" name="UseSystemNumber" value="false" @(!Model.UseSystemNumber ? "checked" : "") data-number-mode="manual" /> ورود دستی</label>
+                 </div>
+                 <input asp-for="AgreementNo" id="editAgreementNo" class="form-control form-control-sm" dir="ltr" placeholder="مثلاً CA1405001" />
+             </div>
             <div class="col-12 col-md-4">
                 <label asp-for="Title" class="form-label small">عنوان *</label>
                 <input asp-for="Title" class="form-control form-control-sm" required />
@@ -37,10 +46,14 @@
                 <label asp-for="Subject" class="form-label small">موضوع *</label>
                 <input asp-for="Subject" class="form-control form-control-sm" required />
             </div>
-            <div class="col-6 col-md-3">
-                <label asp-for="StartDate" class="form-label small">تاریخ شروع *</label>
-                <input asp-for="StartDate" type="text" data-persian-date class="form-control form-control-sm" required />
-            </div>
+             <div class="col-6 col-md-3">
+                 <label asp-for="StartDate" class="form-label small">تاریخ شروع *</label>
+                 <input asp-for="StartDate" type="text" data-persian-date class="form-control form-control-sm" required />
+             </div>
+             <div class="col-6 col-md-3">
+                 <label asp-for="SignedAt" class="form-label small">تاریخ انعقاد فیزیکی *</label>
+                 <input asp-for="SignedAt" type="text" data-persian-date class="form-control form-control-sm" required />
+             </div>
             <div class="col-6 col-md-3">
                 <label asp-for="EndDate" class="form-label small">تاریخ پایان</label>
                 <input asp-for="EndDate" type="text" data-persian-date class="form-control form-control-sm" />
@@ -71,8 +84,26 @@
             <div class="col-6 col-md-3"><label asp-for="BankName" class="form-label small">بانک</label><input asp-for="BankName" class="form-control form-control-sm" /></div>
             <div class="col-6 col-md-4"><label asp-for="BankAccountIban" class="form-label small">شماره شبا</label><input asp-for="BankAccountIban" class="form-control form-control-sm" dir="ltr" /></div>
             <div class="col-12 col-md-5"><label asp-for="BankAccountHolder" class="form-label small">به نام</label><input asp-for="BankAccountHolder" class="form-control form-control-sm" /></div>
-            <div class="col-12"><label asp-for="Terms" class="form-label small">شرح مفاد و تعهدات</label><textarea asp-for="Terms" class="form-control form-control-sm" rows="5"></textarea></div>
-            <div class="col-12"><label asp-for="AdminNote" class="form-label small">یادداشت مدیر</label><input asp-for="AdminNote" class="form-control form-control-sm" /></div>
+             <div class="col-12"><label asp-for="Terms" class="form-label small">شرح مفاد و تعهدات</label><textarea asp-for="Terms" class="form-control form-control-sm" rows="5"></textarea></div>
+             <div class="col-12" id="sellableProjectsRow">
+                 <label class="form-label small">پروژه‌های قابل ارائه برای این همکار فروش</label>
+                 @if (sellableProjects.Any())
+                 {
+                     <div class="d-flex flex-wrap gap-2">
+                         @foreach (var project in sellableProjects)
+                         {
+                             <label class="border rounded px-2 py-1 small bg-light">
+                                 <input type="checkbox" name="SellableProjectIds" value="@project.Id" class="form-check-input me-1" @(Model.SellableProjectIds.Contains((int)project.Id) ? "checked" : "") /> @project.Title
+                             </label>
+                         }
+                     </div>
+                 }
+                 else
+                 {
+                     <div class="small text-muted">پروژه‌ای برای ارائه تعریف نشده است.</div>
+                 }
+             </div>
+             <div class="col-12"><label asp-for="AdminNote" class="form-label small">یادداشت مدیر</label><input asp-for="AdminNote" class="form-control form-control-sm" /></div>
         </div>
         <div class="form-check mt-2">
             <input asp-for="BasedOnPaidStages" class="form-check-input" />
@@ -82,4 +113,20 @@
     </form>
 </div>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function syncAgreementNumber() {
+            var manual = document.querySelector('[data-number-mode="manual"]:checked');
+            var input = document.getElementById('editAgreementNo');
+            input.disabled = !manual;
+        }
+        document.querySelectorAll('[data-number-mode]').forEach(function (radio) { radio.addEventListener('change', syncAgreementNumber); });
+        syncAgreementNumber();
+        function syncProjectAccess() {
+            document.getElementById('sellableProjectsRow').style.display = document.getElementById('Kind').value === '1' ? '' : 'none';
+        }
+        document.getElementById('Kind').addEventListener('change', syncProjectAccess);
+        syncProjectAccess();
+    </script>
+}

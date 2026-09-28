@@ -58,8 +58,9 @@
                 <a href="/Admin/PortalLeads" class="@(controller == "PortalLeads" ? "active" : "")"><i class="bi bi-funnel"></i> لیدهای همکاران</a>
                 <a href="/Admin/PortalLeads/Contracts" class="@(controller == "PortalLeads" && action == "Contracts" ? "active" : "")"><i class="bi bi-file-earmark-text"></i> قراردادها و پورسانت</a>
                 <a href="/Admin/PortalDev" class="@(controller == "PortalDev" ? "active" : "")"><i class="bi bi-kanban"></i> برد تسک‌های فنی</a>
-                <a href="/Admin/PortalDev/Projects" class="@(controller == "PortalDev" && action == "Projects" ? "active" : "")"><i class="bi bi-diagram-3"></i> پروژه‌های فنی</a>
-                <a href="/Admin/PortalDev/Workload" class="@(controller == "PortalDev" && action == "Workload" ? "active" : "")"><i class="bi bi-speedometer"></i> بار کاری تیم</a>
+                 <a href="/Admin/PortalDev/Projects" class="@(controller == "PortalDev" && action == "Projects" ? "active" : "")"><i class="bi bi-diagram-3"></i> پروژه‌های فنی</a>
+                 <a href="/Admin/PortalProjects" class="@(controller == "PortalProjects" ? "active" : "")"><i class="bi bi-briefcase"></i> پروژه‌های آماده ارائه به مشتری</a>
+                 <a href="/Admin/PortalDev/Workload" class="@(controller == "PortalDev" && action == "Workload" ? "active" : "")"><i class="bi bi-speedometer"></i> بار کاری تیم</a>
                 <a href="/Admin/PortalDev/Tickets" class="@(controller == "PortalDev" && action == "Tickets" ? "active" : "")"><i class="bi bi-life-preserver"></i> درخواست‌های فنی</a>
                 <a href="/Admin/PortalAnnouncements" class="@(controller == "PortalAnnouncements" ? "active" : "")"><i class="bi bi-megaphone"></i> مرکز ارتباطی</a>
                 <a href="/Admin/PortalAgreements" class="@(controller == "PortalAgreements" ? "active" : "")"><i class="bi bi-journal-bookmark"></i> قراردادهای همکاری</a>
@@ -91,6 +92,7 @@
                 <button class="sn-admin-burger d-lg-none" type="button" id="adminBurger"><i class="bi bi-list"></i></button>
                 <h1 class="sn-admin-page-title">@ViewData["Title"]</h1>
                 <div class="ms-auto d-flex align-items-center gap-2">
+                    <a href="/Admin/Dashboard" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex"><i class="bi bi-house me-1"></i>داشبورد</a>
                     <span class="badge sn-badge-admin">ادمین</span>
                 </div>
             </header>

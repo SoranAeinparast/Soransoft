@@ -39,18 +39,21 @@
                         <h6 class="mb-1">@p.Title</h6>
                         <div class="small text-muted">@p.Description</div>
                     </div>
-                    <form asp-action="EditProject" method="post" class="row g-1 align-items-center">
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#dev-project-@p.Id"><i class="bi bi-sliders me-1"></i>مدیریت پروژه</button>
+                </div>
+                <div class="small mt-2 text-muted">@p.Tasks.Count تسک · @p.Members.Count عضو · @(p.IsActive ? "فعال" : "غیرفعال")</div>
+                <div class="collapse mt-3" id="dev-project-@p.Id">
+                    <form asp-action="EditProject" method="post" class="row g-1 align-items-center mb-3 border rounded p-2 bg-light">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="Id" value="@p.Id" />
-                        <div class="col-12 col-md-auto"><input name="Title" class="form-control form-control-sm" value="@p.Title" required placeholder="عنوان" style="width:150px" /></div>
-                        <div class="col-12 col-md-auto"><input name="Description" class="form-control form-control-sm" value="@p.Description" placeholder="توضیح" style="width:150px" /></div>
-                        <div class="col-12 col-md-auto"><input name="StatusText" class="form-control form-control-sm" value="@p.StatusText" placeholder="وضعیت" style="width:130px" /></div>
+                        <div class="col-12 col-md-3"><input name="Title" class="form-control form-control-sm" value="@p.Title" required placeholder="عنوان" /></div>
+                        <div class="col-12 col-md-3"><input name="Description" class="form-control form-control-sm" value="@p.Description" placeholder="توضیح" /></div>
+                        <div class="col-12 col-md-2"><input name="StatusText" class="form-control form-control-sm" value="@p.StatusText" placeholder="وضعیت" /></div>
                         <input type="hidden" name="IsActive" value="false" />
-                        <label class="form-check form-check-inline small mb-0"><input type="checkbox" name="IsActive" value="true" class="form-check-input" @(p.IsActive ? "checked" : "") /> فعال</label>
-                        <button class="btn btn-sm btn-outline-primary" title="ذخیره پروژه"><i class="bi bi-save"></i></button>
-                        <button type="submit" formaction="/Admin/PortalDev/DeleteProject" name="id" value="@p.Id" formmethod="post" class="btn btn-sm btn-outline-danger" onclick="return confirm('پروژه حذف شود؟ سابقه تسک‌ها حفظ می‌شود.')"><i class="bi bi-trash"></i></button>
+                        <label class="form-check form-check-inline small mb-0 col-auto"><input type="checkbox" name="IsActive" value="true" class="form-check-input" @(p.IsActive ? "checked" : "") /> فعال</label>
+                        <button class="btn btn-sm btn-outline-primary col-auto" title="ذخیره پروژه"><i class="bi bi-save"></i></button>
+                        <button type="submit" formaction="/Admin/PortalDev/DeleteProject" name="id" value="@p.Id" formmethod="post" class="btn btn-sm btn-outline-danger col-auto" onclick="return confirm('پروژه حذف شود؟ سابقه تسک‌ها حفظ می‌شود.')"><i class="bi bi-trash"></i></button>
                     </form>
-                </div>
                 @if (total > 0)
                 {
                     <div class="small mt-2">
@@ -98,6 +101,7 @@
                     <input name="roleInProject" class="form-control form-control-sm" placeholder="نقش (مثلاً Backend)" style="max-width:130px" />
                     <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-person-plus"></i></button>
                 </form>
+                </div>
             </div>
         </div>
     }

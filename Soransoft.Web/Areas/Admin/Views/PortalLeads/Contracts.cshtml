@@ -74,12 +74,18 @@
                     <div class="small text-muted"><i class="bi bi-shield-check me-1"></i>انقضای لایسنس: @PersianDisplay.Date(exp)</div>
                 }
             </div>
-            <div class="text-start">
+            <div class="text-start d-flex align-items-end gap-2">
+                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#contractDetails-@c.Id">
+                    <i class="bi bi-sliders me-1"></i>مدیریت قرارداد
+                </button>
+                <div>
                 <span class="badge @StatusBadge(c.Status)">@StatusTitle(c.Status)</span>
                 <div class="small mt-1">@c.TotalAmount.ToString("N0") تومان</div>
+                </div>
             </div>
         </div>
 
+        <div class="collapse mt-3" id="contractDetails-@c.Id">
         @* ---------- مراحل پرداخت ---------- *@
         <div class="d-flex justify-content-between align-items-center mt-3">
             <h6 class="small mb-0"><i class="bi bi-list-check me-1"></i>مراحل پرداخت مشتری</h6>
@@ -249,9 +255,10 @@
                 <i class="bi bi-percent me-1"></i>تعیین/ویرایش پورسانت
             </button>
         </div>
-    </div>
+        </div>
+        </div>
 
-    @* ---------- مودال افزودن مرحله ---------- *@
+        @* ---------- مودال افزودن مرحله ---------- *@
     <div class="modal fade" id="stageModal-@c.Id" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">

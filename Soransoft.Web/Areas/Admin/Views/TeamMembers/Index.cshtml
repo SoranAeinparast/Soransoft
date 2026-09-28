@@ -67,10 +67,13 @@
                                 </td>
                                 <td colspan="2" class="p-0">
                                     <form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-1 align-items-center px-2 py-2 m-0">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="Id" value="@item.Id" />
-                                        <input type="hidden" name="Image" value="@item.Image" />
-                                        <div class="col-12 col-md-5"><input name="FullName" value="@item.FullName" class="form-control form-control-sm" /></div>
+                                         @Html.AntiForgeryToken()
+                                         <input type="hidden" name="Id" value="@item.Id" />
+                                         <input type="hidden" name="Image" value="@item.Image" />
+                                         <input type="hidden" name="LinkedinUrl" value="@item.LinkedinUrl" />
+                                         <input type="hidden" name="DisplayOrder" value="@item.DisplayOrder" />
+                                         <input type="hidden" name="IsActive" value="@item.IsActive.ToString().ToLower()" />
+                                         <div class="col-12 col-md-5"><input name="FullName" value="@item.FullName" class="form-control form-control-sm" /></div>
                                         <div class="col-12 col-md-5"><input name="Role" value="@item.Role" class="form-control form-control-sm" /></div>
                                         <div class="col-12 col-md-2"><button type="submit" class="btn btn-sm btn-outline-primary w-100">ثبت</button></div>
                                     </form>
@@ -86,14 +89,9 @@
                                     }
                                 </td>
                                 <td>
-                                    <form asp-action="Edit" method="post" class="d-inline-flex align-items-center gap-1">
+                                    <form asp-action="UpdateDisplayOrder" method="post" class="d-inline-flex align-items-center gap-1">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="Id" value="@item.Id" />
-                                        <input type="hidden" name="FullName" value="@item.FullName" />
-                                        <input type="hidden" name="Role" value="@item.Role" />
-                                        <input type="hidden" name="Image" value="@item.Image" />
-                                        <input type="hidden" name="LinkedinUrl" value="@item.LinkedinUrl" />
-                                        <input type="hidden" name="IsActive" value="@item.IsActive.ToString().ToLower()" />
                                         <input name="DisplayOrder" value="@item.DisplayOrder" class="form-control form-control-sm" type="number" style="width:64px" />
                                         <button type="submit" class="btn btn-sm btn-link p-0 text-primary" title="ذخیره ترتیب"><i class="bi bi-check2"></i></button>
                                     </form>

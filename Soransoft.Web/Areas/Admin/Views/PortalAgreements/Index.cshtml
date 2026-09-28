@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "قراردادهای همکاری فی‌مابین";
     var partners = ViewBag.Partners as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var sellableProjects = ViewBag.SellableProjects as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
     string KindTitle(Soransoft.Domain.Entities.AgreementKind k) => k == Soransoft.Domain.Entities.AgreementKind.Sales ? "فروش" : "فنی";
     string StatusBadge(Soransoft.Domain.Entities.AgreementStatus s) => s switch
     {
@@ -41,19 +42,32 @@
                     <option value="2">فنی (توسعه‌دهنده)</option>
                 </select>
             </div>
-            <div class="col-12 col-md-4">
-                <label class="form-label small">عنوان *</label>
-                <input name="Title" class="form-control form-control-sm" required placeholder="مثلاً: قرارداد همکاری فروش" />
-            </div>
+             <div class="col-12 col-md-4">
+                 <label class="form-label small">عنوان *</label>
+                 <input name="Title" class="form-control form-control-sm" required placeholder="مثلاً: قرارداد همکاری فروش" />
+             </div>
             <div class="col-6 col-md-3">
                 <label class="form-label small">موضوع *</label>
-                <input name="Subject" class="form-control form-control-sm" required placeholder="موضوع اصلی قرارداد" />
-            </div>
+                 <input name="Subject" class="form-control form-control-sm" required placeholder="موضوع اصلی قرارداد" />
+             </div>
 
-            <div class="col-6 col-md-3">
-                <label class="form-label small">تاریخ شروع *</label>
-                <input name="StartDate" type="text" data-persian-date class="form-control form-control-sm" required />
-            </div>
+             <div class="col-12 col-md-4">
+                 <label class="form-label small">شماره قرارداد *</label>
+                 <div class="d-flex gap-3 small mb-1">
+                     <label><input type="radio" name="UseSystemNumber" value="true" checked data-number-mode="system" /> تولید سیستمی</label>
+                     <label><input type="radio" name="UseSystemNumber" value="false" data-number-mode="manual" /> ورود دستی</label>
+                 </div>
+                 <input name="AgreementNo" id="newAgreementNo" class="form-control form-control-sm" dir="ltr" placeholder="مثلاً CA1405001" disabled />
+             </div>
+
+             <div class="col-6 col-md-3">
+                 <label class="form-label small">تاریخ شروع *</label>
+                 <input name="StartDate" type="text" data-persian-date class="form-control form-control-sm" required />
+             </div>
+             <div class="col-6 col-md-3">
+                 <label class="form-label small">تاریخ انعقاد فیزیکی *</label>
+                 <input name="SignedAt" type="text" data-persian-date value="@PersianDisplay.Date(DateTime.Now)" class="form-control form-control-sm" required />
+             </div>
             <div class="col-6 col-md-3">
                 <label class="form-label small">تاریخ پایان</label>
                 <input name="EndDate" type="text" data-persian-date class="form-control form-control-sm" />
@@ -101,11 +115,29 @@
                 <input name="BankAccountHolder" class="form-control form-control-sm" />
             </div>
 
-            <div class="col-12">
-                <label class="form-label small">شرح مفاد و تعهدات</label>
-                <textarea name="Terms" class="form-control form-control-sm" rows="4" placeholder="بندهای قرارداد، تعهدات طرفین، جرائم، رازداری و..."></textarea>
-            </div>
-            <div class="col-12">
+             <div class="col-12">
+                 <label class="form-label small">شرح مفاد و تعهدات</label>
+                 <textarea name="Terms" class="form-control form-control-sm" rows="4" placeholder="بندهای قرارداد، تعهدات طرفین، جرائم، رازداری و..."></textarea>
+             </div>
+             <div class="col-12" id="sellableProjectsRow">
+                 <label class="form-label small">پروژه‌های قابل ارائه برای این همکار فروش</label>
+                 @if (sellableProjects.Any())
+                 {
+                     <div class="d-flex flex-wrap gap-2">
+                         @foreach (var project in sellableProjects)
+                         {
+                             <label class="border rounded px-2 py-1 small bg-light">
+                                 <input type="checkbox" name="SellableProjectIds" value="@project.Id" class="form-check-input me-1" /> @project.Title
+                             </label>
+                         }
+                     </div>
+                 }
+                 else
+                 {
+                     <div class="small text-muted">ابتدا از بخش «پروژه‌های آماده ارائه به مشتری» پروژه ایجاد کنید.</div>
+                 }
+             </div>
+             <div class="col-12">
                 <label class="form-label small">یادداشت مدیر (داخلی)</label>
                 <input name="AdminNote" class="form-control form-control-sm" />
             </div>
@@ -127,8 +159,8 @@
     {
         <div class="table-responsive">
             <table class="table table-hover align-middle">
-                <thead>
-                    <tr><th>شماره</th><th>همکار</th><th>نوع</th><th>عنوان</th><th>مبلغ/سقف</th><th>پورسانت</th><th>وضعیت</th><th>PDF</th><th></th></tr>
+                 <thead>
+                     <tr><th>شماره</th><th>همکار</th><th>نوع</th><th>عنوان</th><th>تاریخ انعقاد</th><th>مبلغ/سقف</th><th>پورسانت</th><th>وضعیت</th><th>PDF</th><th></th></tr>
                 </thead>
                 <tbody>
                     @foreach (var a in Model)
@@ -137,8 +169,9 @@
                             <td class="small" dir="ltr">@a.AgreementNo</td>
                             <td>@a.Partner.FullName</td>
                             <td><span class="badge @(a.Kind == Soransoft.Domain.Entities.AgreementKind.Sales ? "bg-primary" : "bg-success")">@KindTitle(a.Kind)</span></td>
-                            <td class="small">@a.Title</td>
-                            <td class="small">@(a.IsUnlimitedAmount ? "نامحدود" : (a.TotalAmount?.ToString("N0") ?? "—"))</td>
+                             <td class="small">@a.Title</td>
+                             <td class="small">@PersianDisplay.Date(a.SignedAt)</td>
+                             <td class="small">@(a.IsUnlimitedAmount ? "نامحدود" : (a.TotalAmount?.ToString("N0") ?? "—"))</td>
                             <td class="small">
                                 @if (a.Kind == Soransoft.Domain.Entities.AgreementKind.Sales)
                                 {
@@ -157,11 +190,8 @@
                                 }
                             </td>
                             <td class="text-end">
-                                @if (a.Status == Soransoft.Domain.Entities.AgreementStatus.Draft)
-                                {
-                                    <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
-                                }
-                                <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary">مدیریت</a>
+                                 <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">مدیریت و ویرایش</a>
+                                 <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary">خلاصه</a>
                             </td>
                         </tr>
                     }
@@ -188,5 +218,20 @@
         }
         unlimited.addEventListener('change', syncUnlimited);
         syncUnlimited();
+
+        document.querySelectorAll('[data-number-mode]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                var input = document.getElementById('newAgreementNo');
+                var manual = document.querySelector('[data-number-mode="manual"]:checked');
+                input.disabled = !manual;
+                if (!manual) input.value = '';
+            });
+        });
+
+        function syncProjectAccess() {
+            document.getElementById('sellableProjectsRow').style.display = document.getElementById('agKind').value === '1' ? '' : 'none';
+        }
+        document.getElementById('agKind').addEventListener('change', syncProjectAccess);
+        syncProjectAccess();
     </script>
 }
