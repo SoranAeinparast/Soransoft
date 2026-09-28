@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
 using System.Security.Claims;
 
