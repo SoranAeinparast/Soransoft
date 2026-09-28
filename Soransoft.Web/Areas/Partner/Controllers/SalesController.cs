@@ -8,17 +8,48 @@ using TaskStatus = Soransoft.Domain.Entities.TaskStatus;
 
 namespace Soransoft.Web.Areas.Partner.Controllers
 {
-    /// <summary>فرم ثبت/ویرایش لید</summary>
+    /// <summary>فرم رسمی معرفی مشتری و ثبت سرنخ فروش</summary>
     public class LeadInputModel
     {
+        [Required(ErrorMessage = "کد ملی همکار فروش الزامی است")]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "کد ملی باید ۱۰ رقم باشد")]
+        public string SalesPartnerNationalId { get; set; } = string.Empty;
+        public DateTime? IntroducedAt { get; set; } = DateTime.Now;
+        public bool IsFollowUp { get; set; }
+
         [Required(ErrorMessage = "نام مشتری الزامی است")]
         public string CustomerName { get; set; } = string.Empty;
         [Required(ErrorMessage = "شماره مشتری الزامی است")]
         [RegularExpression(@"^09\d{9}$", ErrorMessage = "شماره موبایل معتبر نیست")]
         public string CustomerMobile { get; set; } = string.Empty;
+        public string? BusinessName { get; set; }
+        public string? DecisionMakerName { get; set; }
+        public string? DecisionMakerRole { get; set; }
+        public string? CustomerLandline { get; set; }
+        [EmailAddress(ErrorMessage = "ایمیل مشتری معتبر نیست")]
+        public string? CustomerEmail { get; set; }
+        public string? CurrentWebsite { get; set; }
+        public string? Province { get; set; }
+        public string? City { get; set; }
+        public string? FullAddress { get; set; }
+        public string? SocialMedia { get; set; }
+
+        public bool? HasWebsite { get; set; }
+        public string? BusinessType { get; set; }
+        public string? CurrentSystem { get; set; }
+        public bool? HasSimilarPlatform { get; set; }
+        public DateTime? ExpectedStartDate { get; set; }
+        public long? BudgetAmount { get; set; }
+
         [Required(ErrorMessage = "شرح نیاز مشتری الزامی است")]
         public string Requirement { get; set; } = string.Empty;
+        public string? SecondaryRequirements { get; set; }
         public long? EstimatedAmount { get; set; }
+        public string? IntroductionMethod { get; set; }
+        public DateTime? FirstContactDate { get; set; }
+        public bool? DecisionMakerConfirmed { get; set; }
+        public LeadNegotiationLevel? NegotiationLevel { get; set; }
+        public bool? NearContract { get; set; }
     }
 
     /// <summary>فرم ثبت درخواست بررسی فنی</summary>
@@ -83,10 +114,19 @@ namespace Soransoft.Web.Areas.Partner.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(CancellationToken ct)
         {
             if (!IsSalesSide) return Forbidden();
-            return View(new LeadInputModel());
+            var agreement = await _db.CooperationAgreements.AsNoTracking()
+                .Where(a => a.PartnerId == PartnerId && a.Kind == AgreementKind.Sales && a.Status == AgreementStatus.Active)
+                .OrderByDescending(a => a.SignedAt)
+                .FirstOrDefaultAsync(ct);
+            ViewBag.ActiveAgreement = agreement;
+            var partnerNationalId = await _db.Partners.AsNoTracking()
+                .Where(p => p.Id == PartnerId)
+                .Select(p => p.NationalId)
+                .FirstOrDefaultAsync(ct);
+            return View(new LeadInputModel { SalesPartnerNationalId = partnerNationalId ?? string.Empty });
         }
 
         [HttpPost]
@@ -94,23 +134,63 @@ namespace Soransoft.Web.Areas.Partner.Controllers
         public async Task<IActionResult> Create(LeadInputModel model, CancellationToken ct)
         {
             if (!IsSalesSide) return Forbidden();
+            var agreement = await _db.CooperationAgreements.AsNoTracking()
+                .Where(a => a.PartnerId == PartnerId && a.Kind == AgreementKind.Sales && a.Status == AgreementStatus.Active)
+                .OrderByDescending(a => a.SignedAt)
+                .FirstOrDefaultAsync(ct);
+            ViewBag.ActiveAgreement = agreement;
             if (!ModelState.IsValid) return View(model);
 
             var lead = new Lead
             {
+                FormNo = $"LD-{DateTime.Now:yyyyMMddHHmmssfff}",
+                IntroducedAt = model.IntroducedAt ?? DateTime.Now,
+                IsFollowUp = model.IsFollowUp,
+                SalesPartnerNationalId = model.SalesPartnerNationalId.Trim(),
+                SalesPartnerAgreementNo = agreement?.AgreementNo,
+                SalesPartnerBankAccount = agreement is null ? null : string.Join(" — ", new[] { agreement.BankName, agreement.BankAccountIban, agreement.BankAccountHolder }.Where(x => !string.IsNullOrWhiteSpace(x))),
                 CustomerName = model.CustomerName.Trim(),
                 CustomerMobile = model.CustomerMobile.Trim(),
+                BusinessName = Clean(model.BusinessName),
+                DecisionMakerName = Clean(model.DecisionMakerName),
+                DecisionMakerRole = Clean(model.DecisionMakerRole),
+                CustomerLandline = Clean(model.CustomerLandline),
+                CustomerEmail = Clean(model.CustomerEmail),
+                CurrentWebsite = Clean(model.CurrentWebsite),
+                Province = Clean(model.Province),
+                City = Clean(model.City),
+                FullAddress = Clean(model.FullAddress),
+                SocialMedia = Clean(model.SocialMedia),
+                HasWebsite = model.HasWebsite,
+                BusinessType = Clean(model.BusinessType),
+                CurrentSystem = Clean(model.CurrentSystem),
+                HasSimilarPlatform = model.HasSimilarPlatform,
+                ExpectedStartDate = model.ExpectedStartDate,
+                BudgetAmount = model.BudgetAmount,
                 Requirement = model.Requirement.Trim(),
+                SecondaryRequirements = Clean(model.SecondaryRequirements),
                 EstimatedAmount = model.EstimatedAmount,
+                IntroductionMethod = Clean(model.IntroductionMethod),
+                FirstContactDate = model.FirstContactDate,
+                DecisionMakerConfirmed = model.DecisionMakerConfirmed,
+                NegotiationLevel = model.NegotiationLevel,
+                NearContract = model.NearContract,
                 PartnerId = PartnerId,
                 Stage = LeadStage.New,
+                ReviewStatus = LeadReviewStatus.Pending,
             };
-            _db.Leads.Add(lead);
-            await _db.SaveChangesAsync(ct);
+            var result = await _portal.CreateLeadAsync(PartnerId, lead, ct);
+            if (!result.Success)
+            {
+                TempData["Error"] = result.Message;
+                return View(model);
+            }
 
             TempData["Success"] = "لید ثبت شد؛ پس از تایید مدیر به قرارداد تبدیل می‌شود.";
             return RedirectToAction(nameof(Index));
         }
+
+        private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
         /// <summary>تغییر وضعیت لید توسط خود فروشنده (مثلاً منصرف شدن مشتری)</summary>
         [HttpPost]
