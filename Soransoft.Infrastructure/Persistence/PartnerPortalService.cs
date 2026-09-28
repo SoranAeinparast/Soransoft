@@ -22,7 +22,7 @@ namespace Soransoft.Infrastructure.Persistence
 
             lead.PartnerId = partnerId;
             lead.Stage = LeadStage.New;
-            lead.History.Add(new LeadHistory { FromStage = LeadStage.New, ToStage = LeadStage.New, Note = "ثبت اولیه لید" });
+            lead.History.Add(new LeadHistory { FromStage = LeadStage.New, ToStage = LeadStage.New, Action = "Created", Note = "ثبت اولیه لید" });
             _db.Leads.Add(lead);
             await _db.SaveChangesAsync(ct);
             return PortalResult.Ok("لید با موفقیت ثبت شد.");
@@ -39,7 +39,7 @@ namespace Soransoft.Infrastructure.Persistence
             if (old == newStage) return PortalResult.Ok("وضعیت تغییری نکرد.");
             lead.Stage = newStage;
             if (newStage == LeadStage.Contracted) lead.ConvertedAt = DateTime.Now;
-            lead.History.Add(new LeadHistory { LeadId = lead.Id, FromStage = old, ToStage = newStage, Note = note });
+            lead.History.Add(new LeadHistory { LeadId = lead.Id, FromStage = old, ToStage = newStage, Action = "StageChanged", Note = note });
             await _db.SaveChangesAsync(ct);
             return PortalResult.Ok($"وضعیت لید از «{StageTitle(old)}» به «{StageTitle(newStage)}» تغییر کرد.");
         }
@@ -60,9 +60,10 @@ namespace Soransoft.Infrastructure.Persistence
             };
             _db.PartnerContracts.Add(contract);
 
+            var previousStage = lead.Stage;
             lead.Stage = LeadStage.Contracted;
             lead.ConvertedAt = DateTime.Now;
-            lead.History.Add(new LeadHistory { LeadId = lead.Id, FromStage = LeadStage.Negotiating, ToStage = LeadStage.Contracted, Note = "تبدیل به قرارداد" });
+            lead.History.Add(new LeadHistory { LeadId = lead.Id, FromStage = previousStage, ToStage = LeadStage.Contracted, Action = "StageChanged", Note = "تبدیل به قرارداد" });
             await _db.SaveChangesAsync(ct);
             return contract;
         }

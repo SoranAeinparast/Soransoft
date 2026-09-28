@@ -55,6 +55,7 @@ namespace Soransoft.Infrastructure.Persistence
         public DbSet<Announcement> Announcements => Set<Announcement>();
         public DbSet<PartnerNotificationRead> PartnerNotificationReads => Set<PartnerNotificationRead>();
         public DbSet<CooperationAgreement> CooperationAgreements => Set<CooperationAgreement>();
+        public DbSet<AgreementCancellationRequest> AgreementCancellationRequests => Set<AgreementCancellationRequest>();
         public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
         public DbSet<WithdrawalRequest> WithdrawalRequests => Set<WithdrawalRequest>();
         public DbSet<PasswordResetRequest> PasswordResetRequests => Set<PasswordResetRequest>();
@@ -92,6 +93,7 @@ namespace Soransoft.Infrastructure.Persistence
             modelBuilder.Entity<TimeLog>().HasQueryFilter(t => !t.Partner!.IsDeleted);
             modelBuilder.Entity<PartnerNotificationRead>().HasQueryFilter(r => !r.Announcement!.IsDeleted && !r.Partner!.IsDeleted);
             modelBuilder.Entity<CooperationAgreement>().HasQueryFilter(a => !a.Partner!.IsDeleted);
+            modelBuilder.Entity<AgreementCancellationRequest>().HasQueryFilter(r => !r.Partner!.IsDeleted && !r.Agreement!.IsDeleted);
             modelBuilder.Entity<WalletTransaction>().HasQueryFilter(t => !t.Partner!.IsDeleted);
             modelBuilder.Entity<WithdrawalRequest>().HasQueryFilter(r => !r.Partner!.IsDeleted);
             modelBuilder.Entity<PasswordResetRequest>().HasQueryFilter(r => !r.Partner!.IsDeleted);

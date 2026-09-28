@@ -15,6 +15,7 @@ namespace Soransoft.Infrastructure.Persistence.Configurations
             b.Property(x => x.FullName).HasMaxLength(150).IsRequired();
             b.Property(x => x.Mobile).HasMaxLength(20);
             b.Property(x => x.Email).HasMaxLength(200);
+            b.Property(x => x.NationalId).HasMaxLength(20);
             b.Property(x => x.TechLevel).HasMaxLength(60);
             b.Property(x => x.Skills).HasMaxLength(500);
             b.Property(x => x.AdminNote).HasColumnType("nvarchar(max)");
@@ -26,9 +27,30 @@ namespace Soransoft.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<Lead> b)
         {
             b.ToTable("Leads");
+            b.Property(x => x.FormNo).HasMaxLength(40);
+            b.Property(x => x.CustomerCode).HasMaxLength(50);
+            b.Property(x => x.SalesPartnerNationalId).HasMaxLength(20);
+            b.Property(x => x.SalesPartnerAgreementNo).HasMaxLength(60);
+            b.Property(x => x.SalesPartnerBankAccount).HasMaxLength(80);
             b.Property(l => l.EstimatedAmount).HasColumnType("bigint");
+            b.Property(l => l.BudgetAmount).HasColumnType("bigint");
             b.Property(x => x.CustomerName).HasMaxLength(150).IsRequired();
             b.Property(x => x.CustomerMobile).HasMaxLength(20).IsRequired();
+            b.Property(x => x.BusinessName).HasMaxLength(200);
+            b.Property(x => x.DecisionMakerName).HasMaxLength(150);
+            b.Property(x => x.DecisionMakerRole).HasMaxLength(120);
+            b.Property(x => x.CustomerLandline).HasMaxLength(30);
+            b.Property(x => x.CustomerEmail).HasMaxLength(200);
+            b.Property(x => x.CurrentWebsite).HasMaxLength(300);
+            b.Property(x => x.Province).HasMaxLength(100);
+            b.Property(x => x.City).HasMaxLength(100);
+            b.Property(x => x.SocialMedia).HasMaxLength(500);
+            b.Property(x => x.BusinessType).HasMaxLength(150);
+            b.Property(x => x.CurrentSystem).HasMaxLength(150);
+            b.Property(x => x.IntroductionMethod).HasMaxLength(200);
+            b.Property(x => x.SystemCustomerNo).HasMaxLength(80);
+            b.Property(x => x.SecondaryRequirements).HasColumnType("nvarchar(max)");
+            b.Property(x => x.ReviewNote).HasColumnType("nvarchar(max)");
             b.Property(x => x.Requirement).HasColumnType("nvarchar(max)");
             b.Property(x => x.AdminNote).HasColumnType("nvarchar(max)");
             b.HasIndex(x => x.Stage);
@@ -41,7 +63,9 @@ namespace Soransoft.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<LeadHistory> b)
         {
             b.ToTable("LeadHistories");
+            b.Property(x => x.Action).HasMaxLength(40).IsRequired();
             b.Property(x => x.Note).HasMaxLength(500);
+            b.HasIndex(x => new { x.LeadId, x.CreatedAt });
         }
     }
 
@@ -204,6 +228,7 @@ namespace Soransoft.Infrastructure.Persistence.Configurations
             b.ToTable("SellableProjects");
             b.Property(x => x.Title).HasMaxLength(200).IsRequired();
             b.Property(x => x.Description).HasColumnType("nvarchar(max)");
+            b.Property(x => x.FeaturedImage).HasMaxLength(300);
             b.HasIndex(x => new { x.IsActive, x.DisplayOrder });
             b.HasMany(x => x.Documents).WithOne(x => x.Project).HasForeignKey(x => x.SellableProjectId).OnDelete(DeleteBehavior.Cascade);
             b.HasMany(x => x.Comments).WithOne(x => x.Project).HasForeignKey(x => x.SellableProjectId).OnDelete(DeleteBehavior.Cascade);
@@ -284,6 +309,20 @@ namespace Soransoft.Infrastructure.Persistence.Configurations
             b.Property(x => x.AdminNote).HasColumnType("nvarchar(max)");
             b.Property(x => x.CommissionValue).HasPrecision(18, 2);
             b.HasIndex(x => new { x.PartnerId, x.Kind });
+            b.HasMany(x => x.CancellationRequests).WithOne(x => x.Agreement).HasForeignKey(x => x.AgreementId).OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+
+    internal sealed class AgreementCancellationRequestConfig : IEntityTypeConfiguration<AgreementCancellationRequest>
+    {
+        public void Configure(EntityTypeBuilder<AgreementCancellationRequest> b)
+        {
+            b.ToTable("AgreementCancellationRequests");
+            b.Property(x => x.Reason).HasColumnType("nvarchar(max)").IsRequired();
+            b.Property(x => x.AdminResponse).HasColumnType("nvarchar(max)");
+            b.HasIndex(x => new { x.AgreementId, x.Status });
+            b.HasIndex(x => new { x.PartnerId, x.Status });
+            b.HasOne(x => x.Partner).WithMany().HasForeignKey(x => x.PartnerId).OnDelete(DeleteBehavior.Restrict);
         }
     }
 
