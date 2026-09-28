@@ -767,7 +767,10 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateDisplayOrder(int id, int displayOrder, CancellationToken ct)
+        public async Task<IActionResult> UpdateDisplayOrder(
+            [FromForm(Name = "id")] int id,
+            [FromForm(Name = "displayOrder")] int displayOrder,
+            CancellationToken ct)
         {
             var item = await _db.TeamMembers.FirstOrDefaultAsync(t => t.Id == id, ct);
             if (item is null)
