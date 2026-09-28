@@ -82,7 +82,7 @@
                     </button>
                 </form>
                 <form method="post" action="/Admin/Tariffs/DeleteSection/@sec.Id" class="d-inline"
-                      onsubmit="return confirm('حذف شود؟ همه پکیج‌های این بخش هم از سایت حذف می‌شوند.')">
+                      data-swal-confirm="حذف شود؟ همه پکیج‌های این بخش هم از سایت حذف می‌شوند.">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
                 </form>
@@ -219,7 +219,7 @@
                                         </form>
                                         <form method="post" action="/Admin/Tariffs/DeleteItem/@item.Id" class="d-flex align-items-center">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-link p-0 text-danger" title="حذف ردیف" onclick="return confirm('حذف شود؟')"><i class="bi bi-x"></i></button>
+                                            <button type="submit" class="btn btn-sm btn-link p-0 text-danger" title="حذف ردیف" data-swal-confirm="حذف شود؟"><i class="bi bi-x"></i></button>
                                         </form>
                                     }
                                     <form asp-action="AddItem" method="post" class="d-flex align-items-center gap-1">
