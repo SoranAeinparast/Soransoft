@@ -51,6 +51,70 @@ namespace Soransoft.Web.Controllers
             return PhysicalFile(fullPath, contentType, Path.GetFileName(fullPath), enableRangeProcessing: true);
         }
 
+        [HttpGet("sellable-project/{id:int}")]
+        public async Task<IActionResult> DownloadSellableProject(int id, CancellationToken ct)
+        {
+            if (User.HasClaim("MustChangePassword", "1"))
+                return Forbid();
+
+            var document = await _db.SellableProjectDocuments.AsNoTracking()
+                .Where(d => d.Id == id && !d.IsDeleted && d.IsActive && !d.Project.IsDeleted && d.Project.IsActive)
+                .Select(d => new { d.StoredPath, d.SellableProjectId })
+                .FirstOrDefaultAsync(ct);
+            if (document is null || string.IsNullOrWhiteSpace(document.StoredPath))
+                return NotFound();
+
+            if (!await CanAccessSellableProjectAsync(document.SellableProjectId, ct))
+                return NotFound();
+
+            var relativePath = ExtractStoredRelativePath(document.StoredPath);
+            if (relativePath is null)
+                return NotFound();
+
+            return ServePrivateFile(relativePath);
+        }
+
+        private async Task<bool> CanAccessSellableProjectAsync(int projectId, CancellationToken ct)
+        {
+            if (User.IsInRole("Admin")) return true;
+            if (!User.HasClaim("UserType", "Partner") ||
+                !int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var partnerId))
+                return false;
+
+            var partner = await _db.Partners.AsNoTracking()
+                .Where(p => p.Id == partnerId && p.IsActive && !p.IsDeleted)
+                .Select(p => new { p.Id, p.CanSeeAllSalesData, p.Role })
+                .FirstOrDefaultAsync(ct);
+            if (partner is null || partner.Role is not (PartnerRole.Sales or PartnerRole.SalesManager))
+                return false;
+
+            var now = DateTime.Now;
+            var hasActiveSalesAgreement = await _db.CooperationAgreements.AsNoTracking().AnyAsync(a =>
+                a.PartnerId == partner.Id &&
+                a.Kind == AgreementKind.Sales &&
+                a.Status == AgreementStatus.Active &&
+                a.StartDate <= now &&
+                (!a.EndDate.HasValue || a.EndDate.Value >= now), ct);
+            if (!hasActiveSalesAgreement) return false;
+
+            return partner.CanSeeAllSalesData || await _db.SellableProjectPartners.AsNoTracking().AnyAsync(a =>
+                a.SellableProjectId == projectId && a.PartnerId == partner.Id && a.IsActive, ct);
+        }
+
+        private IActionResult ServePrivateFile(string relativePath)
+        {
+            var fullPath = ResolvePrivatePath(relativePath);
+            if (fullPath is null || !System.IO.File.Exists(fullPath))
+                return NotFound();
+
+            var contentType = _contentTypes.TryGetContentType(fullPath, out var detectedType)
+                ? detectedType
+                : "application/octet-stream";
+            Response.Headers.CacheControl = "no-store";
+            Response.Headers.Pragma = "no-cache";
+            return PhysicalFile(fullPath, contentType, Path.GetFileName(fullPath), enableRangeProcessing: true);
+        }
+
         private async Task<bool> CanAccessAsync(string relativePath, CancellationToken ct)
         {
             var storedPath = BuildStoredPath(relativePath);
@@ -118,6 +182,19 @@ namespace Soransoft.Web.Controllers
             {
                 return null;
             }
+        }
+
+        private static string? ExtractStoredRelativePath(string? storedPath)
+        {
+            const string marker = "?path=";
+            if (string.IsNullOrWhiteSpace(storedPath)) return null;
+
+            var markerIndex = storedPath.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+            if (markerIndex < 0 || !storedPath[..markerIndex].TrimEnd('/').EndsWith("/documents/download", StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            var encodedPath = storedPath[(markerIndex + marker.Length)..].Split('&', 2)[0];
+            return NormalizeRelativePath(Uri.UnescapeDataString(encodedPath));
         }
 
         private static string? NormalizeRelativePath(string? path)

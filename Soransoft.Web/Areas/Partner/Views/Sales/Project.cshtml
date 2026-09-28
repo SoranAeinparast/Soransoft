@@ -1,50 +1,196 @@
 @model Soransoft.Domain.Entities.SellableProject
 @{
     ViewData["Title"] = Model.Title;
+    var documents = Model.Documents
+        .Where(d => d.IsActive && !d.IsDeleted)
+        .OrderBy(d => d.DisplayOrder)
+        .ThenBy(d => d.Title)
+        .ToList();
+    var comments = Model.Comments
+        .Where(c => !c.IsDeleted)
+        .OrderByDescending(c => c.CreatedAt)
+        .ToList();
+    var categoryCount = documents.Select(d => d.Category).Distinct(StringComparer.OrdinalIgnoreCase).Count();
 }
 
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <div>
-        <h5 class="mb-1"><i class="bi bi-briefcase me-2"></i>@Model.Title</h5>
-        <div class="small text-muted">مستندات آماده ارائه به مشتری</div>
-    </div>
-    <div class="d-flex gap-2">
-        <a asp-action="Catalog" class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-right me-1"></i>فهرست پروژه‌ها</a>
-        <a href="/Partner/Dashboard" class="btn btn-sm btn-outline-secondary"><i class="bi bi-house me-1"></i>داشبورد</a>
-    </div>
-</div>
+<style>
+    .sales-project-hero {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #d9e8e9;
+        border-radius: 20px;
+        padding: 1.5rem;
+        color: #17333a;
+        background: linear-gradient(135deg, #f8ffff 0%, #eef8f8 58%, #e1f2f0 100%);
+        box-shadow: 0 12px 30px rgba(23, 67, 74, .06);
+    }
+    .sales-project-hero::after {
+        content: "";
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        left: -70px;
+        bottom: -130px;
+        border-radius: 50%;
+        background: rgba(0, 179, 164, .12);
+    }
+    .sales-project-kicker { color: #087f78; font-size: .76rem; font-weight: 800; letter-spacing: .04em; }
+    .sales-project-icon {
+        width: 58px;
+        height: 58px;
+        flex: 0 0 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        color: #fff;
+        background: linear-gradient(145deg, #00b3a4, #087f78);
+        box-shadow: 0 8px 18px rgba(0, 143, 133, .22);
+        font-size: 1.45rem;
+    }
+    .sales-project-stat {
+        min-width: 110px;
+        padding: .65rem .85rem;
+        border: 1px solid rgba(0, 135, 125, .14);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .68);
+    }
+    .sales-project-stat strong { display: block; font-size: 1.1rem; color: #17333a; }
+    .sales-project-stat span { color: #6c858b; font-size: .76rem; }
+    .sales-project-section {
+        border: 1px solid #e3ebee;
+        border-radius: 16px;
+        background: #fff;
+        padding: 1.2rem;
+    }
+    .sales-project-section-title { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; }
+    .sales-project-section-title h6 { margin: 0; font-weight: 800; }
+    .sales-document-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 72px;
+        padding: .8rem .2rem;
+        border-bottom: 1px solid #eef3f5;
+    }
+    .sales-document-item:last-child { border-bottom: 0; padding-bottom: .1rem; }
+    .sales-document-icon {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        color: #087f78;
+        background: #e8f7f5;
+        font-size: 1.05rem;
+    }
+    .sales-comment {
+        padding: .9rem;
+        border: 1px solid #e7eef0;
+        border-radius: 13px;
+        background: #fbfdfd;
+    }
+    .sales-comment + .sales-comment { margin-top: .7rem; }
+    .sales-comment-body { white-space: pre-line; line-height: 1.9; color: #334e55; }
+    @media (max-width: 575.98px) {
+        .sales-project-hero, .sales-project-section { padding: 1rem; border-radius: 15px; }
+        .sales-document-item { align-items: flex-start; flex-direction: column; }
+        .sales-document-item .btn { width: 100%; }
+    }
+</style>
 
-@if (!string.IsNullOrWhiteSpace(Model.Description))
-{
-    <div class="sn-admin-card mb-3"><h6><i class="bi bi-info-circle me-1"></i>معرفی پروژه</h6><div class="small lh-lg">@Html.Raw(SafeHtml.Sanitize(Model.Description))</div></div>
-}
-
-@if (!Model.Documents.Any())
-{
-    <div class="sn-admin-card text-muted">برای این پروژه هنوز مستندی ثبت نشده است.</div>
-}
-else
-{
-    @foreach (var group in Model.Documents.GroupBy(d => d.Category).OrderBy(g => g.Key))
-    {
-        <div class="sn-admin-card mb-3">
-            <h6 class="mb-3"><i class="bi bi-folder2-open me-1"></i>@group.Key</h6>
-            <div class="list-group list-group-flush">
-                @foreach (var document in group.OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
-                {
-                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center gap-2">
-                        <div><strong class="small">@document.Title</strong><div class="small text-muted">@(document.OriginalFileName ?? "لینک اینترنتی")</div></div>
-                        @if (document.Kind == Soransoft.Domain.Entities.SellableDocumentKind.Link)
-                        {
-                            <a href="@document.ExternalUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-up-left me-1"></i>مشاهده لینک</a>
-                        }
-                        else
-                        {
-                            <a href="@document.StoredPath" class="btn btn-sm btn-primary"><i class="bi bi-download me-1"></i>دانلود فایل</a>
-                        }
-                    </div>
-                }
+<div class="sales-project-page">
+    <div class="sales-project-hero mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 position-relative" style="z-index:1">
+            <div class="d-flex align-items-center gap-3">
+                <span class="sales-project-icon"><i class="bi bi-briefcase"></i></span>
+                <div>
+                    <div class="sales-project-kicker mb-1">پروژه قابل ارائه به مشتری</div>
+                    <h4 class="mb-1 fw-bold">@Model.Title</h4>
+                    <div class="small text-muted">محتوای آماده برای معرفی و ارائه حرفه‌ای</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-action="Catalog" class="btn btn-sm btn-light border"><i class="bi bi-arrow-right me-1"></i>فهرست پروژه‌ها</a>
+                <a href="/Partner/Dashboard" class="btn btn-sm btn-outline-secondary"><i class="bi bi-house me-1"></i>داشبورد</a>
             </div>
         </div>
-    }
-}
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <div class="mt-4 pt-3 border-top position-relative" style="z-index:1">
+                <div class="small lh-lg">@Html.Raw(SafeHtml.Sanitize(Model.Description))</div>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap gap-2 mt-4 position-relative" style="z-index:1">
+            <div class="sales-project-stat"><strong>@documents.Count</strong><span>مستند فعال</span></div>
+            <div class="sales-project-stat"><strong>@categoryCount</strong><span>دسته‌بندی</span></div>
+            <div class="sales-project-stat"><strong>@comments.Count</strong><span>دستورالعمل داخلی</span></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            <section class="sales-project-section h-100">
+                <div class="sales-project-section-title">
+                    <div><h6><i class="bi bi-folder2-open text-primary me-2"></i>مستندات پروژه</h6><div class="small text-muted mt-1">فایل‌ها و لینک‌های قابل استفاده برای ارائه به مشتری</div></div>
+                    <span class="badge bg-light text-dark border">@documents.Count مورد</span>
+                </div>
+
+                @if (!documents.Any())
+                {
+                    <div class="text-center text-muted py-5"><i class="bi bi-folder-x d-block fs-2 mb-2"></i>برای این پروژه هنوز مستندی ثبت نشده است.</div>
+                }
+                else
+                {
+                    @foreach (var group in documents.GroupBy(d => d.Category).OrderBy(g => g.Key))
+                    {
+                        <div class="small fw-bold text-muted border-bottom pb-2 mb-1 mt-3">@group.Key</div>
+                        @foreach (var document in group)
+                        {
+                            <div class="sales-document-item">
+                                <div class="d-flex align-items-center gap-2 min-w-0">
+                                    <span class="sales-document-icon"><i class="bi @(document.Kind == Soransoft.Domain.Entities.SellableDocumentKind.Link ? "bi-link-45deg" : "bi-file-earmark-arrow-down")"></i></span>
+                                    <div class="min-w-0"><strong class="d-block text-truncate">@document.Title</strong><span class="small text-muted text-truncate d-block">@(document.OriginalFileName ?? document.ExternalUrl ?? "مستند پروژه")</span></div>
+                                </div>
+                                @if (document.Kind == Soransoft.Domain.Entities.SellableDocumentKind.Link)
+                                {
+                                    <a href="@document.ExternalUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary text-nowrap"><i class="bi bi-box-arrow-up-left me-1"></i>مشاهده لینک</a>
+                                }
+                                else
+                                {
+                                    <a asp-area="" asp-controller="Document" asp-action="DownloadSellableProject" asp-route-id="@document.Id" class="btn btn-sm btn-primary text-nowrap"><i class="bi bi-download me-1"></i>دانلود فایل</a>
+                                }
+                            </div>
+                        }
+                    }
+                }
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <section class="sales-project-section h-100">
+                <div class="sales-project-section-title">
+                    <div><h6><i class="bi bi-chat-left-text text-primary me-2"></i>دستورالعمل و کامنت داخلی</h6><div class="small text-muted mt-1">نکات مهم برای معرفی پروژه</div></div>
+                </div>
+                @if (!comments.Any())
+                {
+                    <div class="text-center text-muted py-5"><i class="bi bi-chat-square-text d-block fs-2 mb-2"></i>دستورالعملی برای این پروژه ثبت نشده است.</div>
+                }
+                else
+                {
+                    @foreach (var comment in comments)
+                    {
+                        <div class="sales-comment">
+                            <div class="sales-comment-body">@comment.Body</div>
+                            <div class="small text-muted mt-2"><i class="bi bi-clock me-1"></i>@PersianDisplay.DateTimeText(comment.CreatedAt)</div>
+                        </div>
+                    }
+                }
+            </section>
+        </div>
+    </div>
+</div>

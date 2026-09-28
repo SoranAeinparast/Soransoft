@@ -176,7 +176,7 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             }
 
             var projects = await VisibleSellableProjects()
-                .Include(p => p.Documents.Where(d => d.IsActive).OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
+                .Include(p => p.Documents.Where(d => !d.IsDeleted && d.IsActive).OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
                 .OrderBy(p => p.DisplayOrder).ThenBy(p => p.Title)
                 .ToListAsync(ct);
             ViewBag.HasActiveAgreement = true;
@@ -189,7 +189,8 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             if (!await HasActiveSalesAgreementAsync(ct)) return Forbid();
 
             var project = await VisibleSellableProjects()
-                .Include(p => p.Documents.Where(d => d.IsActive).OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
+                .Include(p => p.Documents.Where(d => !d.IsDeleted && d.IsActive).OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
+                .Include(p => p.Comments.Where(c => !c.IsDeleted).OrderByDescending(c => c.CreatedAt))
                 .FirstOrDefaultAsync(p => p.Id == id, ct);
             if (project is null) return NotFound();
             return View(project);
