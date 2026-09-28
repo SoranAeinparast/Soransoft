@@ -48,10 +48,23 @@
                 <div class="col-12 col-md-4"><label asp-for="CustomerMobile" class="form-label small">شماره همراه *</label><input asp-for="CustomerMobile" class="form-control" dir="ltr" placeholder="09xxxxxxxxx" /></div>
                 <div class="col-12 col-md-4"><label asp-for="CustomerLandline" class="form-label small">شماره تماس ثابت</label><input asp-for="CustomerLandline" class="form-control" dir="ltr" /></div>
                 <div class="col-12 col-md-4"><label asp-for="CustomerEmail" class="form-label small">ایمیل</label><input asp-for="CustomerEmail" type="email" class="form-control" dir="ltr" /></div>
-                <div class="col-12 col-md-4"><label asp-for="CurrentWebsite" class="form-label small">وب‌سایت فعلی</label><input asp-for="CurrentWebsite" class="form-control" dir="ltr" placeholder="https://" /></div>
-                <div class="col-12 col-md-3"><label asp-for="Province" class="form-label small">استان</label><input asp-for="Province" class="form-control" /></div>
-                <div class="col-12 col-md-3"><label asp-for="City" class="form-label small">شهرستان / شهر</label><input asp-for="City" class="form-control" /></div>
-                <div class="col-12 col-md-6"><label asp-for="SocialMedia" class="form-label small">اینستاگرام / شبکه‌های اجتماعی</label><input asp-for="SocialMedia" class="form-control" dir="ltr" /></div>
+                <div class="col-12 col-md-3">
+                    <label asp-for="Province" class="form-label small">استان</label>
+                    <select asp-for="Province" class="form-select" data-iran-province data-selected="@Model.Province" data-locations-url="/data/iran-locations.json">
+                        <option value="">انتخاب استان</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label asp-for="City" class="form-label small">شهرستان / شهر</label>
+                    <select asp-for="City" class="form-select" data-iran-city data-selected="@Model.City" disabled>
+                        <option value="">ابتدا استان را انتخاب کنید</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label asp-for="SocialMedia" class="form-label small">راه‌های ارتباطی آنلاین</label>
+                    <textarea asp-for="SocialMedia" class="form-control" dir="ltr" rows="2" placeholder="مثال: Instagram: @example&#10;Telegram: @example&#10;LinkedIn: https://..."></textarea>
+                    <div class="form-text">نام کاربری یا لینک هر شبکه را در یک خط بنویسید.</div>
+                </div>
                 <div class="col-12"><label asp-for="FullAddress" class="form-label small">آدرس کامل</label><textarea asp-for="FullAddress" class="form-control" rows="2"></textarea></div>
             </div>
         </div>
@@ -62,7 +75,18 @@
                 <div class="col-12 col-md-4"><label asp-for="BusinessType" class="form-label small">نوع فعالیت</label><input asp-for="BusinessType" class="form-control" placeholder="قنادی، شیرینی‌فروشی، کارگاه، زنجیره‌ای یا سایر" /></div>
                 <div class="col-12 col-md-4"><label asp-for="CurrentSystem" class="form-label small">نام سیستم فعلی</label><input asp-for="CurrentSystem" class="form-control" /></div>
                 <div class="col-12 col-md-4"><label asp-for="BudgetAmount" class="form-label small">بودجه تقریبی (تومان)</label><input asp-for="BudgetAmount" type="number" min="0" class="form-control" /></div>
-                <div class="col-12 col-md-4"><label class="form-label small d-block">وب‌سایت دارد؟</label><label class="form-check form-check-inline"><input asp-for="HasWebsite" value="true" class="form-check-input" type="radio" /> بله</label><label class="form-check form-check-inline"><input asp-for="HasWebsite" value="false" class="form-check-input" type="radio" /> خیر</label></div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small d-block">وب‌سایت دارد؟</label>
+                    <div class="d-flex gap-3 align-items-center">
+                        <label class="form-check mb-0"><input asp-for="HasWebsite" value="true" class="form-check-input" type="radio" data-website-option="true" /> بله</label>
+                        <label class="form-check mb-0"><input asp-for="HasWebsite" value="false" class="form-check-input" type="radio" data-website-option="false" /> خیر</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-8">
+                    <label asp-for="CurrentWebsite" class="form-label small">آدرس وب‌سایت فعلی</label>
+                    <input asp-for="CurrentWebsite" class="form-control" dir="ltr" placeholder="مثال: https://example.com" data-website-url />
+                    <div class="form-text">اگر «خیر» را انتخاب کنید، این فیلد غیرفعال می‌شود.</div>
+                </div>
                 <div class="col-12 col-md-4"><label class="form-label small d-block">پلتفرم مشابه دارد؟</label><label class="form-check form-check-inline"><input asp-for="HasSimilarPlatform" value="true" class="form-check-input" type="radio" /> بله</label><label class="form-check form-check-inline"><input asp-for="HasSimilarPlatform" value="false" class="form-check-input" type="radio" /> خیر</label></div>
                 <div class="col-12 col-md-4"><label asp-for="ExpectedStartDate" class="form-label small">زمان احتمالی شروع</label><input asp-for="ExpectedStartDate" type="text" data-persian-date class="form-control" /></div>
             </div>

@@ -156,7 +156,7 @@ namespace Soransoft.Web.Areas.Partner.Controllers
                 DecisionMakerRole = Clean(model.DecisionMakerRole),
                 CustomerLandline = Clean(model.CustomerLandline),
                 CustomerEmail = Clean(model.CustomerEmail),
-                CurrentWebsite = Clean(model.CurrentWebsite),
+                CurrentWebsite = model.HasWebsite == true ? Clean(model.CurrentWebsite) : null,
                 Province = Clean(model.Province),
                 City = Clean(model.City),
                 FullAddress = Clean(model.FullAddress),

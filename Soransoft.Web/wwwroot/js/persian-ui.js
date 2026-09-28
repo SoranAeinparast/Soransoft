@@ -106,15 +106,264 @@
         }
     }
 
-    document.querySelectorAll('input[data-persian-date]').forEach(function (input) {
+    var jalaliMonths = [
+        'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+        'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+    ];
+    var jalaliWeekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    var activeDatePicker = null;
+
+    function jalaliDaysInMonth(year, month) {
+        if (month <= 6) return 31;
+        if (month <= 11) return 30;
+        var start = jalaliToGregorian(year, month, 1);
+        var next = jalaliToGregorian(year + 1, 1, 1);
+        return Math.round((Date.UTC(next[0], next[1] - 1, next[2]) - Date.UTC(start[0], start[1] - 1, start[2])) / 86400000);
+    }
+
+    function closeDatePicker() {
+        if (!activeDatePicker) return;
+        activeDatePicker.node.remove();
+        activeDatePicker = null;
+    }
+
+    function setupPersianDatePicker(input) {
+        if (input.dataset.persianDateReady === 'true') return;
+        input.dataset.persianDateReady = 'true';
         input.inputMode = 'numeric';
+        input.autocomplete = 'off';
         input.placeholder = input.placeholder || '۱۴۰۴/۰۱/۰۱';
         input.dir = 'ltr';
         showJalali(input);
-        input.addEventListener('blur', function () {
-            showJalali(input);
-        });
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'sn-persian-date-control';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'sn-persian-date-button';
+        button.setAttribute('aria-label', 'انتخاب تاریخ');
+        button.innerHTML = '<i class="bi bi-calendar3"></i>';
+        wrapper.appendChild(button);
+
+        var picker = document.createElement('div');
+        picker.className = 'sn-persian-datepicker';
+        picker.setAttribute('dir', 'rtl');
+        var current = new Date();
+        var currentJalali = gregorianToJalali(current.getFullYear(), current.getMonth() + 1, current.getDate());
+        var selected = parseDate(input.value);
+        var selectedJalali = selected ? gregorianToJalali(selected[0], selected[1], selected[2]) : null;
+        var state = {
+            year: selectedJalali ? selectedJalali[0] : currentJalali[0],
+            month: selectedJalali ? selectedJalali[1] : currentJalali[1]
+        };
+
+        function positionPicker() {
+            if (!activeDatePicker) return;
+            var rect = input.getBoundingClientRect();
+            picker.style.top = Math.round(rect.bottom + 6) + 'px';
+            picker.style.right = Math.max(8, Math.round(window.innerWidth - rect.right)) + 'px';
+        }
+
+        function renderPicker() {
+            picker.innerHTML = '';
+            var header = document.createElement('div');
+            header.className = 'sn-persian-datepicker-header';
+
+            var previous = document.createElement('button');
+            previous.type = 'button';
+            previous.className = 'sn-persian-datepicker-nav';
+            previous.setAttribute('aria-label', 'ماه قبل');
+            previous.innerHTML = '<i class="bi bi-chevron-right"></i>';
+            previous.addEventListener('click', function () {
+                state.month--;
+                if (state.month < 1) { state.month = 12; state.year--; }
+                renderPicker();
+            });
+
+            var title = document.createElement('strong');
+            title.textContent = jalaliMonths[state.month - 1] + ' ' + toPersianDigits(String(state.year));
+
+            var next = document.createElement('button');
+            next.type = 'button';
+            next.className = 'sn-persian-datepicker-nav';
+            next.setAttribute('aria-label', 'ماه بعد');
+            next.innerHTML = '<i class="bi bi-chevron-left"></i>';
+            next.addEventListener('click', function () {
+                state.month++;
+                if (state.month > 12) { state.month = 1; state.year++; }
+                renderPicker();
+            });
+
+            header.appendChild(previous);
+            header.appendChild(title);
+            header.appendChild(next);
+            picker.appendChild(header);
+
+            var weekdays = document.createElement('div');
+            weekdays.className = 'sn-persian-datepicker-weekdays';
+            jalaliWeekdays.forEach(function (weekday) {
+                var cell = document.createElement('span');
+                cell.textContent = weekday;
+                weekdays.appendChild(cell);
+            });
+            picker.appendChild(weekdays);
+
+            var grid = document.createElement('div');
+            grid.className = 'sn-persian-datepicker-grid';
+            var firstGregorian = jalaliToGregorian(state.year, state.month, 1);
+            var offset = (new Date(Date.UTC(firstGregorian[0], firstGregorian[1] - 1, firstGregorian[2])).getUTCDay() + 1) % 7;
+            for (var blank = 0; blank < offset; blank++) grid.appendChild(document.createElement('span'));
+
+            var days = jalaliDaysInMonth(state.year, state.month);
+            for (var day = 1; day <= days; day++) {
+                var dayButton = document.createElement('button');
+                dayButton.type = 'button';
+                dayButton.className = 'sn-persian-datepicker-day';
+                dayButton.textContent = toPersianDigits(String(day));
+                if (selectedJalali && selectedJalali[0] === state.year && selectedJalali[1] === state.month && selectedJalali[2] === day) {
+                    dayButton.classList.add('is-selected');
+                }
+                (function (selectedDay) {
+                    dayButton.addEventListener('click', function () {
+                        input.value = toPersianDigits(String(state.year).padStart(4, '0') + '/' + String(state.month).padStart(2, '0') + '/' + String(selectedDay).padStart(2, '0'));
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        closeDatePicker();
+                    });
+                })(day);
+                grid.appendChild(dayButton);
+            }
+            picker.appendChild(grid);
+
+            var footer = document.createElement('div');
+            footer.className = 'sn-persian-datepicker-footer';
+            var clear = document.createElement('button');
+            clear.type = 'button';
+            clear.className = 'btn btn-sm btn-link';
+            clear.textContent = 'پاک کردن';
+            clear.addEventListener('click', function () {
+                input.value = '';
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                closeDatePicker();
+            });
+            footer.appendChild(clear);
+            picker.appendChild(footer);
+        }
+
+        function openPicker(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (activeDatePicker && activeDatePicker.node === picker) {
+                closeDatePicker();
+                return;
+            }
+            closeDatePicker();
+            activeDatePicker = { node: picker, wrapper: wrapper };
+            document.body.appendChild(picker);
+            renderPicker();
+            positionPicker();
+        }
+
+        button.addEventListener('click', openPicker);
+        input.addEventListener('blur', function () { showJalali(input); });
+        window.addEventListener('resize', positionPicker);
+        window.addEventListener('scroll', positionPicker, true);
+    }
+
+    document.querySelectorAll('input[data-persian-date]').forEach(setupPersianDatePicker);
+
+    document.addEventListener('click', function (event) {
+        if (activeDatePicker && !activeDatePicker.wrapper.contains(event.target) && !activeDatePicker.node.contains(event.target)) {
+            closeDatePicker();
+        }
     });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeDatePicker();
+    });
+
+    function setupWebsiteToggle() {
+        var websiteUrl = document.querySelector('[data-website-url]');
+        var options = document.querySelectorAll('input[data-website-option]');
+        if (!websiteUrl || !options.length) return;
+
+        function updateWebsiteState() {
+            var selected = document.querySelector('input[data-website-option]:checked');
+            var enabled = selected && selected.value === 'true';
+            websiteUrl.disabled = !enabled;
+            if (!enabled) websiteUrl.value = '';
+        }
+
+        options.forEach(function (option) { option.addEventListener('change', updateWebsiteState); });
+        updateWebsiteState();
+    }
+
+    function normalizeLocation(value) {
+        return String(value || '').trim().replace(/[يى]/g, 'ی').replace(/ك/g, 'ک').replace(/\u200c/g, '').replace(/\s+/g, ' ');
+    }
+
+    function setupIranLocations() {
+        var provinceSelect = document.querySelector('select[data-iran-province]');
+        var citySelect = document.querySelector('select[data-iran-city]');
+        if (!provinceSelect || !citySelect) return;
+
+        var locationsUrl = provinceSelect.dataset.locationsUrl || '/data/iran-locations.json';
+        var selectedProvince = provinceSelect.dataset.selected || provinceSelect.value || '';
+        var selectedCity = citySelect.dataset.selected || citySelect.value || '';
+
+        function addOption(select, value, text, selected) {
+            var option = document.createElement('option');
+            option.value = value;
+            option.textContent = text;
+            option.selected = selected;
+            select.appendChild(option);
+        }
+
+        function fillCities(province, cityValue) {
+            citySelect.innerHTML = '';
+            if (!province) {
+                addOption(citySelect, '', 'ابتدا استان را انتخاب کنید', true);
+                citySelect.disabled = true;
+                return;
+            }
+
+            addOption(citySelect, '', 'انتخاب شهرستان / شهر', !cityValue);
+            province.cities.forEach(function (city) {
+                addOption(citySelect, city, city, normalizeLocation(city) === normalizeLocation(cityValue));
+            });
+            if (cityValue && !province.cities.some(function (city) { return normalizeLocation(city) === normalizeLocation(cityValue); })) {
+                addOption(citySelect, cityValue, cityValue, true);
+            }
+            citySelect.disabled = false;
+        }
+
+        fetch(locationsUrl, { credentials: 'same-origin' })
+            .then(function (response) {
+                if (!response.ok) throw new Error('Unable to load locations');
+                return response.json();
+            })
+            .then(function (locations) {
+                provinceSelect.innerHTML = '';
+                addOption(provinceSelect, '', 'انتخاب استان', !selectedProvince);
+                locations.forEach(function (location) {
+                    addOption(provinceSelect, location.province, location.province, normalizeLocation(location.province) === normalizeLocation(selectedProvince));
+                });
+                var selected = locations.find(function (location) { return normalizeLocation(location.province) === normalizeLocation(provinceSelect.value); });
+                fillCities(selected, selectedCity);
+                provinceSelect.addEventListener('change', function () {
+                    var next = locations.find(function (location) { return location.province === provinceSelect.value; });
+                    fillCities(next, '');
+                });
+            })
+            .catch(function () {
+                provinceSelect.disabled = false;
+                citySelect.disabled = false;
+            });
+    }
+
+    setupWebsiteToggle();
+    setupIranLocations();
 
     document.querySelectorAll('input[data-persian-datetime]').forEach(function (input) {
         input.inputMode = 'numeric';

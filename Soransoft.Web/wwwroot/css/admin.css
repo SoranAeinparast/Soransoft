@@ -121,6 +121,69 @@ a .sn-stat-card { color: inherit; }
 /* ---------- Forms ---------- */
 .sn-admin-card .form-label { font-weight: 600; font-size: .85rem; }
 
+/* ---------- Persian date picker ---------- */
+.sn-persian-date-control { position: relative; display: flex; align-items: stretch; }
+.sn-persian-date-control .form-control { padding-left: 2.75rem; }
+.sn-persian-date-button {
+    position: absolute;
+    left: .35rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: #64798a;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.sn-persian-date-button:hover,
+.sn-persian-date-button:focus-visible { background: #e8f7f5; color: #008f83; }
+.sn-persian-datepicker {
+    position: fixed;
+    z-index: 1200;
+    width: 292px;
+    padding: .75rem;
+    background: #fff;
+    border: 1px solid #d9e4e8;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(22, 33, 42, .18);
+}
+.sn-persian-datepicker-header,
+.sn-persian-datepicker-footer { display: flex; align-items: center; justify-content: space-between; }
+.sn-persian-datepicker-header { margin-bottom: .65rem; }
+.sn-persian-datepicker-nav {
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 8px;
+    color: #405563;
+    background: #f0f4f6;
+    cursor: pointer;
+}
+.sn-persian-datepicker-nav:hover { background: #dff5f1; color: #008f83; }
+.sn-persian-datepicker-weekdays,
+.sn-persian-datepicker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: .2rem; text-align: center; }
+.sn-persian-datepicker-weekdays { color: #8a9aa4; font-size: .7rem; margin-bottom: .25rem; }
+.sn-persian-datepicker-grid { min-height: 13.5rem; }
+.sn-persian-datepicker-grid > span { min-height: 2rem; }
+.sn-persian-datepicker-day {
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #273945;
+    min-height: 2rem;
+    cursor: pointer;
+}
+.sn-persian-datepicker-day:hover { background: #e8f7f5; color: #008f83; }
+.sn-persian-datepicker-day.is-selected { background: #00b3a4; color: #fff; font-weight: 700; }
+.sn-persian-datepicker-footer { border-top: 1px solid #edf1f3; margin-top: .45rem; padding-top: .35rem; }
+.sn-persian-datepicker-footer .btn { color: #c0394b; text-decoration: none; padding: 0; }
+
+@media (max-width: 420px) {
+    .sn-persian-datepicker { width: min(292px, calc(100vw - 16px)); }
+}
+
 /* ---------- Media Library ---------- */
 .sn-media-card.sn-media-inuse { border-color: #f0b429; }
 
