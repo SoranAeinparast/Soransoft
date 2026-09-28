@@ -75,6 +75,54 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.ToTable("Admins", (string)null);
                 });
 
+            modelBuilder.Entity("Soransoft.Domain.Entities.AgreementCancellationRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("AgreementId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DecidedByAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RequestedTerminationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgreementId", "Status");
+
+                    b.HasIndex("PartnerId", "Status");
+
+                    b.ToTable("AgreementCancellationRequests", (string)null);
+                });
+
             modelBuilder.Entity("Soransoft.Domain.Entities.Announcement", b =>
                 {
                     b.Property<int>("Id")
@@ -620,54 +668,6 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.ToTable("CooperationAgreements", (string)null);
                 });
 
-            modelBuilder.Entity("Soransoft.Domain.Entities.AgreementCancellationRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AdminResponse")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("AgreementId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DecidedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DecidedByAdminId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PartnerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("RequestedTerminationDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgreementId", "Status");
-
-                    b.HasIndex("PartnerId", "Status");
-
-                    b.ToTable("AgreementCancellationRequests", (string)null);
-                });
-
             modelBuilder.Entity("Soransoft.Domain.Entities.DevProject", b =>
                 {
                     b.Property<int>("Id")
@@ -839,6 +839,9 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.Property<string>("AdminNote")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<long?>("BudgetAmount")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("BusinessName")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -847,8 +850,9 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<long?>("BudgetAmount")
-                        .HasColumnType("bigint");
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("ConvertedAt")
                         .HasColumnType("datetime2");
@@ -856,10 +860,13 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CustomerMobile")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<string>("CurrentSystem")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("CurrentWebsite")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("CustomerCode")
                         .HasMaxLength(50)
@@ -873,22 +880,15 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<string>("CustomerMobile")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("CustomerName")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("City")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("CurrentSystem")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("CurrentWebsite")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
 
                     b.Property<bool?>("DecisionMakerConfirmed")
                         .HasColumnType("bit");
@@ -906,6 +906,9 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
 
                     b.Property<long?>("EstimatedAmount")
                         .HasColumnType("bigint");
+
+                    b.Property<bool?>("ExistingCustomer")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("ExpectedStartDate")
                         .HasColumnType("datetime2");
@@ -933,17 +936,24 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsFollowUp")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool?>("NearContract")
                         .HasColumnType("bit");
+
+                    b.Property<int?>("NegotiationLevel")
+                        .HasColumnType("int");
 
                     b.Property<int>("PartnerId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("NegotiationLevel")
-                        .HasColumnType("int");
+                    b.Property<string>("Province")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Requirement")
                         .IsRequired()
@@ -987,9 +997,6 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
-                    b.Property<bool?>("NearContract")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -1010,21 +1017,21 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AdminId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Action")
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
 
+                    b.Property<int?>("AdminId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("FromStage")
+                    b.Property<int?>("FromReviewStatus")
                         .HasColumnType("int");
 
-                    b.Property<int?>("FromReviewStatus")
+                    b.Property<int>("FromStage")
                         .HasColumnType("int");
 
                     b.Property<int>("LeadId")
@@ -1034,18 +1041,16 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("ToStage")
+                    b.Property<int?>("ToReviewStatus")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ToReviewStatus")
+                    b.Property<int>("ToStage")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LeadId");
 
                     b.HasIndex("LeadId", "CreatedAt");
 
@@ -1525,12 +1530,12 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
                     b.Property<string>("FeaturedImage")
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -2479,6 +2484,25 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.ToTable("WithdrawalRequests", (string)null);
                 });
 
+            modelBuilder.Entity("Soransoft.Domain.Entities.AgreementCancellationRequest", b =>
+                {
+                    b.HasOne("Soransoft.Domain.Entities.CooperationAgreement", "Agreement")
+                        .WithMany("CancellationRequests")
+                        .HasForeignKey("AgreementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Soransoft.Domain.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Agreement");
+
+                    b.Navigation("Partner");
+                });
+
             modelBuilder.Entity("Soransoft.Domain.Entities.Announcement", b =>
                 {
                     b.HasOne("Soransoft.Domain.Entities.Partner", "Partner")
@@ -2554,25 +2578,6 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                         .HasForeignKey("PartnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Partner");
-                });
-
-            modelBuilder.Entity("Soransoft.Domain.Entities.AgreementCancellationRequest", b =>
-                {
-                    b.HasOne("Soransoft.Domain.Entities.CooperationAgreement", "Agreement")
-                        .WithMany("CancellationRequests")
-                        .HasForeignKey("AgreementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Soransoft.Domain.Entities.Partner", "Partner")
-                        .WithMany()
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Agreement");
 
                     b.Navigation("Partner");
                 });
@@ -2878,6 +2883,11 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.Navigation("Articles");
                 });
 
+            modelBuilder.Entity("Soransoft.Domain.Entities.CooperationAgreement", b =>
+                {
+                    b.Navigation("CancellationRequests");
+                });
+
             modelBuilder.Entity("Soransoft.Domain.Entities.DevProject", b =>
                 {
                     b.Navigation("Documents");
@@ -2930,11 +2940,6 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.Navigation("Documents");
 
                     b.Navigation("PartnerAccess");
-                });
-
-            modelBuilder.Entity("Soransoft.Domain.Entities.CooperationAgreement", b =>
-                {
-                    b.Navigation("CancellationRequests");
                 });
 
             modelBuilder.Entity("Soransoft.Domain.Entities.Service", b =>
