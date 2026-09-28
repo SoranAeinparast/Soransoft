@@ -16,9 +16,32 @@ namespace Soransoft.Infrastructure.Persistence.Configurations
             b.Property(x => x.Mobile).HasMaxLength(20);
             b.Property(x => x.Email).HasMaxLength(200);
             b.Property(x => x.NationalId).HasMaxLength(20);
+            b.Property(x => x.FatherName).HasMaxLength(150);
+            b.Property(x => x.BirthCertificateNumber).HasMaxLength(30);
+            b.Property(x => x.BirthPlace).HasMaxLength(100);
+            b.Property(x => x.Landline).HasMaxLength(30);
+            b.Property(x => x.Address).HasColumnType("nvarchar(max)");
+            b.Property(x => x.PostalCode).HasMaxLength(20);
+            b.Property(x => x.PersonalPhotoPath).HasMaxLength(400);
+            b.Property(x => x.NationalCardFrontPath).HasMaxLength(400);
+            b.Property(x => x.NationalCardBackPath).HasMaxLength(400);
+            b.Property(x => x.BirthCertificatePath).HasMaxLength(400);
+            b.Property(x => x.IdentityDocumentPath).HasMaxLength(400);
             b.Property(x => x.TechLevel).HasMaxLength(60);
             b.Property(x => x.Skills).HasMaxLength(500);
             b.Property(x => x.AdminNote).HasColumnType("nvarchar(max)");
+        }
+    }
+
+    internal sealed class PartnerDocumentConfig : IEntityTypeConfiguration<PartnerDocument>
+    {
+        public void Configure(EntityTypeBuilder<PartnerDocument> b)
+        {
+            b.ToTable("PartnerDocuments");
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.StoredPath).HasMaxLength(400).IsRequired();
+            b.HasIndex(x => new { x.PartnerId, x.CreatedAt });
+            b.HasOne(x => x.Partner).WithMany(x => x.Documents).HasForeignKey(x => x.PartnerId).OnDelete(DeleteBehavior.Cascade);
         }
     }
 

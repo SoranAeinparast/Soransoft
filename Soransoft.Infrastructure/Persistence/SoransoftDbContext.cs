@@ -34,6 +34,7 @@ namespace Soransoft.Infrastructure.Persistence
 
         // ---------- پرتال همکاران ----------
         public DbSet<Partner> Partners => Set<Partner>();
+        public DbSet<PartnerDocument> PartnerDocuments => Set<PartnerDocument>();
         public DbSet<Lead> Leads => Set<Lead>();
         public DbSet<LeadHistory> LeadHistories => Set<LeadHistory>();
         public DbSet<PartnerContract> PartnerContracts => Set<PartnerContract>();

@@ -129,8 +129,17 @@ namespace Soransoft.Web.Controllers
                                 (s.ReceiptFile == storedPath || s.DocumentFile == storedPath), ct)
                      || await _db.WalletTransactions.AsNoTracking()
                             .AnyAsync(t => t.DocumentFile == storedPath, ct)
-                     || await _db.SellableProjectDocuments.AsNoTracking()
-                            .AnyAsync(d => !d.IsDeleted && d.IsActive && d.StoredPath == storedPath, ct);
+                       || await _db.SellableProjectDocuments.AsNoTracking()
+                              .AnyAsync(d => !d.IsDeleted && d.IsActive && d.StoredPath == storedPath, ct)
+                      || await _db.Partners.AsNoTracking()
+                             .AnyAsync(p => !p.IsDeleted &&
+                                 (p.PersonalPhotoPath == storedPath ||
+                                  p.NationalCardFrontPath == storedPath ||
+                                  p.NationalCardBackPath == storedPath ||
+                                  p.BirthCertificatePath == storedPath ||
+                                  p.IdentityDocumentPath == storedPath), ct)
+                      || await _db.PartnerDocuments.AsNoTracking()
+                             .AnyAsync(d => !d.IsDeleted && d.StoredPath == storedPath, ct);
             }
 
             if (!User.HasClaim("UserType", "Partner") ||
@@ -164,9 +173,18 @@ namespace Soransoft.Web.Controllers
                 || await _db.WalletTransactions.AsNoTracking()
                        .AnyAsync(t => t.PartnerId == partner.Id && t.DocumentFile == storedPath, ct)
                  || (hasActiveSalesAgreement && await _db.SellableProjectDocuments.AsNoTracking()
-                        .AnyAsync(d => d.IsActive && d.StoredPath == storedPath &&
-                            d.Project.IsActive &&
-                            (partner.CanSeeAllSalesData || d.Project.PartnerAccess.Any(a => a.PartnerId == partner.Id && a.IsActive)), ct));
+                         .AnyAsync(d => d.IsActive && d.StoredPath == storedPath &&
+                             d.Project.IsActive &&
+                             (partner.CanSeeAllSalesData || d.Project.PartnerAccess.Any(a => a.PartnerId == partner.Id && a.IsActive)), ct))
+                 || await _db.Partners.AsNoTracking()
+                        .AnyAsync(p => p.Id == partner.Id &&
+                            (p.PersonalPhotoPath == storedPath ||
+                             p.NationalCardFrontPath == storedPath ||
+                             p.NationalCardBackPath == storedPath ||
+                             p.BirthCertificatePath == storedPath ||
+                             p.IdentityDocumentPath == storedPath), ct)
+                 || await _db.PartnerDocuments.AsNoTracking()
+                        .AnyAsync(d => !d.IsDeleted && d.PartnerId == partner.Id && d.StoredPath == storedPath, ct);
         }
 
         private string? ResolvePrivatePath(string relativePath)

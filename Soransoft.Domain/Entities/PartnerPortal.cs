@@ -149,6 +149,19 @@ namespace Soransoft.Domain.Entities
         public string? Email { get; set; }
         /// <summary>برای ثبت رسمی فرم معرفی مشتری</summary>
         public string? NationalId { get; set; }
+        public string? FatherName { get; set; }
+        public string? BirthCertificateNumber { get; set; }
+        public string? BirthPlace { get; set; }
+        public DateTime? BirthDate { get; set; }
+        public string? Landline { get; set; }
+        public string? Address { get; set; }
+        public string? PostalCode { get; set; }
+        /// <summary>تصویر پرسنلی خصوصی در App_Data</summary>
+        public string? PersonalPhotoPath { get; set; }
+        public string? NationalCardFrontPath { get; set; }
+        public string? NationalCardBackPath { get; set; }
+        public string? BirthCertificatePath { get; set; }
+        public string? IdentityDocumentPath { get; set; }
         /// <summary>نقش همکار (فروش، توسعه‌دهنده، مدیر فروش، مدیر فنی)</summary>
         public PartnerRole Role { get; set; } = PartnerRole.Sales;
         /// <summary>سطح دسترسی ارشد: دیدن لیدها/قراردادها/گزارش‌های همه همکاران</summary>
@@ -167,6 +180,16 @@ namespace Soransoft.Domain.Entities
         public virtual ICollection<DevTask> Tasks { get; set; } = new List<DevTask>();
         public virtual ICollection<TimeLog> TimeLogs { get; set; } = new List<TimeLog>();
         public virtual ICollection<ProjectMember> ProjectMemberships { get; set; } = new List<ProjectMember>();
+        public virtual ICollection<PartnerDocument> Documents { get; set; } = new List<PartnerDocument>();
+    }
+
+    /// <summary>مدرک خصوصی بارگذاری‌شده توسط همکار</summary>
+    public class PartnerDocument : BaseDeletableEntity
+    {
+        public int PartnerId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string StoredPath { get; set; } = string.Empty;
+        public Partner Partner { get; set; } = null!;
     }
 
     /// <summary>لید فروش (مشتری احتمالی) — ثبت توسط فروشنده، تایید توسط مدیر</summary>
