@@ -52,7 +52,7 @@
                         <input type="hidden" name="IsActive" value="false" />
                         <label class="form-check form-check-inline small mb-0 col-auto"><input type="checkbox" name="IsActive" value="true" class="form-check-input" @(p.IsActive ? "checked" : "") /> فعال</label>
                         <button class="btn btn-sm btn-outline-primary col-auto" title="ذخیره پروژه"><i class="bi bi-save"></i></button>
-                        <button type="submit" formaction="/Admin/PortalDev/DeleteProject" name="id" value="@p.Id" formmethod="post" class="btn btn-sm btn-outline-danger col-auto" onclick="return confirm('پروژه حذف شود؟ سابقه تسک‌ها حفظ می‌شود.')"><i class="bi bi-trash"></i></button>
+                        <button type="submit" formaction="/Admin/PortalDev/DeleteProject" name="id" value="@p.Id" formmethod="post" class="btn btn-sm btn-outline-danger col-auto" data-swal-confirm="پروژه حذف شود؟ سابقه تسک‌ها حفظ می‌شود."><i class="bi bi-trash"></i></button>
                     </form>
                 @if (total > 0)
                 {
@@ -79,7 +79,7 @@
                             <form asp-action="DeleteMember" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@m.Id" />
-                                <button class="btn btn-sm btn-link p-0 text-danger" title="حذف عضو" onclick="return confirm('این عضو از پروژه حذف شود؟')"><i class="bi bi-x"></i></button>
+                                <button class="btn btn-sm btn-link p-0 text-danger" title="حذف عضو" data-swal-confirm="این عضو از پروژه حذف شود؟"><i class="bi bi-x"></i></button>
                             </form>
                         }
                     }

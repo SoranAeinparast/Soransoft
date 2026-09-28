@@ -113,7 +113,7 @@
                                     </td>
                                     <td class="text-end" style="min-width:150px">
                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#edit-@it.Id"><i class="bi bi-pencil"></i></button>
-                                        <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('این آیتم حذف شود؟')">
+                                        <form asp-action="Delete" method="post" class="d-inline" data-swal-confirm="این آیتم حذف شود؟">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@it.Id" />
                                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
