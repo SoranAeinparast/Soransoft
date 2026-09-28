@@ -41,7 +41,7 @@
                 <thead>
                     <tr>
                         <th>مشتری</th>
-                        <th>نیاز</th>
+                        <th>نام فروشگاه / مجموعه</th>
                         <th>مبلغ تخمینی</th>
                         <th>وضعیت</th>
                         <th>تاریخ ثبت</th>
@@ -56,11 +56,14 @@
                                 <strong>@l.CustomerName</strong>
                                 <div class="small text-muted" dir="ltr">@l.CustomerMobile</div>
                             </td>
-                            <td class="small" style="max-width:260px">@l.Requirement</td>
+                            <td class="small">@(string.IsNullOrWhiteSpace(l.BusinessName) ? "—" : l.BusinessName)</td>
                             <td>@(l.EstimatedAmount?.ToString("N0") ?? "—")</td>
                             <td><span class="badge @StageBadge(l.Stage)">@StageTitle(l.Stage)</span><div class="small text-muted mt-1">@ReviewTitle(l.ReviewStatus)</div></td>
                             <td class="small">@PersianDisplay.Date(l.CreatedAt)</td>
                             <td class="text-end">
+                                <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                                    <a href="/Partner/Sales/Edit/@l.Id" class="btn btn-sm btn-outline-secondary" title="ویرایش اطلاعات لید"><i class="bi bi-pencil-square"></i></a>
+                                    <a href="/Partner/Sales/Print/@l.Id" target="_blank" rel="noopener" class="btn btn-sm btn-outline-dark" title="چاپ فرم رسمی"><i class="bi bi-printer"></i></a>
                                 @if (l.Stage != Soransoft.Domain.Entities.LeadStage.Contracted && l.Stage != Soransoft.Domain.Entities.LeadStage.Lost)
                                 {
                                     <form asp-action="ChangeStage" method="post" class="d-inline-flex gap-1 align-items-center">
@@ -77,6 +80,7 @@
                                 {
                                     <span class="small text-success"><i class="bi bi-check2"></i> تبدیل به قرارداد</span>
                                 }
+                                </div>
                             </td>
                         </tr>
                     }

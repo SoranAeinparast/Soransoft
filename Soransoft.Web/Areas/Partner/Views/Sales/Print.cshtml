@@ -1,0 +1,72 @@
+@model Soransoft.Domain.Entities.Lead
+@{
+    Layout = null;
+    string YesNo(bool? value) => value switch { true => "بله", false => "خیر", _ => "ثبت نشده" };
+    string Value(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
+}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>فرم معرفی مشتری - @Model.FormNo</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <style>
+        :root { color-scheme: light; }
+        * { box-sizing: border-box; }
+        body { background: #e9eef1; color: #1f2d35; font-family: Tahoma, Arial, sans-serif; font-size: 11pt; }
+        .sheet { width: 210mm; min-height: 297mm; margin: 12mm auto; padding: 13mm 14mm; background: #fff; box-shadow: 0 4px 24px rgba(25,45,60,.12); }
+        .brand { color: #008f83; letter-spacing: .12em; font-weight: 800; font-size: 13pt; }
+        .document-title { border-bottom: 2px solid #00a596; padding-bottom: 6mm; margin-bottom: 6mm; }
+        .document-title h1 { font-size: 17pt; margin: 3mm 0 1mm; }
+        .meta { display: flex; justify-content: space-between; gap: 10mm; color: #61727c; font-size: 9pt; }
+        .section { border: 1px solid #d6e1e5; border-radius: 5px; margin-bottom: 4mm; overflow: hidden; }
+        .section-title { background: #eef8f6; color: #007c72; font-weight: 700; padding: 2.5mm 4mm; }
+        .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+        .fact { padding: 2.7mm 4mm; border-bottom: 1px solid #edf1f2; min-height: 13mm; }
+        .fact:nth-child(odd) { border-left: 1px solid #edf1f2; }
+        .fact.full { grid-column: 1 / -1; }
+        .label { display: block; color: #71818a; font-size: 8.5pt; margin-bottom: 1mm; }
+        .value { white-space: pre-wrap; overflow-wrap: anywhere; }
+        .signature { display: grid; grid-template-columns: 1fr 1fr; gap: 20mm; margin-top: 12mm; text-align: center; }
+        .signature > div { border-top: 1px solid #87979f; padding-top: 3mm; min-height: 16mm; }
+        .actions { width: 210mm; margin: 0 auto 10mm; display: flex; justify-content: center; gap: 2mm; }
+        @page { size: A4; margin: 0; }
+        @media print { body { background: #fff; } .sheet { margin: 0; box-shadow: none; } .actions { display: none; } }
+        @media (max-width: 900px) { .sheet, .actions { width: 100%; } .sheet { margin: 0; padding: 7mm; } }
+        @media (max-width: 560px) { .facts { grid-template-columns: 1fr; } .fact:nth-child(odd) { border-left: 0; } }
+    </style>
+</head>
+<body>
+    <div class="actions"><button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> چاپ فرم A4</button><button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.close()">بستن</button></div>
+    <main class="sheet">
+        <header class="document-title">
+            <div class="brand">SORANSOFT</div>
+            <h1>فرم رسمی معرفی مشتری و ثبت سرنخ فروش</h1>
+            <div class="meta"><span>شماره فرم: <strong dir="ltr">@Value(Model.FormNo)</strong></span><span>تاریخ ثبت: <strong>@PersianDisplay.DateTimeText(Model.CreatedAt)</strong></span><span>وضعیت: <strong>@Model.Stage</strong></span></div>
+        </header>
+
+        <section class="section">
+            <div class="section-title">مشخصات همکار معرفی‌کننده</div>
+            <div class="facts"><div class="fact"><span class="label">نام و نام خانوادگی</span><span class="value">@Value(Model.Partner?.FullName)</span></div><div class="fact"><span class="label">کد ملی همکار</span><span class="value" dir="ltr">@Value(Model.SalesPartnerNationalId)</span></div><div class="fact"><span class="label">شماره قرارداد همکاری</span><span class="value" dir="ltr">@Value(Model.SalesPartnerAgreementNo)</span></div><div class="fact"><span class="label">نوع معرفی</span><span class="value">@(Model.IsFollowUp ? "پیگیری" : "معرفی جدید")</span></div></div>
+        </section>
+
+        <section class="section">
+            <div class="section-title">مشخصات کامل مشتری و کسب‌وکار</div>
+            <div class="facts"><div class="fact"><span class="label">نام مشتری / شرکت</span><span class="value">@Value(Model.CustomerName)</span></div><div class="fact"><span class="label">نام فروشگاه / مجموعه</span><span class="value">@Value(Model.BusinessName)</span></div><div class="fact"><span class="label">نام مدیر / تصمیم‌گیرنده</span><span class="value">@Value(Model.DecisionMakerName)</span></div><div class="fact"><span class="label">سمت تصمیم‌گیرنده</span><span class="value">@Value(Model.DecisionMakerRole)</span></div><div class="fact"><span class="label">موبایل</span><span class="value" dir="ltr">@Value(Model.CustomerMobile)</span></div><div class="fact"><span class="label">تلفن ثابت / ایمیل</span><span class="value" dir="ltr">@Value(Model.CustomerLandline) / @Value(Model.CustomerEmail)</span></div><div class="fact"><span class="label">استان / شهر</span><span class="value">@Value(Model.Province) / @Value(Model.City)</span></div><div class="fact"><span class="label">نوع فعالیت</span><span class="value">@Value(Model.BusinessType)</span></div><div class="fact full"><span class="label">آدرس کامل</span><span class="value">@Value(Model.FullAddress)</span></div><div class="fact full"><span class="label">راه‌های ارتباطی آنلاین</span><span class="value" dir="ltr">@Value(Model.SocialMedia)</span></div></div>
+        </section>
+
+        <section class="section">
+            <div class="section-title">وضعیت کسب‌وکار و مذاکره</div>
+            <div class="facts"><div class="fact"><span class="label">وب‌سایت</span><span class="value">@YesNo(Model.HasWebsite) @if (!string.IsNullOrWhiteSpace(Model.CurrentWebsite)) { <span dir="ltr">(@Model.CurrentWebsite)</span> }</span></div><div class="fact"><span class="label">سیستم فعلی</span><span class="value">@Value(Model.CurrentSystem)</span></div><div class="fact"><span class="label">پلتفرم مشابه</span><span class="value">@YesNo(Model.HasSimilarPlatform)</span></div><div class="fact"><span class="label">بودجه تقریبی</span><span class="value">@(Model.BudgetAmount?.ToString("N0") ?? "—") تومان</span></div><div class="fact"><span class="label">مبلغ تخمینی فروش</span><span class="value">@(Model.EstimatedAmount?.ToString("N0") ?? "—") تومان</span></div><div class="fact"><span class="label">زمان احتمالی شروع</span><span class="value">@PersianDisplay.Date(Model.ExpectedStartDate)</span></div><div class="fact"><span class="label">نحوه آشنایی / معرفی</span><span class="value">@Value(Model.IntroductionMethod)</span></div><div class="fact"><span class="label">تاریخ اولین ارتباط</span><span class="value">@PersianDisplay.Date(Model.FirstContactDate)</span></div><div class="fact"><span class="label">تصمیم‌گیرنده تایید شده</span><span class="value">@YesNo(Model.DecisionMakerConfirmed)</span></div><div class="fact"><span class="label">میزان مذاکره / آستانه قرارداد</span><span class="value">@(Model.NegotiationLevel?.ToString() ?? "ثبت نشده") / @YesNo(Model.NearContract)</span></div><div class="fact full"><span class="label">شرح نیاز اصلی</span><span class="value">@Value(Model.Requirement)</span></div><div class="fact full"><span class="label">امکانات یا نیازهای ثانویه</span><span class="value">@Value(Model.SecondaryRequirements)</span></div></div>
+        </section>
+
+        <section class="section">
+            <div class="section-title">تایید و امضا</div>
+            <div class="facts"><div class="fact"><span class="label">توضیحات تکمیلی</span><span class="value">این فرم برای ثبت رسمی معرفی مشتری و شروع فرآیند بررسی سرنخ فروش صادر شده است.</span></div><div class="fact"><span class="label">تاریخ معرفی</span><span class="value">@PersianDisplay.Date(Model.IntroducedAt)</span></div></div>
+            <div class="signature"><div>امضای همکار معرفی‌کننده</div><div>مهر و امضای سوران‌سافت</div></div>
+        </section>
+    </main>
+</body>
+</html>

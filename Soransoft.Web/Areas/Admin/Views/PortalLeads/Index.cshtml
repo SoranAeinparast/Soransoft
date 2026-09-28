@@ -44,7 +44,7 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>مشتری</th><th>همکار فروش</th><th>نیاز</th><th>مبلغ تخمینی</th>
+                         <th>مشتری</th><th>همکار فروش</th><th>نام فروشگاه / مجموعه</th><th>مبلغ تخمینی</th>
                          <th>وضعیت</th><th>بررسی رسمی</th><th>تاریخچه</th><th class="text-end">عملیات</th>
                     </tr>
                 </thead>
@@ -57,7 +57,7 @@
                                 <div class="small text-muted" dir="ltr">@l.CustomerMobile</div>
                             </td>
                             <td>@l.Partner?.FullName</td>
-                            <td class="small" style="max-width:220px">@l.Requirement</td>
+                            <td class="small">@(string.IsNullOrWhiteSpace(l.BusinessName) ? "—" : l.BusinessName)</td>
                             <td>@(l.EstimatedAmount?.ToString("N0") ?? "—")</td>
                             <td><span class="badge @StageBadge(l.Stage)">@StageTitle(l.Stage)</span></td>
                             <td>

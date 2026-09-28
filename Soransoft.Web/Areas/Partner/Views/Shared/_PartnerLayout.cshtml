@@ -44,7 +44,7 @@
                      <a href="/Partner/Sales" class="@(controller == "Sales" && action == "Index" ? "active" : "")"><i class="bi bi-funnel"></i> لیدها</a>
                      <a href="/Partner/Sales/Commissions" class="@(controller == "Sales" && action == "Commissions" ? "active" : "")"><i class="bi bi-cash-stack"></i> عملکرد و کمیسیون</a>
                      <a href="/Partner/Sales/Catalog" class="@(controller == "Sales" && (action == "Catalog" || action == "Project") ? "active" : "")"><i class="bi bi-briefcase"></i> مستندات پروژه‌های قابل فروش</a>
-                     <a href="/Partner/Sales/Tickets" class="@(controller == "Sales" && action == "Tickets" ? "active" : "")"><i class="bi bi-life-preserver"></i> درخواست بررسی فنی</a>
+                 <a href="/Partner/Sales/Tickets" class="@(controller == "Sales" && action == "Tickets" ? "active" : "")"><i class="bi bi-life-preserver"></i> درخواست بررسی فنی</a>
                 }
 
                 @if (isDevSide)
@@ -53,7 +53,7 @@
                     <a href="/Partner/Dev" class="@(controller == "Dev" && action == "Index" ? "active" : "")"><i class="bi bi-kanban"></i> برد تسک‌ها</a>
                     <a href="/Partner/Dev/TimeLogs" class="@(controller == "Dev" && action == "TimeLogs" ? "active" : "")"><i class="bi bi-stopwatch"></i> ثبت زمان</a>
                     <a href="/Partner/Dev/Documents" class="@(controller == "Dev" && action == "Documents" ? "active" : "")"><i class="bi bi-journal-code"></i> مستندات فنی</a>
-                    <a href="/Partner/Dev/Profile" class="@(controller == "Dev" && action == "Profile" ? "active" : "")"><i class="bi bi-person-vcard"></i> پروفایل فنی</a>
+                     <a href="/Partner/Dev/Profile" class="@(controller == "Dev" && action == "Profile" ? "active" : "")"><i class="bi bi-person-vcard"></i> پروفایل فنی</a>
                 }
 
                 <div class="sn-admin-nav-group">مالی</div>
@@ -64,6 +64,7 @@
                 <a href="/Partner/Dev/Notifications" class="@(controller == "Dev" && action == "Notifications" ? "active" : "")"><i class="bi bi-megaphone"></i> اطلاعیه‌ها</a>
 
                 <div class="sn-admin-nav-group">حساب</div>
+                <a href="/Partner/PersonalProfile" class="@(controller == "PersonalProfile" ? "active" : "")"><i class="bi bi-person-vcard"></i> پروفایل شخصی</a>
                 <form method="post" action="/Partner/Account/Logout" class="sn-admin-logout-form">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="sn-admin-nav-button"><i class="bi bi-box-arrow-right"></i> خروج (@partnerName)</button>
