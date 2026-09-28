@@ -470,6 +470,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public async Task<IActionResult> Index(CancellationToken ct) =>
             View(await _db.TariffSections
                 .Include(t => t.Packages.Where(p => !p.IsDeleted))
+                    .ThenInclude(p => p.Items.OrderBy(i => i.DisplayOrder))
                 .OrderBy(t => t.DisplayOrder).ToListAsync(ct));
 
         // ---------------- بخش‌های تعرفه ----------------
@@ -702,7 +703,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public TeamMembersController(SoransoftDbContext db, IFileStorage storage) { _db = db; _storage = storage; }
 
         public async Task<IActionResult> Index(CancellationToken ct) =>
-            View(await _db.TeamMembers.OrderBy(t => t.DisplayOrder).ToListAsync(ct));
+            View(await _db.TeamMembers.OrderBy(t => t.DisplayOrder).ThenBy(t => t.Id).ToListAsync(ct));
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -761,6 +762,23 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             {
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateDisplayOrder(int id, int displayOrder, CancellationToken ct)
+        {
+            var item = await _db.TeamMembers.FirstOrDefaultAsync(t => t.Id == id, ct);
+            if (item is null)
+            {
+                TempData["Error"] = "عضو تیم یافت نشد.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            item.DisplayOrder = Math.Max(0, displayOrder);
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = $"ترتیب نمایش «{item.FullName}» به {item.DisplayOrder} تغییر کرد.";
             return RedirectToAction(nameof(Index));
         }
 

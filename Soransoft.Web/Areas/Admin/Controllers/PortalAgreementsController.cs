@@ -18,7 +18,9 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public int PartnerId { get; set; }
         [Required(ErrorMessage = "نوع قرارداد الزامی است")]
         public AgreementKind Kind { get; set; } = AgreementKind.Sales;
+        public bool UseSystemNumber { get; set; } = true;
         public string? AgreementNo { get; set; }
+        public List<int> SellableProjectIds { get; set; } = new();
         [Required(ErrorMessage = "عنوان قرارداد الزامی است")]
         public string Title { get; set; } = string.Empty;
         [Required(ErrorMessage = "موضوع قرارداد الزامی است")]
@@ -27,6 +29,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public string? Terms { get; set; }
         [Required(ErrorMessage = "تاریخ شروع الزامی است")]
         public DateTime StartDate { get; set; } = DateTime.Now;
+        [Required(ErrorMessage = "تاریخ انعقاد الزامی است")]
+        public DateTime SignedAt { get; set; } = DateTime.Now;
         public DateTime? EndDate { get; set; }
         public long? TotalAmount { get; set; }
         /// <summary>سقف نامحدود — تعداد قرارداد با مشتری محدود نیست و پورسانت درصدی است</summary>
@@ -52,6 +56,10 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 yield return new ValidationResult("نوع قرارداد معتبر نیست.", new[] { nameof(Kind) });
             if (!Enum.IsDefined(CommissionMethod))
                 yield return new ValidationResult("روش پورسانت معتبر نیست.", new[] { nameof(CommissionMethod) });
+            if (!UseSystemNumber && string.IsNullOrWhiteSpace(AgreementNo))
+                yield return new ValidationResult("برای شماره دستی قرارداد مقدار وارد کنید.", new[] { nameof(AgreementNo) });
+            if (!string.IsNullOrWhiteSpace(AgreementNo) && AgreementNo.Trim().Length > 60)
+                yield return new ValidationResult("شماره قرارداد نمی‌تواند بیشتر از ۶۰ کاراکتر باشد.", new[] { nameof(AgreementNo) });
             if (EndDate is DateTime end && end < StartDate)
                 yield return new ValidationResult("تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.", new[] { nameof(EndDate) });
             if (!IsUnlimitedAmount && (!TotalAmount.HasValue || TotalAmount.Value <= 0))
@@ -84,6 +92,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 .ToListAsync(ct);
 
             await FillPartnersAsync(ct);
+            await FillSellableProjectsAsync(ct);
             return View(items);
         }
 
@@ -92,23 +101,24 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         {
             var agreement = await _db.CooperationAgreements.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id, ct);
             if (agreement is null) return NotFound();
-            if (agreement.Status != AgreementStatus.Draft)
-            {
-                TempData["Error"] = "فقط پیش‌نویس قرارداد قابل ویرایش است.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
             await FillPartnersAsync(ct);
+            await FillSellableProjectsAsync(ct);
             return View(new AgreementFormModel
             {
                 Id = agreement.Id,
                 PartnerId = agreement.PartnerId,
                 Kind = agreement.Kind,
+                UseSystemNumber = IsSystemNumber(agreement.AgreementNo),
                 AgreementNo = agreement.AgreementNo,
+                SellableProjectIds = await _db.SellableProjectPartners.AsNoTracking()
+                    .Where(x => x.PartnerId == agreement.PartnerId && x.IsActive)
+                    .Select(x => x.SellableProjectId)
+                    .ToListAsync(ct),
                 Title = agreement.Title,
                 Subject = agreement.Subject,
                 Terms = agreement.Terms,
                 StartDate = agreement.StartDate,
+                SignedAt = agreement.SignedAt,
                 EndDate = agreement.EndDate,
                 TotalAmount = agreement.TotalAmount,
                 IsUnlimitedAmount = agreement.IsUnlimitedAmount,
@@ -124,7 +134,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             });
         }
 
-        /// <summary>ذخیره (ایجاد/ویرایش) قرارداد — ویرایش فقط در وضعیت Draft</summary>
+        /// <summary>ذخیره (ایجاد/ویرایش) قرارداد همکاری</summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Save(AgreementFormModel model, CancellationToken ct)
@@ -139,29 +149,47 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             if (partner is null) { TempData["Error"] = "همکار یافت نشد."; return RedirectToAction(nameof(Index)); }
 
             CooperationAgreement? agreement;
+            int? previousPartnerId = null;
             if (model.Id == 0)
             {
                 agreement = new CooperationAgreement { Status = AgreementStatus.Draft };
-                agreement.AgreementNo = await NextAgreementNoAsync(model.Kind, ct);
                 _db.CooperationAgreements.Add(agreement);
             }
             else
             {
                 agreement = await _db.CooperationAgreements.FirstOrDefaultAsync(a => a.Id == model.Id, ct);
                 if (agreement is null) { TempData["Error"] = "قرارداد یافت نشد."; return RedirectToAction(nameof(Index)); }
-                if (agreement.Status != AgreementStatus.Draft)
-                {
-                    TempData["Error"] = "قرارداد فعال/خاتمه‌یافته قابل ویرایش نیست؛ برای تغییر، قرارداد جدید ثبت کنید.";
-                    return RedirectToAction(nameof(Details), new { id = agreement.Id });
-                }
+                previousPartnerId = agreement.PartnerId;
+            }
+
+            var requestedAgreementNo = model.UseSystemNumber
+                ? (model.Id == 0 || !IsSystemNumber(agreement.AgreementNo)
+                    ? await NextAgreementNoAsync(model.Kind, ct)
+                    : agreement.AgreementNo)
+                : model.AgreementNo?.Trim();
+
+            if (string.IsNullOrWhiteSpace(requestedAgreementNo))
+            {
+                TempData["Error"] = "شماره قرارداد الزامی است.";
+                return RedirectToAction(model.Id == 0 ? nameof(Index) : nameof(Edit), new { id = model.Id });
+            }
+
+            var duplicateNumber = await _db.CooperationAgreements.AnyAsync(a =>
+                a.Id != model.Id && a.AgreementNo == requestedAgreementNo, ct);
+            if (duplicateNumber)
+            {
+                TempData["Error"] = $"شماره قرارداد «{requestedAgreementNo}» قبلاً ثبت شده است.";
+                return RedirectToAction(model.Id == 0 ? nameof(Index) : nameof(Edit), new { id = model.Id });
             }
 
             agreement.PartnerId = model.PartnerId;
             agreement.Kind = model.Kind;
+            agreement.AgreementNo = requestedAgreementNo;
             agreement.Title = model.Title.Trim();
             agreement.Subject = model.Subject.Trim();
             agreement.Terms = model.Terms ?? "";
             agreement.StartDate = model.StartDate;
+            agreement.SignedAt = model.SignedAt;
             agreement.EndDate = model.EndDate;
             agreement.IsUnlimitedAmount = model.IsUnlimitedAmount;
             agreement.TotalAmount = model.IsUnlimitedAmount ? null : model.TotalAmount;
@@ -176,9 +204,15 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             agreement.AdminNote = string.IsNullOrWhiteSpace(model.AdminNote) ? null : model.AdminNote.Trim();
 
             await _db.SaveChangesAsync(ct);
+            if (previousPartnerId.HasValue && previousPartnerId.Value != model.PartnerId)
+                await SyncSellableProjectAccessAsync(previousPartnerId.Value, Array.Empty<int>(), ct);
+            await SyncSellableProjectAccessAsync(
+                model.PartnerId,
+                model.Kind == AgreementKind.Sales ? model.SellableProjectIds : Array.Empty<int>(),
+                ct);
             TempData["Success"] = model.Id == 0
                 ? $"قرارداد {agreement.AgreementNo} به‌عنوان پیش‌نویس ثبت شد؛ پس از آپلود PDF و فعال‌سازی، ملاک طرفین می‌شود."
-                : "پیش‌نویس به‌روزرسانی شد.";
+                : "اطلاعات قرارداد به‌روزرسانی شد.";
             return RedirectToAction(nameof(Details), new { id = agreement.Id });
         }
 
@@ -279,12 +313,50 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             return prefix + (count + 1).ToString("000");
         }
 
+        private static bool IsSystemNumber(string? agreementNo) =>
+            !string.IsNullOrWhiteSpace(agreementNo)
+            && (agreementNo.StartsWith("SA-", StringComparison.OrdinalIgnoreCase)
+                || agreementNo.StartsWith("TA-", StringComparison.OrdinalIgnoreCase));
+
         private async Task FillPartnersAsync(CancellationToken ct)
         {
             ViewBag.Partners = await _db.Partners.AsNoTracking()
                 .Where(p => !p.IsDeleted && p.IsActive)
                 .Select(p => new { p.Id, p.FullName, p.Role })
                 .ToListAsync(ct);
+        }
+
+        private async Task FillSellableProjectsAsync(CancellationToken ct)
+        {
+            ViewBag.SellableProjects = await _db.SellableProjects.AsNoTracking()
+                .Where(p => p.IsActive && !p.IsDeleted)
+                .OrderBy(p => p.DisplayOrder).ThenBy(p => p.Title)
+                .Select(p => new { p.Id, p.Title })
+                .ToListAsync(ct);
+        }
+
+        private async Task SyncSellableProjectAccessAsync(int partnerId, IEnumerable<int> projectIds, CancellationToken ct)
+        {
+            var existing = await _db.SellableProjectPartners
+                .Where(x => x.PartnerId == partnerId)
+                .ToListAsync(ct);
+            _db.SellableProjectPartners.RemoveRange(existing);
+
+            var ids = projectIds.Distinct().ToList();
+            if (ids.Count > 0)
+            {
+                var validIds = await _db.SellableProjects.AsNoTracking()
+                    .Where(p => ids.Contains(p.Id) && p.IsActive && !p.IsDeleted)
+                    .Select(p => p.Id)
+                    .ToListAsync(ct);
+                _db.SellableProjectPartners.AddRange(validIds.Select(id => new SellableProjectPartner
+                {
+                    PartnerId = partnerId,
+                    SellableProjectId = id,
+                    IsActive = true,
+                }));
+            }
+            await _db.SaveChangesAsync(ct);
         }
     }
 }

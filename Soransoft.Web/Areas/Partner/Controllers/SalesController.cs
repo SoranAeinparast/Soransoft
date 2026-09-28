@@ -164,6 +164,57 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             return RedirectToAction(nameof(Contracts));
         }
 
+        // ============================================================ پروژه‌های قابل ارائه به مشتری
+
+        public async Task<IActionResult> Catalog(CancellationToken ct)
+        {
+            if (!IsSalesSide) return Forbidden();
+            if (!await HasActiveSalesAgreementAsync(ct))
+            {
+                ViewBag.HasActiveAgreement = false;
+                return View(new List<SellableProject>());
+            }
+
+            var projects = await VisibleSellableProjects()
+                .Include(p => p.Documents.Where(d => d.IsActive).OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
+                .OrderBy(p => p.DisplayOrder).ThenBy(p => p.Title)
+                .ToListAsync(ct);
+            ViewBag.HasActiveAgreement = true;
+            return View(projects);
+        }
+
+        public async Task<IActionResult> Project(int id, CancellationToken ct)
+        {
+            if (!IsSalesSide) return Forbidden();
+            if (!await HasActiveSalesAgreementAsync(ct)) return Forbid();
+
+            var project = await VisibleSellableProjects()
+                .Include(p => p.Documents.Where(d => d.IsActive).OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
+                .FirstOrDefaultAsync(p => p.Id == id, ct);
+            if (project is null) return NotFound();
+            return View(project);
+        }
+
+        private IQueryable<SellableProject> VisibleSellableProjects()
+        {
+            var query = _db.SellableProjects
+                .Where(p => p.IsActive && !p.IsDeleted);
+            return CanSeeAllSales
+                ? query
+                : query.Where(p => p.PartnerAccess.Any(a => a.PartnerId == PartnerId && a.IsActive));
+        }
+
+        private Task<bool> HasActiveSalesAgreementAsync(CancellationToken ct)
+        {
+            var now = DateTime.Now;
+            return _db.CooperationAgreements.AsNoTracking().AnyAsync(a =>
+                a.PartnerId == PartnerId &&
+                a.Kind == AgreementKind.Sales &&
+                a.Status == AgreementStatus.Active &&
+                a.StartDate <= now &&
+                (!a.EndDate.HasValue || a.EndDate.Value >= now), ct);
+        }
+
         // ============================================================ کمیسیون
 
         public async Task<IActionResult> Commissions(CancellationToken ct)

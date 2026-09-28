@@ -15,7 +15,7 @@ namespace Soransoft.Web.Controllers
     {
         private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
-            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".webp",
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".zip", ".rar", ".mp4", ".webm", ".mov", ".png", ".jpg", ".jpeg", ".webp",
         };
 
         private readonly SoransoftDbContext _db;
@@ -59,11 +59,13 @@ namespace Soransoft.Web.Controllers
                            .AnyAsync(c => !c.IsDeleted && c.ContractFile == storedPath, ct)
                     || await _db.CooperationAgreements.AsNoTracking()
                            .AnyAsync(a => !a.IsDeleted && a.ContractFile == storedPath, ct)
-                    || await _db.ContractPaymentStages.AsNoTracking()
-                           .AnyAsync(s => !s.Contract.IsDeleted &&
-                               (s.ReceiptFile == storedPath || s.DocumentFile == storedPath), ct)
-                    || await _db.WalletTransactions.AsNoTracking()
-                           .AnyAsync(t => t.DocumentFile == storedPath, ct);
+                     || await _db.ContractPaymentStages.AsNoTracking()
+                            .AnyAsync(s => !s.Contract.IsDeleted &&
+                                (s.ReceiptFile == storedPath || s.DocumentFile == storedPath), ct)
+                     || await _db.WalletTransactions.AsNoTracking()
+                            .AnyAsync(t => t.DocumentFile == storedPath, ct)
+                     || await _db.SellableProjectDocuments.AsNoTracking()
+                            .AnyAsync(d => !d.IsDeleted && d.IsActive && d.StoredPath == storedPath, ct);
             }
 
             if (!User.HasClaim("UserType", "Partner") ||
@@ -72,9 +74,18 @@ namespace Soransoft.Web.Controllers
 
             var partner = await _db.Partners.AsNoTracking()
                 .Where(p => p.Id == partnerId && p.IsActive && !p.IsDeleted)
-                .Select(p => new { p.Id, p.CanSeeAllSalesData })
+                .Select(p => new { p.Id, p.CanSeeAllSalesData, p.Role })
                 .FirstOrDefaultAsync(ct);
             if (partner is null) return false;
+
+            var now = DateTime.Now;
+            var hasActiveSalesAgreement = partner.Role is PartnerRole.Sales or PartnerRole.SalesManager
+                && await _db.CooperationAgreements.AsNoTracking().AnyAsync(a =>
+                    a.PartnerId == partner.Id &&
+                    a.Kind == AgreementKind.Sales &&
+                    a.Status == AgreementStatus.Active &&
+                    a.StartDate <= now &&
+                    (!a.EndDate.HasValue || a.EndDate.Value >= now), ct);
 
             return await _db.PartnerContracts.AsNoTracking()
                        .AnyAsync(c => !c.IsDeleted && c.ContractFile == storedPath &&
@@ -86,7 +97,11 @@ namespace Soransoft.Web.Controllers
                            (s.ReceiptFile == storedPath || s.DocumentFile == storedPath) &&
                            (partner.CanSeeAllSalesData || s.Contract.PartnerId == partner.Id), ct)
                 || await _db.WalletTransactions.AsNoTracking()
-                       .AnyAsync(t => t.PartnerId == partner.Id && t.DocumentFile == storedPath, ct);
+                       .AnyAsync(t => t.PartnerId == partner.Id && t.DocumentFile == storedPath, ct)
+                 || (hasActiveSalesAgreement && await _db.SellableProjectDocuments.AsNoTracking()
+                        .AnyAsync(d => d.IsActive && d.StoredPath == storedPath &&
+                            d.Project.IsActive &&
+                            (partner.CanSeeAllSalesData || d.Project.PartnerAccess.Any(a => a.PartnerId == partner.Id && a.IsActive)), ct));
         }
 
         private string? ResolvePrivatePath(string relativePath)
