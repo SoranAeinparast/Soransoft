@@ -5,6 +5,7 @@ using SkiaSharp;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
 using System.Globalization;
+using PartnerEntity = Soransoft.Domain.Entities.Partner;
 
 namespace Soransoft.Web.Areas.Partner.Controllers
 {
@@ -48,11 +49,13 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             return File(output, "image/jpeg", $"soransoft-id-card-{personnelCode}.jpg");
         }
 
-        private byte[] RenderCard(Partner partner, string personnelCode, DateTime? agreementEndDate, string verificationUrl, string templatePath)
+        private byte[] RenderCard(PartnerEntity partner, string personnelCode, DateTime? agreementEndDate, string verificationUrl, string templatePath)
         {
             using var template = SKBitmap.Decode(templatePath) ?? throw new InvalidOperationException("قالب کارت قابل خواندن نیست.");
             using var canvas = new SKCanvas(template);
-            using var textPaint = new SKPaint { Color = SKColors.Black, IsAntialias = true, Typeface = SKTypeface.FromFamilyName("Arial") };
+            using var textPaint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
+            using var typeface = SKTypeface.FromFamilyName("Arial");
+            using var font = new SKFont(typeface, template.Height * .055f);
 
             var width = template.Width;
             var height = template.Height;
@@ -66,13 +69,13 @@ namespace Soransoft.Web.Areas.Partner.Controllers
                 if (photo is not null) canvas.DrawBitmap(photo, photoBox);
             }
 
-            textPaint.TextSize = height * .055f;
-            DrawText(canvas, textPaint, partner.FullName, width * .34f, height * .32f);
-            textPaint.TextSize = height * .038f;
-            DrawText(canvas, textPaint, $"کد پرسنلی: {personnelCode}", width * .34f, height * .42f);
-            DrawText(canvas, textPaint, $"تماس: {partner.Mobile ?? "ثبت نشده"}", width * .34f, height * .49f);
-            DrawText(canvas, textPaint, $"ایمیل: {partner.Email ?? "ثبت نشده"}", width * .34f, height * .56f);
-            DrawText(canvas, textPaint, $"اعتبار تا: {PersianDate(agreementEndDate)}", width * .34f, height * .63f);
+            font.Size = height * .055f;
+            DrawText(canvas, textPaint, font, partner.FullName, width * .34f, height * .32f);
+            font.Size = height * .038f;
+            DrawText(canvas, textPaint, font, $"کد پرسنلی: {personnelCode}", width * .34f, height * .42f);
+            DrawText(canvas, textPaint, font, $"تماس: {partner.Mobile ?? "ثبت نشده"}", width * .34f, height * .49f);
+            DrawText(canvas, textPaint, font, $"ایمیل: {partner.Email ?? "ثبت نشده"}", width * .34f, height * .56f);
+            DrawText(canvas, textPaint, font, $"اعتبار تا: {PersianDate(agreementEndDate)}", width * .34f, height * .63f);
 
             using var qrData = new QRCodeGenerator().CreateQrCode(verificationUrl, QRCodeGenerator.ECCLevel.Q);
             var qrBytes = new PngByteQRCode(qrData).GetGraphic(12);
@@ -84,7 +87,8 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             return encoded.ToArray();
         }
 
-        private static void DrawText(SKCanvas canvas, SKPaint paint, string text, float x, float y) => canvas.DrawText(text, x, y, paint);
+        private static void DrawText(SKCanvas canvas, SKPaint paint, SKFont font, string text, float x, float y) =>
+            canvas.DrawText(text, x, y, SKTextAlign.Left, font, paint);
 
         private string VerificationUrl(string personnelCode) =>
             $"{(_configuration["CardVerificationBaseUrl"] ?? "https://verify.soransoft.ir").TrimEnd('/')}/card/{Uri.EscapeDataString(personnelCode)}";

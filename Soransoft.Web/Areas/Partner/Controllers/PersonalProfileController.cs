@@ -5,6 +5,7 @@ using Soransoft.Application.Interfaces;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
 using System.ComponentModel.DataAnnotations;
+using PartnerEntity = Soransoft.Domain.Entities.Partner;
 
 namespace Soransoft.Web.Areas.Partner.Controllers
 {
@@ -188,7 +189,7 @@ namespace Soransoft.Web.Areas.Partner.Controllers
 
         private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-        private static PersonalProfileViewModel ToViewModel(Partner partner, List<PartnerDocument> documents) => new()
+        private static PersonalProfileViewModel ToViewModel(PartnerEntity partner, List<PartnerDocument> documents) => new()
         {
             Id = partner.Id,
             FullName = partner.FullName,
