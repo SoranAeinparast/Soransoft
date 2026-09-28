@@ -5,6 +5,7 @@ using SkiaSharp;
 using SkiaSharp.HarfBuzz;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
+using System.IO.Compression;
 using System.Globalization;
 using PartnerEntity = Soransoft.Domain.Entities.Partner;
 
@@ -48,8 +49,8 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             using var template = SKBitmap.Decode(templatePath) ?? throw new InvalidOperationException("قالب کارت قابل خواندن نیست.");
             using var canvas = new SKCanvas(template);
             using var textPaint = new SKPaint { Color = new SKColor(0x00, 0x1D, 0x43), IsAntialias = true };
-            using var regularTypeface = LoadTypeface("Vazirmatn-Regular.ttf");
-            using var boldTypeface = LoadTypeface("Vazirmatn-Bold.ttf");
+            using var regularTypeface = LoadTypeface("Vazirmatn-Regular.ttf.gz");
+            using var boldTypeface = LoadTypeface("Vazirmatn-Bold.ttf.gz");
             using var shaper = new SKShaper(regularTypeface);
             using var boldShaper = new SKShaper(boldTypeface);
             using var nameFont = new SKFont(boldTypeface, 31);
@@ -93,6 +94,16 @@ namespace Soransoft.Web.Areas.Partner.Controllers
         {
             var fontsRoot = Path.Combine(_environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot"), "fonts");
             var path = Path.Combine(fontsRoot, fileName);
+            if (fileName.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+            {
+                using var compressed = System.IO.File.OpenRead(path);
+                using var gzip = new GZipStream(compressed, CompressionMode.Decompress);
+                using var fontBytes = new MemoryStream();
+                gzip.CopyTo(fontBytes);
+                using var data = SKData.CreateCopy(fontBytes.ToArray());
+                return SKTypeface.FromData(data) ?? SKTypeface.FromFamilyName("DejaVu Sans") ?? throw new InvalidOperationException("فونت کارت شناسایی قابل بارگذاری نیست.");
+            }
+
             return SKTypeface.FromFile(path) ?? SKTypeface.FromFamilyName("DejaVu Sans") ?? throw new InvalidOperationException("فونت کارت شناسایی قابل بارگذاری نیست.");
         }
 
