@@ -184,11 +184,36 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         {
             var contracts = await _db.PartnerContracts.AsNoTracking()
                 .Include(c => c.Partner)
-                .Include(c => c.PaymentStages)
-                .Include(c => c.ThirdPartyCosts)
-                .Include(c => c.CommissionRates)
+                .Where(c => !c.IsDeleted)
                 .OrderBy(c => c.Status).ThenByDescending(c => c.CreatedAt)
                 .ToListAsync(ct);
+
+            return View(contracts);
+        }
+
+        /// <summary>صفحه مدیریت یک قرارداد مشتری؛ جزئیات سنگین فقط در این صفحه بارگذاری می‌شود.</summary>
+        public async Task<IActionResult> Manage(int id, CancellationToken ct)
+        {
+            var contract = await _db.PartnerContracts.AsNoTracking()
+                .Include(c => c.Partner)
+                .Include(c => c.PaymentStages)
+                .Include(c => c.ThirdPartyCosts)
+                .Include(c => c.CommissionRates).ThenInclude(r => r.Partner)
+                .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted, ct);
+            if (contract is null)
+            {
+                TempData["Error"] = "قرارداد یافت نشد.";
+                return RedirectToAction(nameof(Contracts));
+            }
+
+            await LoadContractManagementDataAsync(new[] { contract }, ct);
+            ViewBag.IsContractManagement = true;
+            return View("Contracts", new List<PartnerContract> { contract });
+        }
+
+        private async Task LoadContractManagementDataAsync(IEnumerable<PartnerContract> contracts, CancellationToken ct)
+        {
+            var contractList = contracts.ToList();
 
             ViewBag.SalesPartners = await _db.Partners.AsNoTracking()
                 .Where(p => !p.IsDeleted && (p.Role == PartnerRole.Sales || p.Role == PartnerRole.SalesManager))
@@ -202,7 +227,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
             // پورسانت محاسبه‌شده و مبنای خالص هر نرخ (مبنا پس از کسر هزینه شخص ثالث)
             var commissionInfo = new Dictionary<int, (decimal Commission, long Base)>();
-            foreach (var c in contracts)
+            foreach (var c in contractList)
             {
                 foreach (var r in c.CommissionRates)
                 {
@@ -212,11 +237,9 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             ViewBag.CommissionInfo = commissionInfo;
 
             // مجموع هزینه شخص ثالث هر قرارداد
-            ViewBag.ThirdPartyTotals = contracts.ToDictionary(
+            ViewBag.ThirdPartyTotals = contractList.ToDictionary(
                 c => c.Id,
                 c => c.ThirdPartyCosts.Where(x => x.DeductFromFirstPayment).Sum(x => x.Amount));
-
-            return View(contracts);
         }
 
         /// <summary>افزودن/ویرایش مرحله پرداخت</summary>

@@ -6,6 +6,7 @@
     var catalogue = ViewBag.CostCatalogue as List<ThirdPartyCostItem> ?? new();
     var commissionInfo = ViewBag.CommissionInfo as Dictionary<int, (decimal Commission, long Base)> ?? new();
     var thirdPartyTotals = ViewBag.ThirdPartyTotals as Dictionary<int, long> ?? new();
+    var isManagement = ViewBag.IsContractManagement as bool? ?? false;
 
     string StatusBadge(ContractStatus s) => s switch
     {
@@ -45,22 +46,74 @@
     };
 }
 
-<h5 class="mb-3"><i class="bi bi-file-earmark-text me-2"></i>قراردادها (@Model.Count)</h5>
-
-<div class="alert alert-light border small">
-    <i class="bi bi-info-circle me-1"></i>
-    <strong>قاعده پورسانت:</strong> مجموع هزینه‌های شخص ثالث (هاست، دامنه، گواهینامه، سرویس‌ها) از مبلغ قرارداد در اولین پرداخت مشتری کسر می‌شود؛
-    باقی‌مانده، مبنای محاسبه پورسانت همکار فروش است. پله‌ای‌ها را در هر خط به شکل <code dir="ltr">مبلغ|درصد</code> وارد کنید.
-    <a href="/Admin/PortalCosts" class="ms-1">مدیریت کاتالوگ هزینه‌های شخص ثالث</a>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>@(isManagement ? "مدیریت قرارداد" : $"قراردادها ({Model.Count})")</h5>
+    @if (isManagement)
+    {
+        <a asp-action="Contracts" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت به فهرست قراردادها</a>
+    }
 </div>
 
-@if (!Model.Any())
+@if (!isManagement)
 {
-    <div class="sn-admin-card"><p class="text-muted mb-0">قراردادی ثبت نشده است. لیدهای تاییدشده در بخش لیدها به قرارداد تبدیل می‌شوند.</p></div>
+    @if (!Model.Any())
+    {
+        <div class="sn-admin-card"><p class="text-muted mb-0">قراردادی ثبت نشده است. لیدهای تاییدشده در بخش لیدها به قرارداد تبدیل می‌شوند.</p></div>
+    }
+    else
+    {
+        <div class="sn-admin-card p-0 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>کد / نام پروژه</th>
+                            <th>نوع قرارداد</th>
+                            <th>مبلغ کل</th>
+                            <th>تاریخ شروع</th>
+                            <th>تاریخ پایان</th>
+                            <th>وضعیت</th>
+                            <th class="text-end">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="small text-muted" dir="ltr">#@c.Id</div>
+                                    <strong>@c.Title</strong>
+                                    <div class="small text-muted">@c.CustomerName</div>
+                                </td>
+                                <td>@(c.LeadId.HasValue ? "تبدیل‌شده از لید" : "ثبت مستقیم")</td>
+                                <td class="text-nowrap">@c.TotalAmount.ToString("N0") تومان</td>
+                                <td class="text-nowrap">@PersianDisplay.Date(c.CreatedAt)</td>
+                                <td class="text-nowrap">@(c.LicenseExpiresAt is DateTime end ? PersianDisplay.Date(end) : "—")</td>
+                                <td><span class="badge @StatusBadge(c.Status)">@StatusTitle(c.Status)</span></td>
+                                <td class="text-end">
+                                    <a asp-action="Manage" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary text-nowrap">
+                                        <i class="bi bi-sliders me-1"></i>مدیریت
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
 }
 
-@foreach (var c in Model)
+@if (isManagement)
 {
+    <div class="alert alert-light border small">
+        <i class="bi bi-info-circle me-1"></i>
+        <strong>قاعده پورسانت:</strong> مجموع هزینه‌های شخص ثالث از مبلغ قرارداد در اولین پرداخت مشتری کسر می‌شود؛ باقی‌مانده، مبنای محاسبه پورسانت همکار فروش است.
+        <a href="/Admin/PortalCosts" class="ms-1">مدیریت کاتالوگ هزینه‌های شخص ثالث</a>
+    </div>
+
+    foreach (var c in Model)
+    {
     var stages = c.PaymentStages.OrderBy(i => i.Number).ToList();
     var paid = stages.Where(i => i.Status == PaymentStageStatus.Paid).Sum(i => (long)i.Amount);
     var thirdParty = thirdPartyTotals.TryGetValue(c.Id, out var tp) ? tp : 0;
@@ -419,6 +472,7 @@
             </div>
         </div>
     </div>
+    }
 }
 
 @section Scripts {
