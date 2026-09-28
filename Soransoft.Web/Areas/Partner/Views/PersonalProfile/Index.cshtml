@@ -1,0 +1,71 @@
+@model Soransoft.Web.Areas.Partner.Controllers.PersonalProfileViewModel
+@{ ViewData["Title"] = "پروفایل شخصی"; }
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div><h5 class="mb-1"><i class="bi bi-person-vcard me-2"></i>پروفایل شخصی و مدارک شناسایی</h5><div class="small text-muted">اطلاعات این صفحه فقط برای شما و مدیران مجاز قابل مشاهده است.</div></div>
+    <a href="/Partner/Dashboard" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>داشبورد</a>
+</div>
+
+<div class="alert alert-warning small"><i class="bi bi-shield-lock me-1"></i>مدارک در فضای خصوصی برنامه ذخیره می‌شوند و لینک مستقیم عمومی ندارند.</div>
+<div asp-validation-summary="All" class="alert alert-danger small"></div>
+
+<form asp-action="Save" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <div class="row g-3">
+        <div class="col-12 col-xl-8">
+            <div class="sn-admin-card mb-3">
+                <h6 class="mb-3"><i class="bi bi-person-lines-fill me-2"></i>مشخصات شناسنامه‌ای</h6>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6"><label asp-for="FullName" class="form-label small">نام و نام خانوادگی *</label><input asp-for="FullName" class="form-control" /></div>
+                    <div class="col-12 col-md-6"><label asp-for="FatherName" class="form-label small">نام پدر</label><input asp-for="FatherName" class="form-control" /></div>
+                    <div class="col-12 col-md-4"><label asp-for="NationalId" class="form-label small">کد ملی</label><input asp-for="NationalId" class="form-control" dir="ltr" maxlength="20" /></div>
+                    <div class="col-12 col-md-4"><label asp-for="BirthCertificateNumber" class="form-label small">شماره شناسنامه</label><input asp-for="BirthCertificateNumber" class="form-control" dir="ltr" /></div>
+                    <div class="col-12 col-md-4"><label asp-for="BirthPlace" class="form-label small">محل تولد</label><input asp-for="BirthPlace" class="form-control" /></div>
+                    <div class="col-12 col-md-4"><label asp-for="BirthDate" class="form-label small">تاریخ تولد</label><input asp-for="BirthDate" type="text" data-persian-date class="form-control" /></div>
+                </div>
+            </div>
+            <div class="sn-admin-card mb-3">
+                <h6 class="mb-3"><i class="bi bi-telephone me-2"></i>راه‌های ارتباطی و نشانی</h6>
+                <div class="row g-3">
+                    <div class="col-12 col-md-4"><label asp-for="Mobile" class="form-label small">شماره موبایل *</label><input asp-for="Mobile" class="form-control" dir="ltr" /></div>
+                    <div class="col-12 col-md-4"><label asp-for="Landline" class="form-label small">تلفن ثابت</label><input asp-for="Landline" class="form-control" dir="ltr" /></div>
+                    <div class="col-12 col-md-4"><label asp-for="Email" class="form-label small">ایمیل</label><input asp-for="Email" class="form-control" dir="ltr" /></div>
+                    <div class="col-12 col-md-4"><label asp-for="PostalCode" class="form-label small">کد پستی</label><input asp-for="PostalCode" class="form-control" dir="ltr" /></div>
+                    <div class="col-12"><label asp-for="Address" class="form-label small">آدرس کامل</label><textarea asp-for="Address" class="form-control" rows="3"></textarea></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4">
+            <div class="sn-admin-card mb-3">
+                <h6 class="mb-3"><i class="bi bi-camera me-2"></i>عکس پرسنلی</h6>
+                @if (!string.IsNullOrWhiteSpace(Model.PersonalPhotoPath)) { <a href="@Model.PersonalPhotoPath" target="_blank" rel="noopener" class="small d-block mb-2">مشاهده عکس فعلی</a> }
+                <input asp-for="PersonalPhoto" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
+                <div class="form-text">JPG، PNG یا WEBP تا سقف ۲۰ مگابایت.</div>
+            </div>
+            <div class="sn-admin-card">
+                <h6 class="mb-3"><i class="bi bi-card-heading me-2"></i>مدارک شناسایی</h6>
+                <div class="mb-3"><label asp-for="NationalCardFront" class="form-label small">روی کارت ملی @if (!string.IsNullOrWhiteSpace(Model.NationalCardFrontPath)) { <a href="@Model.NationalCardFrontPath" target="_blank" rel="noopener" class="text-decoration-none">(مشاهده)</a> } else { <span class="text-muted">(ثبت نشده)</span> }</label><input asp-for="NationalCardFront" type="file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.webp" /></div>
+                <div class="mb-3"><label asp-for="NationalCardBack" class="form-label small">پشت کارت ملی @if (!string.IsNullOrWhiteSpace(Model.NationalCardBackPath)) { <a href="@Model.NationalCardBackPath" target="_blank" rel="noopener" class="text-decoration-none">(مشاهده)</a> } else { <span class="text-muted">(ثبت نشده)</span> }</label><input asp-for="NationalCardBack" type="file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.webp" /></div>
+                <div class="mb-3"><label asp-for="BirthCertificate" class="form-label small">تصویر شناسنامه @if (!string.IsNullOrWhiteSpace(Model.BirthCertificatePath)) { <a href="@Model.BirthCertificatePath" target="_blank" rel="noopener" class="text-decoration-none">(مشاهده)</a> } else { <span class="text-muted">(ثبت نشده)</span> }</label><input asp-for="BirthCertificate" type="file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.webp" /></div>
+                <div><label asp-for="IdentityDocument" class="form-label small">سایر مدرک شناسایی اصلی @if (!string.IsNullOrWhiteSpace(Model.IdentityDocumentPath)) { <a href="@Model.IdentityDocumentPath" target="_blank" rel="noopener" class="text-decoration-none">(مشاهده)</a> } else { <span class="text-muted">(ثبت نشده)</span> }</label><input asp-for="IdentityDocument" type="file" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.webp" /></div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="sn-admin-card">
+                <h6 class="mb-1"><i class="bi bi-paperclip me-2"></i>سایر مدارک</h6>
+                <p class="small text-muted">عنوان مدرک را دقیق بنویسید؛ سپس فایل همان مدرک را انتخاب کنید. مثال: کارت پایان خدمت، مدرک تحصیلی یا گواهی مهارت.</p>
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-5"><label asp-for="OtherDocumentTitle" class="form-label small">این مدرک چیست؟</label><input asp-for="OtherDocumentTitle" class="form-control" placeholder="مثلاً: مدرک تحصیلی کارشناسی" /></div>
+                    <div class="col-12 col-md-7"><label asp-for="OtherDocument" class="form-label small">فایل مدرک</label><input asp-for="OtherDocument" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" /></div>
+                </div>
+                @if (Model.Documents.Any())
+                {
+                    <div class="table-responsive mt-3"><table class="table table-sm align-middle mb-0"><thead><tr><th>عنوان مدرک</th><th>تاریخ</th><th class="text-end">عملیات</th></tr></thead><tbody>@foreach (var document in Model.Documents) { <tr><td>@document.Title</td><td>@PersianDisplay.Date(document.CreatedAt)</td><td class="text-end"><a href="@document.StoredPath" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i></a><form asp-action="DeleteDocument" method="post" class="d-inline" data-swal-confirm="این مدرک حذف شود؟">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@document.Id" /><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td></tr> }</tbody></table></div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary"><i class="bi bi-save me-1"></i>ذخیره پروفایل و مدارک</button><a href="/Partner/Dashboard" class="btn btn-outline-secondary">انصراف</a></div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
