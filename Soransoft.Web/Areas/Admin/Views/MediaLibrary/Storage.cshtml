@@ -22,7 +22,7 @@
     <div class="d-flex gap-2">
         <a href="/Admin/MediaLibrary" class="btn btn-sm btn-outline-secondary"><i class="bi bi-folder2-open me-1"></i> کتابخانه رسانه</a>
         <form method="post" action="/Admin/MediaLibrary/CleanupOrphans" class="d-inline"
-              onsubmit="return confirm('همه فایل‌های بدون ارجاع (@Model.TotalOrphans فایل — @Size(Model.TotalOrphanSizeBytes)) حذف شوند؟\n\nاین عمل قابل بازگشت نیست.');">
+              data-swal-confirm="همه فایل‌های بدون ارجاع (@Model.TotalOrphans فایل — @Size(Model.TotalOrphanSizeBytes)) حذف شوند؟ این عمل قابل بازگشت نیست.">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn sn-btn-primary btn-sm" @(Model.TotalOrphans == 0 ? "disabled" : "")>
                 <i class="bi bi-trash3 me-1"></i> پاکسازی فایل‌های بدون ارجاع

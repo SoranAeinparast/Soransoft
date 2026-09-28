@@ -40,7 +40,7 @@
                         <td class="text-nowrap">
                             <a href="/Admin/Articles/Edit/@item.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
                             <form method="post" action="/Admin/Articles/Delete/@item.Id" class="d-inline"
-                                  onsubmit="return confirm('حذف شود؟')">
+                                  data-swal-confirm="حذف شود؟">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
                             </form>

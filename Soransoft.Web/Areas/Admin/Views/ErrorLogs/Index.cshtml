@@ -12,7 +12,7 @@
         <a href="/Admin/ErrorLogs" class="btn btn-sm @(string.IsNullOrEmpty(severity) ? "sn-btn-primary" : "btn-outline-secondary")">همه</a>
         <a href="/Admin/ErrorLogs?severity=Error" class="btn btn-sm @(!string.IsNullOrEmpty(severity) && severity == "Error" ? "sn-btn-primary" : "btn-outline-secondary")">Error</a>
         <a href="/Admin/ErrorLogs?severity=Warning" class="btn btn-sm @(!string.IsNullOrEmpty(severity) && severity == "Warning" ? "sn-btn-primary" : "btn-outline-secondary")">Warning</a>
-        <form method="post" action="/Admin/ErrorLogs/ClearAll" onsubmit="return confirm('همه لاگ‌ها پاک شوند؟')">
+        <form method="post" action="/Admin/ErrorLogs/ClearAll" data-swal-confirm="همه لاگ‌ها پاک شوند؟">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-sm btn-outline-danger">پاک کردن همه</button>
         </form>
@@ -45,11 +45,11 @@
                         <td dir="ltr" class="small">@item.Path</td>
                         <td class="small">@item.HttpMethod</td>
                         <td dir="ltr" class="small">@item.IpAddress</td>
-                        <td class="small">@item.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                        <td class="small">@PersianDisplay.DateTimeText(item.CreatedAt)</td>
                         <td class="text-nowrap">
                             <a href="/Admin/ErrorLogs/Details/@item.Id" class="btn btn-sm btn-outline-primary">جزئیات</a>
                             <form method="post" action="/Admin/ErrorLogs/Delete/@item.Id" class="d-inline"
-                                  onsubmit="return confirm('حذف شود؟')">
+                                  data-swal-confirm="حذف شود؟">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
                             </form>

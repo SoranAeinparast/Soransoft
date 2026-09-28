@@ -34,7 +34,7 @@
                                 </form>
                             }
                             <form method="post" action="/Admin/ConsultationRequests/Delete/@item.Id" class="d-inline"
-                                  onsubmit="return confirm('حذف شود؟')">
+                                  data-swal-confirm="حذف شود؟">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
                             </form>
