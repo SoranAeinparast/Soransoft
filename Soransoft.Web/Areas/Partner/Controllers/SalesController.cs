@@ -129,6 +129,20 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             return View(new LeadInputModel { SalesPartnerNationalId = partnerNationalId ?? string.Empty });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id, CancellationToken ct)
+        {
+            if (!IsSalesSide) return Forbidden();
+
+            var lead = await VisibleLeads.FirstOrDefaultAsync(l => l.Id == id, ct);
+            if (lead is null) return NotFound();
+
+            await LoadActiveAgreementAsync(ct);
+            ViewData["IsEdit"] = true;
+            ViewData["EditId"] = id;
+            return View("Create", ToInputModel(lead));
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(LeadInputModel model, CancellationToken ct)
@@ -189,6 +203,109 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             TempData["Success"] = "لید ثبت شد؛ پس از تایید مدیر به قرارداد تبدیل می‌شود.";
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, LeadInputModel model, CancellationToken ct)
+        {
+            if (!IsSalesSide) return Forbidden();
+
+            var lead = await VisibleLeads.FirstOrDefaultAsync(l => l.Id == id, ct);
+            if (lead is null) return NotFound();
+
+            await LoadActiveAgreementAsync(ct);
+            ViewData["IsEdit"] = true;
+            ViewData["EditId"] = id;
+            if (!ModelState.IsValid) return View("Create", model);
+
+            lead.IntroducedAt = model.IntroducedAt ?? lead.IntroducedAt;
+            lead.IsFollowUp = model.IsFollowUp;
+            lead.SalesPartnerNationalId = model.SalesPartnerNationalId.Trim();
+            lead.CustomerName = model.CustomerName.Trim();
+            lead.CustomerMobile = model.CustomerMobile.Trim();
+            lead.BusinessName = Clean(model.BusinessName);
+            lead.DecisionMakerName = Clean(model.DecisionMakerName);
+            lead.DecisionMakerRole = Clean(model.DecisionMakerRole);
+            lead.CustomerLandline = Clean(model.CustomerLandline);
+            lead.CustomerEmail = Clean(model.CustomerEmail);
+            lead.CurrentWebsite = model.HasWebsite == true ? Clean(model.CurrentWebsite) : null;
+            lead.HasWebsite = model.HasWebsite;
+            lead.Province = Clean(model.Province);
+            lead.City = Clean(model.City);
+            lead.FullAddress = Clean(model.FullAddress);
+            lead.SocialMedia = Clean(model.SocialMedia);
+            lead.BusinessType = Clean(model.BusinessType);
+            lead.CurrentSystem = Clean(model.CurrentSystem);
+            lead.HasSimilarPlatform = model.HasSimilarPlatform;
+            lead.ExpectedStartDate = model.ExpectedStartDate;
+            lead.BudgetAmount = model.BudgetAmount;
+            lead.Requirement = model.Requirement.Trim();
+            lead.SecondaryRequirements = Clean(model.SecondaryRequirements);
+            lead.EstimatedAmount = model.EstimatedAmount;
+            lead.IntroductionMethod = Clean(model.IntroductionMethod);
+            lead.FirstContactDate = model.FirstContactDate;
+            lead.DecisionMakerConfirmed = model.DecisionMakerConfirmed;
+            lead.NegotiationLevel = model.NegotiationLevel;
+            lead.NearContract = model.NearContract;
+
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "اطلاعات لید با موفقیت ویرایش شد.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Print(int id, CancellationToken ct)
+        {
+            if (!IsSalesSide) return Forbidden();
+
+            var lead = await VisibleLeads
+                .Include(l => l.Partner)
+                .FirstOrDefaultAsync(l => l.Id == id, ct);
+            if (lead is null) return NotFound();
+
+            return View(lead);
+        }
+
+        private async Task LoadActiveAgreementAsync(CancellationToken ct)
+        {
+            ViewBag.ActiveAgreement = await _db.CooperationAgreements.AsNoTracking()
+                .Where(a => a.PartnerId == PartnerId && a.Kind == AgreementKind.Sales && a.Status == AgreementStatus.Active)
+                .OrderByDescending(a => a.SignedAt)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        private static LeadInputModel ToInputModel(Lead lead) => new()
+        {
+            SalesPartnerNationalId = lead.SalesPartnerNationalId ?? string.Empty,
+            IntroducedAt = lead.IntroducedAt,
+            IsFollowUp = lead.IsFollowUp,
+            CustomerName = lead.CustomerName,
+            CustomerMobile = lead.CustomerMobile,
+            BusinessName = lead.BusinessName,
+            DecisionMakerName = lead.DecisionMakerName,
+            DecisionMakerRole = lead.DecisionMakerRole,
+            CustomerLandline = lead.CustomerLandline,
+            CustomerEmail = lead.CustomerEmail,
+            CurrentWebsite = lead.CurrentWebsite,
+            Province = lead.Province,
+            City = lead.City,
+            FullAddress = lead.FullAddress,
+            SocialMedia = lead.SocialMedia,
+            HasWebsite = lead.HasWebsite ?? !string.IsNullOrWhiteSpace(lead.CurrentWebsite),
+            BusinessType = lead.BusinessType,
+            CurrentSystem = lead.CurrentSystem,
+            HasSimilarPlatform = lead.HasSimilarPlatform,
+            ExpectedStartDate = lead.ExpectedStartDate,
+            BudgetAmount = lead.BudgetAmount,
+            Requirement = lead.Requirement,
+            SecondaryRequirements = lead.SecondaryRequirements,
+            EstimatedAmount = lead.EstimatedAmount,
+            IntroductionMethod = lead.IntroductionMethod,
+            FirstContactDate = lead.FirstContactDate,
+            DecisionMakerConfirmed = lead.DecisionMakerConfirmed,
+            NegotiationLevel = lead.NegotiationLevel,
+            NearContract = lead.NearContract,
+        };
 
         private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
