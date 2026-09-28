@@ -21,7 +21,15 @@ if (!builder.Environment.IsDevelopment() &&
         .Any(host => host.Trim() == "*")))
     throw new InvalidOperationException("AllowedHosts must contain explicit trusted hosts outside Development.");
 
-builder.Services.AddHostFiltering();
+builder.Services.AddHostFiltering(options =>
+{
+    options.AllowedHosts.Clear();
+    foreach (var host in (allowedHosts ?? string.Empty)
+        .Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+    {
+        options.AllowedHosts.Add(host);
+    }
+});
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
