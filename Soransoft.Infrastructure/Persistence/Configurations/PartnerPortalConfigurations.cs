@@ -197,6 +197,55 @@ namespace Soransoft.Infrastructure.Persistence.Configurations
         }
     }
 
+    internal sealed class SellableProjectConfig : IEntityTypeConfiguration<SellableProject>
+    {
+        public void Configure(EntityTypeBuilder<SellableProject> b)
+        {
+            b.ToTable("SellableProjects");
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Description).HasColumnType("nvarchar(max)");
+            b.HasIndex(x => new { x.IsActive, x.DisplayOrder });
+            b.HasMany(x => x.Documents).WithOne(x => x.Project).HasForeignKey(x => x.SellableProjectId).OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.Comments).WithOne(x => x.Project).HasForeignKey(x => x.SellableProjectId).OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.PartnerAccess).WithOne(x => x.Project).HasForeignKey(x => x.SellableProjectId).OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+
+    internal sealed class SellableProjectDocumentConfig : IEntityTypeConfiguration<SellableProjectDocument>
+    {
+        public void Configure(EntityTypeBuilder<SellableProjectDocument> b)
+        {
+            b.ToTable("SellableProjectDocuments");
+            b.Property(x => x.Title).HasMaxLength(250).IsRequired();
+            b.Property(x => x.Category).HasMaxLength(80).IsRequired();
+            b.Property(x => x.StoredPath).HasMaxLength(300);
+            b.Property(x => x.ExternalUrl).HasMaxLength(1000);
+            b.Property(x => x.OriginalFileName).HasMaxLength(255);
+            b.Property(x => x.ContentType).HasMaxLength(150);
+            b.HasIndex(x => new { x.SellableProjectId, x.DisplayOrder });
+        }
+    }
+
+    internal sealed class SellableProjectCommentConfig : IEntityTypeConfiguration<SellableProjectComment>
+    {
+        public void Configure(EntityTypeBuilder<SellableProjectComment> b)
+        {
+            b.ToTable("SellableProjectComments");
+            b.Property(x => x.Body).HasColumnType("nvarchar(max)").IsRequired();
+            b.HasIndex(x => new { x.SellableProjectId, x.CreatedAt });
+        }
+    }
+
+    internal sealed class SellableProjectPartnerConfig : IEntityTypeConfiguration<SellableProjectPartner>
+    {
+        public void Configure(EntityTypeBuilder<SellableProjectPartner> b)
+        {
+            b.ToTable("SellableProjectPartners");
+            b.HasIndex(x => new { x.SellableProjectId, x.PartnerId }).IsUnique();
+            b.HasOne(x => x.Partner).WithMany().HasForeignKey(x => x.PartnerId).OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+
     internal sealed class AnnouncementConfig : IEntityTypeConfiguration<Announcement>
     {
         public void Configure(EntityTypeBuilder<Announcement> b)

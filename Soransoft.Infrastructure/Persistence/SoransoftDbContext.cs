@@ -48,6 +48,10 @@ namespace Soransoft.Infrastructure.Persistence
         public DbSet<DevTask> DevTasks => Set<DevTask>();
         public DbSet<TimeLog> TimeLogs => Set<TimeLog>();
         public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
+        public DbSet<SellableProject> SellableProjects => Set<SellableProject>();
+        public DbSet<SellableProjectDocument> SellableProjectDocuments => Set<SellableProjectDocument>();
+        public DbSet<SellableProjectComment> SellableProjectComments => Set<SellableProjectComment>();
+        public DbSet<SellableProjectPartner> SellableProjectPartners => Set<SellableProjectPartner>();
         public DbSet<Announcement> Announcements => Set<Announcement>();
         public DbSet<PartnerNotificationRead> PartnerNotificationReads => Set<PartnerNotificationRead>();
         public DbSet<CooperationAgreement> CooperationAgreements => Set<CooperationAgreement>();
@@ -91,6 +95,9 @@ namespace Soransoft.Infrastructure.Persistence
             modelBuilder.Entity<WalletTransaction>().HasQueryFilter(t => !t.Partner!.IsDeleted);
             modelBuilder.Entity<WithdrawalRequest>().HasQueryFilter(r => !r.Partner!.IsDeleted);
             modelBuilder.Entity<PasswordResetRequest>().HasQueryFilter(r => !r.Partner!.IsDeleted);
+            modelBuilder.Entity<SellableProjectDocument>().HasQueryFilter(d => !d.Project!.IsDeleted);
+            modelBuilder.Entity<SellableProjectComment>().HasQueryFilter(c => !c.Project!.IsDeleted);
+            modelBuilder.Entity<SellableProjectPartner>().HasQueryFilter(a => !a.Project!.IsDeleted && !a.Partner!.IsDeleted);
         }
 
         /// <summary>ثبت خودکار تاریخ تغییر</summary>

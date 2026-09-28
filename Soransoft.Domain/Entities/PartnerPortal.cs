@@ -400,6 +400,67 @@ namespace Soransoft.Domain.Entities
         public virtual DevProject Project { get; set; } = null!;
     }
 
+    /// <summary>نوع محتوای مستند پروژه قابل فروش</summary>
+    public enum SellableDocumentKind
+    {
+        Upload = 1,
+        Link = 2
+    }
+
+    /// <summary>پروژه آماده ارائه به مشتری برای همکاران فروش</summary>
+    public class SellableProject : BaseDeletableEntity
+    {
+        public string Title { get; set; } = string.Empty;
+        /// <summary>معرفی کامل پروژه (HTML پاک‌سازی‌شده)</summary>
+        public string Description { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
+        public int DisplayOrder { get; set; }
+
+        public virtual ICollection<SellableProjectDocument> Documents { get; set; } = new List<SellableProjectDocument>();
+        public virtual ICollection<SellableProjectComment> Comments { get; set; } = new List<SellableProjectComment>();
+        public virtual ICollection<SellableProjectPartner> PartnerAccess { get; set; } = new List<SellableProjectPartner>();
+    }
+
+    /// <summary>مستند یا لینک مرتبط با پروژه قابل فروش</summary>
+    public class SellableProjectDocument : BaseDeletableEntity
+    {
+        public int SellableProjectId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        /// <summary>کاتالوگ، دمو، تبلیغات، فرم، سایر</summary>
+        public string Category { get; set; } = "سایر";
+        public SellableDocumentKind Kind { get; set; } = SellableDocumentKind.Upload;
+        /// <summary>مسیر خصوصی فایل</summary>
+        public string? StoredPath { get; set; }
+        public string? ExternalUrl { get; set; }
+        public string? OriginalFileName { get; set; }
+        public string? ContentType { get; set; }
+        public long? SizeBytes { get; set; }
+        public int DisplayOrder { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        public virtual SellableProject Project { get; set; } = null!;
+    }
+
+    /// <summary>کامنت و دستورالعمل داخلی مدیر درباره پروژه قابل فروش</summary>
+    public class SellableProjectComment : BaseDeletableEntity
+    {
+        public int SellableProjectId { get; set; }
+        public string Body { get; set; } = string.Empty;
+
+        public virtual SellableProject Project { get; set; } = null!;
+    }
+
+    /// <summary>دسترسی اختصاصی یک همکار فروش به پروژه قابل ارائه</summary>
+    public class SellableProjectPartner : BaseEntity
+    {
+        public int SellableProjectId { get; set; }
+        public int PartnerId { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        public virtual SellableProject Project { get; set; } = null!;
+        public virtual Partner Partner { get; set; } = null!;
+    }
+
     /// <summary>اطلاعیه/دستور مدیر به همکاران</summary>
     public class Announcement : BaseDeletableEntity
     {

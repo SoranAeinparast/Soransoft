@@ -12,7 +12,7 @@ namespace Soransoft.Infrastructure.Storage
         private readonly IWebHostEnvironment _env;
         private readonly IImageOptimizer _optimizer;
         private readonly string[] _allowedImageExt = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp" };
-        private readonly string[] _allowedDocExt = { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".webp" };
+        private readonly string[] _allowedDocExt = { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".zip", ".rar", ".mp4", ".webm", ".mov", ".png", ".jpg", ".jpeg", ".webp" };
         private readonly string _privateDocumentsRoot;
         private const long MaxImageSize = 20 * 1024 * 1024; // 20MB قبل از بهینه‌سازی
         private const long MaxDocSize = 20 * 1024 * 1024;   // 20MB
