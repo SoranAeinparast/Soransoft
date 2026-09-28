@@ -1,9 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Soransoft.Infrastructure.Persistence;
 
 #nullable disable
 
 namespace Soransoft.Infrastructure.Persistence.Migrations;
 
+[DbContext(typeof(SoransoftDbContext))]
+[Migration("20260928170000_AddPartnerPersonalProfile")]
 public partial class AddPartnerPersonalProfile : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)

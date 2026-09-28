@@ -8,14 +8,6 @@
 
     string SizeText(long bytes) => bytes < 1024 ? $"{bytes} بایت" : $"{bytes / 1024d:N0} کیلوبایت";
 
-    // متن هشدار حذف — برای تصاویرِ در حال استفاده، فهرست محل‌های استفاده ذکر می‌شود
-    string DeleteConfirm(List<MediaUsageRef> refs, string name)
-    {
-        if (refs.Count == 0)
-            return $"فایل «{name}» برای همیشه حذف شود؟ این عمل قابل بازگشت نیست.";
-        var places = string.Join("، ", refs.Select(r => $"{r.KindTitle} «{r.Title}» ({r.Field})"));
-        return $"⚠️ هشدار: فایل «{name}» در حال استفاده است!\n\nمحل‌های استفاده:\n{places}\n\nبا حذف، تصویر در این محتواها نمایش داده نمی‌شود. مطمئنید که حذف شود؟";
-    }
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
