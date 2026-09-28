@@ -64,7 +64,7 @@
                                             </select>
                                             <button class="btn btn-sm btn-outline-primary" title="ذخیره مرحله"><i class="bi bi-check2"></i></button>
                                         </form>
-                                        <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('این لید حذف شود؟')">
+                                        <form asp-action="Delete" method="post" class="d-inline" data-swal-confirm="این لید حذف شود؟">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@l.Id" />
                                             <button class="btn btn-sm btn-outline-danger" title="حذف"><i class="bi bi-trash"></i></button>

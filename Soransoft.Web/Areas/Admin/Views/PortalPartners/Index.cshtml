@@ -163,7 +163,7 @@
                                                 <button class="btn btn-sm btn-outline-primary" title="بازنشانی رمز"><i class="bi bi-key"></i></button>
                                             </form>
                                             <form asp-action="Delete" method="post" class="d-inline"
-                                                  onsubmit="return confirm('حساب @p.FullName حذف شود؟ سابقه لیدها و قراردادهایش حفظ می‌شود.')">
+                                                  data-swal-confirm="حساب @p.FullName حذف شود؟ سابقه لیدها و قراردادهایش حفظ می‌شود.">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@p.Id" />
                                                 <button class="btn btn-sm btn-outline-danger" title="حذف"><i class="bi bi-trash"></i></button>

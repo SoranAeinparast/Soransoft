@@ -217,7 +217,7 @@
                                         </form>
                                     }
                                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#stageEdit-@i.Id"><i class="bi bi-pencil"></i></button>
-                                    <form asp-action="DeleteStage" method="post" class="d-inline" onsubmit="return confirm('این مرحله حذف شود؟')">
+                                    <form asp-action="DeleteStage" method="post" class="d-inline" data-swal-confirm="این مرحله حذف شود؟">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@i.Id" />
                                         <button class="btn btn-sm btn-outline-danger" @(i.Status == PaymentStageStatus.Paid ? "disabled" : "")><i class="bi bi-trash"></i></button>
@@ -264,7 +264,7 @@
                                 <td>@cost.Amount.ToString("N0")</td>
                                 <td class="small">@(cost.Note ?? "—")@(cost.DeductFromFirstPayment ? "" : " (بدون کسر)")</td>
                                 <td class="text-end">
-                                    <form asp-action="DeleteThirdPartyCost" method="post" onsubmit="return confirm('این هزینه حذف شود؟')">
+                                    <form asp-action="DeleteThirdPartyCost" method="post" data-swal-confirm="این هزینه حذف شود؟">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@cost.Id" />
                                         <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
