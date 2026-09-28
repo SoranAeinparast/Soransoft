@@ -1112,6 +1112,24 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.Property<string>("AdminNote")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BirthCertificateNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("BirthCertificatePath")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BirthPlace")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<bool>("CanSeeAllSalesData")
                         .HasColumnType("bit");
 
@@ -1130,22 +1148,46 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<string>("FatherName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("IdentityDocumentPath")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Landline")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("Mobile")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("NationalCardBackPath")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("NationalCardFrontPath")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
                     b.Property<string>("NationalId")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PersonalPhotoPath")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1154,6 +1196,10 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Skills")
                         .HasMaxLength(500)
@@ -1240,6 +1286,46 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("PartnerContracts", (string)null);
+                });
+
+            modelBuilder.Entity("Soransoft.Domain.Entities.PartnerDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StoredPath")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId", "CreatedAt");
+
+                    b.ToTable("PartnerDocuments", (string)null);
                 });
 
             modelBuilder.Entity("Soransoft.Domain.Entities.PartnerNotificationRead", b =>
@@ -2642,6 +2728,17 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Soransoft.Domain.Entities.PartnerDocument", b =>
+                {
+                    b.HasOne("Soransoft.Domain.Entities.Partner", "Partner")
+                        .WithMany("Documents")
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Partner");
+                });
+
             modelBuilder.Entity("Soransoft.Domain.Entities.PartnerNotificationRead", b =>
                 {
                     b.HasOne("Soransoft.Domain.Entities.Announcement", "Announcement")
@@ -2912,6 +3009,8 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Soransoft.Domain.Entities.Partner", b =>
                 {
                     b.Navigation("Contracts");
+
+                    b.Navigation("Documents");
 
                     b.Navigation("Leads");
 
