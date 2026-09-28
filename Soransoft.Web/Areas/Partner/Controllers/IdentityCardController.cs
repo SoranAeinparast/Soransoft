@@ -5,7 +5,6 @@ using SkiaSharp;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
 using Soransoft.Web.Services;
-using System.IO.Compression;
 using System.Globalization;
 using PartnerEntity = Soransoft.Domain.Entities.Partner;
 
@@ -49,8 +48,8 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             using var template = SKBitmap.Decode(templatePath) ?? throw new InvalidOperationException("قالب کارت قابل خواندن نیست.");
             using var canvas = new SKCanvas(template);
             using var textPaint = new SKPaint { Color = new SKColor(0x00, 0x1D, 0x43), IsAntialias = true };
-            using var regularTypeface = LoadTypeface("Vazirmatn-Regular.ttf.gz");
-            using var boldTypeface = LoadTypeface("Vazirmatn-Bold.ttf.gz");
+            using var regularTypeface = LoadTypeface("Vazirmatn-Regular");
+            using var boldTypeface = LoadTypeface("Vazirmatn-Bold");
             using var nameFont = new SKFont(boldTypeface, 31);
             using var roleFont = new SKFont(regularTypeface, 27);
             using var valueFont = new SKFont(regularTypeface, 18);
@@ -88,21 +87,17 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             return encoded.ToArray();
         }
 
-        private SKTypeface LoadTypeface(string fileName)
+        private SKTypeface LoadTypeface(string fontName)
         {
             var fontsRoot = Path.Combine(_environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot"), "fonts");
-            var path = Path.Combine(fontsRoot, fileName);
-            if (fileName.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
-            {
-                using var compressed = System.IO.File.OpenRead(path);
-                using var gzip = new GZipStream(compressed, CompressionMode.Decompress);
-                using var fontBytes = new MemoryStream();
-                gzip.CopyTo(fontBytes);
-                using var data = SKData.CreateCopy(fontBytes.ToArray());
-                return SKTypeface.FromData(data) ?? SKTypeface.FromFamilyName("DejaVu Sans") ?? throw new InvalidOperationException("فونت کارت شناسایی قابل بارگذاری نیست.");
-            }
+            var encoded = string.Concat(Directory.GetFiles(fontsRoot, $"{fontName}.ttf.b64.part*")
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .Select(System.IO.File.ReadAllText));
+            if (string.IsNullOrWhiteSpace(encoded))
+                throw new InvalidOperationException($"فایل فونت {fontName} در پروژه پیدا نشد.");
 
-            return SKTypeface.FromFile(path) ?? SKTypeface.FromFamilyName("DejaVu Sans") ?? throw new InvalidOperationException("فونت کارت شناسایی قابل بارگذاری نیست.");
+            using var data = SKData.CreateCopy(Convert.FromBase64String(encoded));
+            return SKTypeface.FromData(data) ?? SKTypeface.FromFamilyName("DejaVu Sans") ?? throw new InvalidOperationException("فونت کارت شناسایی قابل بارگذاری نیست.");
         }
 
         private static void DrawText(SKCanvas canvas, SKPaint paint, SKFont font, string? text, float x, float y, SKTextAlign align)
