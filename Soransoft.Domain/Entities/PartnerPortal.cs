@@ -28,6 +28,23 @@ namespace Soransoft.Domain.Entities
         Lost = 4
     }
 
+    /// <summary>نتیجه بررسی اولیه لید توسط نماینده تیم توسعه</summary>
+    public enum LeadReviewStatus
+    {
+        Pending = 1,
+        Approved = 2,
+        NeedsMoreReview = 3,
+        Rejected = 4
+    }
+
+    /// <summary>میزان مذاکره انجام‌شده با مشتری</summary>
+    public enum LeadNegotiationLevel
+    {
+        Initial = 1,
+        Medium = 2,
+        Serious = 3
+    }
+
     /// <summary>وضعیت قرارداد</summary>
     public enum ContractStatus
     {
@@ -130,6 +147,8 @@ namespace Soransoft.Domain.Entities
         public string FullName { get; set; } = string.Empty;
         public string? Mobile { get; set; }
         public string? Email { get; set; }
+        /// <summary>برای ثبت رسمی فرم معرفی مشتری</summary>
+        public string? NationalId { get; set; }
         /// <summary>نقش همکار (فروش، توسعه‌دهنده، مدیر فروش، مدیر فنی)</summary>
         public PartnerRole Role { get; set; } = PartnerRole.Sales;
         /// <summary>سطح دسترسی ارشد: دیدن لیدها/قراردادها/گزارش‌های همه همکاران</summary>
@@ -154,13 +173,57 @@ namespace Soransoft.Domain.Entities
     public class Lead : BaseDeletableEntity
     {
         public int PartnerId { get; set; }
+        public string? FormNo { get; set; }
+        public DateTime IntroducedAt { get; set; } = DateTime.Now;
+        public string? CustomerCode { get; set; }
+        public bool IsFollowUp { get; set; }
+
+        // snapshot مشخصات همکار در زمان ثبت فرم
+        public string? SalesPartnerNationalId { get; set; }
+        public string? SalesPartnerAgreementNo { get; set; }
+        public string? SalesPartnerBankAccount { get; set; }
+
         public string CustomerName { get; set; } = string.Empty;
         public string CustomerMobile { get; set; } = string.Empty;
+        public string? BusinessName { get; set; }
+        public string? DecisionMakerName { get; set; }
+        public string? DecisionMakerRole { get; set; }
+        public string? CustomerLandline { get; set; }
+        public string? CustomerEmail { get; set; }
+        public string? CurrentWebsite { get; set; }
+        public string? Province { get; set; }
+        public string? City { get; set; }
+        public string? FullAddress { get; set; }
+        public string? SocialMedia { get; set; }
+
+        // وضعیت و نوع کسب‌وکار مشتری
+        public bool? HasWebsite { get; set; }
+        public string? BusinessType { get; set; }
+        public string? CurrentSystem { get; set; }
+        public bool? HasSimilarPlatform { get; set; }
+        public DateTime? ExpectedStartDate { get; set; }
+        public long? BudgetAmount { get; set; }
+
         /// <summary>نیاز / شرح درخواست مشتری</summary>
         public string Requirement { get; set; } = string.Empty;
+        public string? SecondaryRequirements { get; set; }
         /// <summary>مبلغ تخمینی فروش (تومان)</summary>
         public long? EstimatedAmount { get; set; }
+
+        // نحوه معرفی و وضعیت مذاکره
+        public string? IntroductionMethod { get; set; }
+        public DateTime? FirstContactDate { get; set; }
+        public bool? DecisionMakerConfirmed { get; set; }
+        public LeadNegotiationLevel? NegotiationLevel { get; set; }
+        public bool? NearContract { get; set; }
+
         public LeadStage Stage { get; set; } = LeadStage.New;
+        public LeadReviewStatus ReviewStatus { get; set; } = LeadReviewStatus.Pending;
+        public bool? ExistingCustomer { get; set; }
+        public string? SystemCustomerNo { get; set; }
+        public DateTime? ReviewedAt { get; set; }
+        public int? ReviewedByAdminId { get; set; }
+        public string? ReviewNote { get; set; }
         /// <summary>یادداشت مدیر</summary>
         public string? AdminNote { get; set; }
         /// <summary>تاریخ تبدیل به قرارداد</summary>
@@ -169,12 +232,16 @@ namespace Soransoft.Domain.Entities
         public virtual ICollection<LeadHistory> History { get; set; } = new List<LeadHistory>();
     }
 
-    /// <summary>تاریخچه تغییر وضعیت لید</summary>
+    /// <summary>تاریخچه تغییر مرحله و بررسی رسمی لید</summary>
     public class LeadHistory : BaseEntity
     {
         public int LeadId { get; set; }
+        public string Action { get; set; } = "StageChanged";
         public LeadStage FromStage { get; set; }
         public LeadStage ToStage { get; set; }
+        public LeadReviewStatus? FromReviewStatus { get; set; }
+        public LeadReviewStatus? ToReviewStatus { get; set; }
+        public int? AdminId { get; set; }
         public string? Note { get; set; }
         public virtual Lead Lead { get; set; } = null!;
     }
@@ -413,6 +480,8 @@ namespace Soransoft.Domain.Entities
         public string Title { get; set; } = string.Empty;
         /// <summary>معرفی کامل پروژه (HTML پاک‌سازی‌شده)</summary>
         public string Description { get; set; } = string.Empty;
+        /// <summary>تصویر شاخص عمومی پروژه در کاتالوگ همکار فروش</summary>
+        public string? FeaturedImage { get; set; }
         public bool IsActive { get; set; } = true;
         public int DisplayOrder { get; set; }
 
@@ -563,6 +632,30 @@ namespace Soransoft.Domain.Entities
         public DateTime SignedAt { get; set; } = DateTime.Now;
         /// <summary>یادداشت مدیر</summary>
         public string? AdminNote { get; set; }
+        public virtual ICollection<AgreementCancellationRequest> CancellationRequests { get; set; } = new List<AgreementCancellationRequest>();
+    }
+
+    /// <summary>درخواست فسخ قرارداد همکاری که باید توسط مدیر بررسی شود</summary>
+    public enum AgreementCancellationStatus
+    {
+        Pending = 1,
+        Approved = 2,
+        Rejected = 3
+    }
+
+    public class AgreementCancellationRequest : BaseEntity
+    {
+        public int AgreementId { get; set; }
+        public int PartnerId { get; set; }
+        public string Reason { get; set; } = string.Empty;
+        public DateTime RequestedTerminationDate { get; set; } = DateTime.Now;
+        public AgreementCancellationStatus Status { get; set; } = AgreementCancellationStatus.Pending;
+        public string? AdminResponse { get; set; }
+        public DateTime? DecidedAt { get; set; }
+        public int? DecidedByAdminId { get; set; }
+
+        public virtual CooperationAgreement Agreement { get; set; } = null!;
+        public virtual Partner Partner { get; set; } = null!;
     }
 
     // ============================================================ کیف پول همکاران
