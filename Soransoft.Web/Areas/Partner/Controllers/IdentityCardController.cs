@@ -151,7 +151,7 @@ namespace Soransoft.Web.Areas.Partner.Controllers
         {
             PartnerRole.Sales => "کارشناس فروش",
             PartnerRole.SalesManager => "مدیر فروش",
-            PartnerRole.Developer => "توسعه‌دهنده",
+            PartnerRole.Developer => "توسعه دهنده",
             PartnerRole.TechManager => "مدیر فنی",
             _ => "همکار سوران‌سافت",
         };

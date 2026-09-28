@@ -39,7 +39,7 @@ internal static class PersianTextShaper
         ['غ'] = new('\uFECD', '\uFECE', '\uFECF', '\uFED0', true, true),
         ['ف'] = new('\uFED1', '\uFED2', '\uFED3', '\uFED4', true, true),
         ['ق'] = new('\uFED5', '\uFED6', '\uFED7', '\uFED8', true, true),
-        ['ک'] = new('\uFED9', '\uFEDA', '\uFEDB', '\uFEDC', true, true),
+        ['ک'] = new('\uFB8E', '\uFB8F', '\uFB90', '\uFB91', true, true),
         ['ك'] = new('\uFED9', '\uFEDA', '\uFEDB', '\uFEDC', true, true),
         ['گ'] = new('\uFB92', '\uFB93', '\uFB94', '\uFB95', true, true),
         ['ل'] = new('\uFEDD', '\uFEDE', '\uFEDF', '\uFEE0', true, true),
@@ -57,7 +57,7 @@ internal static class PersianTextShaper
     {
         if (string.IsNullOrWhiteSpace(value)) return string.Empty;
 
-        var source = value.Normalize(NormalizationForm.FormC).Trim();
+        var source = value.Normalize(NormalizationForm.FormC).Replace('\u200C', ' ').Trim();
         var result = new StringBuilder(source.Length);
         for (var index = source.Length - 1; index >= 0; index--)
         {
