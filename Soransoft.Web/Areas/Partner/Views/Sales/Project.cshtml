@@ -1,0 +1,50 @@
+@model Soransoft.Domain.Entities.SellableProject
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h5 class="mb-1"><i class="bi bi-briefcase me-2"></i>@Model.Title</h5>
+        <div class="small text-muted">مستندات آماده ارائه به مشتری</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Catalog" class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-right me-1"></i>فهرست پروژه‌ها</a>
+        <a href="/Partner/Dashboard" class="btn btn-sm btn-outline-secondary"><i class="bi bi-house me-1"></i>داشبورد</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Description))
+{
+    <div class="sn-admin-card mb-3"><h6><i class="bi bi-info-circle me-1"></i>معرفی پروژه</h6><div class="small lh-lg">@Html.Raw(SafeHtml.Sanitize(Model.Description))</div></div>
+}
+
+@if (!Model.Documents.Any())
+{
+    <div class="sn-admin-card text-muted">برای این پروژه هنوز مستندی ثبت نشده است.</div>
+}
+else
+{
+    @foreach (var group in Model.Documents.GroupBy(d => d.Category).OrderBy(g => g.Key))
+    {
+        <div class="sn-admin-card mb-3">
+            <h6 class="mb-3"><i class="bi bi-folder2-open me-1"></i>@group.Key</h6>
+            <div class="list-group list-group-flush">
+                @foreach (var document in group.OrderBy(d => d.DisplayOrder).ThenBy(d => d.Title))
+                {
+                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center gap-2">
+                        <div><strong class="small">@document.Title</strong><div class="small text-muted">@(document.OriginalFileName ?? "لینک اینترنتی")</div></div>
+                        @if (document.Kind == Soransoft.Domain.Entities.SellableDocumentKind.Link)
+                        {
+                            <a href="@document.ExternalUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-up-left me-1"></i>مشاهده لینک</a>
+                        }
+                        else
+                        {
+                            <a href="@document.StoredPath" class="btn btn-sm btn-primary"><i class="bi bi-download me-1"></i>دانلود فایل</a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}

@@ -1,0 +1,43 @@
+@model List<Soransoft.Domain.Entities.SellableProject>
+@{
+    ViewData["Title"] = "مستندات پروژه‌های قابل فروش";
+    var hasAgreement = ViewBag.HasActiveAgreement is true;
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h5 class="mb-1"><i class="bi bi-briefcase me-2"></i>مستندات پروژه‌های قابل فروش</h5>
+        <div class="small text-muted">کاتالوگ، نسخه دمو، محتوای تبلیغاتی و فرم‌های آماده ارائه به مشتری</div>
+    </div>
+    <a href="/Partner/Dashboard" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i>بازگشت به داشبورد</a>
+</div>
+
+@if (!hasAgreement)
+{
+    <div class="alert alert-warning border"><i class="bi bi-lock me-1"></i>دسترسی شما به این بخش پس از فعال شدن قرارداد همکاری فروش توسط مدیر برقرار می‌شود.</div>
+}
+else if (!Model.Any())
+{
+    <div class="sn-admin-card text-muted">در حال حاضر پروژه‌ای برای دسترسی شما فعال نشده است.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var project in Model)
+        {
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="sn-admin-card h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <h6 class="mb-1">@project.Title</h6>
+                        <span class="badge bg-primary">@project.Documents.Count مستند</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(project.Description))
+                    {
+                        <div class="small text-muted mt-2">@Html.Raw(SafeHtml.Sanitize(project.Description))</div>
+                    }
+                    <div class="mt-auto pt-3"><a asp-action="Project" asp-route-id="@project.Id" class="btn btn-sm btn-primary w-100"><i class="bi bi-folder2-open me-1"></i>مشاهده مستندات پروژه</a></div>
+                </div>
+            </div>
+        }
+    </div>
+}

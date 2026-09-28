@@ -40,9 +40,10 @@
                 @if (isSalesSide)
                 {
                     <div class="sn-admin-nav-group">پنل فروش</div>
-                    <a href="/Partner/Sales" class="@(controller == "Sales" && action == "Index" ? "active" : "")"><i class="bi bi-funnel"></i> لیدها</a>
-                    <a href="/Partner/Sales/Commissions" class="@(controller == "Sales" && action == "Commissions" ? "active" : "")"><i class="bi bi-cash-stack"></i> عملکرد و کمیسیون</a>
-                    <a href="/Partner/Sales/Tickets" class="@(controller == "Sales" && action == "Tickets" ? "active" : "")"><i class="bi bi-life-preserver"></i> درخواست بررسی فنی</a>
+                     <a href="/Partner/Sales" class="@(controller == "Sales" && action == "Index" ? "active" : "")"><i class="bi bi-funnel"></i> لیدها</a>
+                     <a href="/Partner/Sales/Commissions" class="@(controller == "Sales" && action == "Commissions" ? "active" : "")"><i class="bi bi-cash-stack"></i> عملکرد و کمیسیون</a>
+                     <a href="/Partner/Sales/Catalog" class="@(controller == "Sales" && (action == "Catalog" || action == "Project") ? "active" : "")"><i class="bi bi-briefcase"></i> مستندات پروژه‌های قابل فروش</a>
+                     <a href="/Partner/Sales/Tickets" class="@(controller == "Sales" && action == "Tickets" ? "active" : "")"><i class="bi bi-life-preserver"></i> درخواست بررسی فنی</a>
                 }
 
                 @if (isDevSide)
@@ -74,6 +75,7 @@
                 <button class="sn-admin-burger d-lg-none" type="button" id="adminBurger"><i class="bi bi-list"></i></button>
                 <h1 class="sn-admin-page-title">@ViewData["Title"]</h1>
                 <div class="ms-auto d-flex align-items-center gap-2">
+                    <a href="/Partner/Dashboard" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex"><i class="bi bi-house me-1"></i>داشبورد</a>
                     <span class="badge sn-badge-admin">@roleTitle</span>
                 </div>
             </header>
