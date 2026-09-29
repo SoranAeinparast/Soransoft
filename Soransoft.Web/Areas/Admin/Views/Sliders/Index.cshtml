@@ -1,82 +1,111 @@
 @model SlidersIndexViewModel
 @{
     ViewData["Title"] = "مدیریت اسلایدر";
+    var totalSlides = Model.Sliders.Count;
+    var activeSlides = Model.Sliders.Count(x => x.IsActive);
 }
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h5 class="mb-0">اسلایدر صفحه اصلی</h5>
-    <a href="/Admin/Sliders/Create" class="btn sn-btn-primary"><i class="bi bi-plus-lg me-1"></i> اسلاید جدید</a>
-</div>
+<div class="sn-slider-page">
+    <header class="sn-admin-page-head">
+        <div>
+            <span class="sn-admin-eyebrow"><i class="bi bi-grid-1x2-fill"></i> مدیریت محتوای صفحه اصلی</span>
+            <h1>اسلایدر صفحه اصلی</h1>
+            <p>ترتیب نمایش، ظاهر و وضعیت اسلایدهای ورودی سایت را از این بخش کنترل کنید.</p>
+        </div>
+        <a href="/Admin/Sliders/Create" class="btn sn-btn-primary sn-admin-head-action"><i class="bi bi-plus-lg me-1"></i> اسلاید جدید</a>
+    </header>
 
-<div class="sn-admin-card mb-4">
-    <h6 class="fw-bold mb-3"><i class="bi bi-sliders me-1"></i> تنظیمات سراسری اسلایدها</h6>
-    <form asp-action="SaveSettings" method="post" class="row g-3 align-items-end">
-        @Html.AntiForgeryToken()
-        <div class="col-12 col-md-3">
-            <label asp-for="Settings.TransitionEffect" class="form-label">افکت انتقال</label>
-            <select asp-for="Settings.TransitionEffect" class="form-select">
-                <option value="fade">محو شدن (Fade)</option>
-                <option value="slide">حرکت افقی (Slide)</option>
-            </select>
-        </div>
-        <div class="col-6 col-md-3">
-            <label asp-for="Settings.Height" class="form-label">ارتفاع (پیکسل)</label>
-            <input asp-for="Settings.Height" class="form-control" type="number" min="300" max="800" />
-        </div>
-        <div class="col-6 col-md-3">
-            <label asp-for="Settings.OverlayOpacity" class="form-label">شفافیت لایه روی تصویر</label>
-            <input asp-for="Settings.OverlayOpacity" class="form-control" type="number" min="0" max="1" step="0.05" />
-        </div>
-        <div class="col-6 col-md-3">
-            <label asp-for="Settings.Interval" class="form-label">زمان هر اسلاید (میلی‌ثانیه)</label>
-            <input asp-for="Settings.Interval" class="form-control" type="number" min="2000" max="30000" step="500" />
-        </div>
-        <div class="col-12">
-            <button type="submit" class="btn sn-btn-primary">ذخیره تنظیمات اسلایدر</button>
-        </div>
-    </form>
-</div>
-
-<div class="sn-admin-card">
-    @if (!Model.Sliders.Any())
-    {
-        <p class="text-muted text-center my-4">اسلایدی ثبت نشده است.</p>
-    }
-    <div class="table-responsive">
-        <table class="table sn-admin-table align-middle">
-            <thead>
-                <tr><th>#</th><th>عنوان</th><th>زیرعنوان</th><th>تصویر</th><th>لینک</th><th>فعال</th><th>ترتیب</th><th></th></tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Sliders)
-                {
-                    <tr>
-                        <td>@item.Id</td>
-                        <td>@item.Title</td>
-                        <td class="small text-muted">@item.SubTitle</td>
-                        <td>
-                            @if (!string.IsNullOrWhiteSpace(item.Image))
-                            {
-                                <img src="@item.Image" alt="" style="max-height:40px" class="rounded" />
-                            }
-                            else
-                            {
-                                <span class="text-muted small">—</span>
-                            }
-                        </td>
-                        <td dir="ltr" class="small">@(item.Link ?? "—")</td>
-                        <td>@(item.IsActive ? "بله" : "خیر")</td>
-                        <td>@item.DisplayOrder</td>
-                        <td class="text-nowrap">
-                            <a href="/Admin/Sliders/Edit/@item.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
-                            <form method="post" action="/Admin/Sliders/Delete/@item.Id" class="d-inline"
-                                  onsubmit="return confirm('حذف شود؟')">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="sn-slider-stats" aria-label="خلاصه اسلایدر">
+        <div class="sn-slider-stat"><span class="sn-slider-stat-icon"><i class="bi bi-images"></i></span><span><strong>@totalSlides</strong><small>کل اسلایدها</small></span></div>
+        <div class="sn-slider-stat"><span class="sn-slider-stat-icon is-active"><i class="bi bi-check2-circle"></i></span><span><strong>@activeSlides</strong><small>اسلاید فعال</small></span></div>
+        <div class="sn-slider-stat"><span class="sn-slider-stat-icon is-soft"><i class="bi bi-sliders"></i></span><span><strong>@Model.Settings.TransitionEffect</strong><small>افکت انتقال</small></span></div>
     </div>
+
+    <section class="sn-admin-card sn-slider-settings-card">
+        <div class="sn-slider-card-head">
+            <div>
+                <span class="sn-card-kicker">تنظیمات نمایش</span>
+                <h2><i class="bi bi-sliders me-2"></i>تنظیمات سراسری اسلایدها</h2>
+            </div>
+            <span class="sn-card-hint">این تنظیمات روی تمام اسلایدهای صفحه اصلی اعمال می‌شوند.</span>
+        </div>
+        <form asp-action="SaveSettings" method="post" class="sn-slider-settings-form">
+            @Html.AntiForgeryToken()
+            <div class="sn-slider-field">
+                <label asp-for="Settings.TransitionEffect" class="form-label">افکت انتقال</label>
+                <select asp-for="Settings.TransitionEffect" class="form-select">
+                    <option value="fade">محو شدن (Fade)</option>
+                    <option value="slide">حرکت افقی (Slide)</option>
+                </select>
+            </div>
+            <div class="sn-slider-field">
+                <label asp-for="Settings.Height" class="form-label">ارتفاع اسلایدر</label>
+                <div class="sn-slider-input-suffix"><input asp-for="Settings.Height" class="form-control" type="number" min="300" max="800" /><span>px</span></div>
+            </div>
+            <div class="sn-slider-field">
+                <label asp-for="Settings.OverlayOpacity" class="form-label">شفافیت لایه روی تصویر</label>
+                <div class="sn-slider-input-suffix"><input asp-for="Settings.OverlayOpacity" class="form-control" type="number" min="0" max="1" step="0.05" /><span>0 تا 1</span></div>
+            </div>
+            <div class="sn-slider-field">
+                <label asp-for="Settings.Interval" class="form-label">زمان نمایش هر اسلاید</label>
+                <div class="sn-slider-input-suffix"><input asp-for="Settings.Interval" class="form-control" type="number" min="2000" max="30000" step="500" /><span>ms</span></div>
+            </div>
+            <div class="sn-slider-settings-submit">
+                <button type="submit" class="btn sn-btn-primary"><i class="bi bi-check2 me-1"></i> ذخیره تنظیمات</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="sn-admin-card sn-slider-list-card">
+        <div class="sn-slider-card-head">
+            <div>
+                <span class="sn-card-kicker">محتوای قابل انتشار</span>
+                <h2><i class="bi bi-collection me-2"></i>اسلایدهای ثبت‌شده</h2>
+            </div>
+            <span class="sn-card-hint">اسلایدها بر اساس ترتیب نمایش مرتب می‌شوند.</span>
+        </div>
+        @if (!Model.Sliders.Any())
+        {
+            <div class="sn-slider-empty"><i class="bi bi-images"></i><strong>هنوز اسلایدی ثبت نشده است.</strong><span>برای شروع، اولین اسلاید صفحه اصلی را اضافه کنید.</span><a href="/Admin/Sliders/Create" class="btn sn-btn-outline">افزودن اسلاید</a></div>
+        }
+        else
+        {
+            <div class="sn-slider-table-wrap">
+                <table class="sn-slider-table">
+                    <thead><tr><th>اسلاید</th><th>وضعیت</th><th>ترتیب</th><th>لینک</th><th>عملیات</th></tr></thead>
+                    <tbody>
+                        @foreach (var item in Model.Sliders)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="sn-slider-identity">
+                                        <div class="sn-slider-thumb">
+                                            @if (!string.IsNullOrWhiteSpace(item.Image))
+                                            {
+                                                <img src="@item.Image" alt="" loading="lazy" />
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-image"></i>
+                                            }
+                                        </div>
+                                        <div><strong>@item.Title</strong><span>@(string.IsNullOrWhiteSpace(item.SubTitle) ? "بدون زیرعنوان" : item.SubTitle)</span></div>
+                                    </div>
+                                </td>
+                                <td><span class="sn-slider-status @(item.IsActive ? "is-active" : "is-inactive")"><i class="bi @(item.IsActive ? "bi-check2" : "bi-pause")"></i>@(item.IsActive ? "فعال" : "غیرفعال")</span></td>
+                                <td><span class="sn-slider-order">@item.DisplayOrder.ToString("00")</span></td>
+                                <td dir="ltr" class="sn-slider-link">@(string.IsNullOrWhiteSpace(item.Link) ? "—" : item.Link)</td>
+                                <td class="sn-slider-actions">
+                                    <a href="/Admin/Sliders/Edit/@item.Id" class="btn sn-slider-edit"><i class="bi bi-pencil-square"></i><span>ویرایش</span></a>
+                                    <form method="post" action="/Admin/Sliders/Delete/@item.Id" onsubmit="return confirm('حذف شود؟')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn sn-slider-delete" aria-label="حذف اسلاید"><i class="bi bi-trash3"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
 </div>
