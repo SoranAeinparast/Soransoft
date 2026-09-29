@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Soransoft.Domain.Entities;
 using Soransoft.Domain.Enums;
 
 namespace Soransoft.Application.ViewModels
@@ -134,6 +135,7 @@ namespace Soransoft.Application.ViewModels
         public List<ArticleCardViewModel> LatestArticles { get; set; } = new();
         public List<TariffSectionViewModel> TariffSections { get; set; } = new();
         public List<ServiceTimelineViewModel> Timelines { get; set; } = new();
+        public List<PromoBanner> PromoBanners { get; set; } = new();
         public IDictionary<string, string> Settings { get; set; } = new Dictionary<string, string>();
         public IDictionary<string, bool> Features { get; set; } = new Dictionary<string, bool>();
     }

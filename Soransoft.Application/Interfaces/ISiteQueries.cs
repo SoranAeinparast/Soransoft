@@ -27,5 +27,7 @@ namespace Soransoft.Application.Interfaces
         Task<List<MenuItemViewModel>> GetMenuAsync(MenuPosition position, CancellationToken ct = default);
         /// <summary>اسلایدهای فعال صفحه اصلی</summary>
         Task<List<Slider>> GetActiveSlidersAsync(CancellationToken ct = default);
+        /// <summary>بنرهای پروموی فعال بر اساس محل نمایش</summary>
+        Task<List<PromoBanner>> GetActivePromoBannersAsync(PromoBannerPlacement? placement = null, CancellationToken ct = default);
     }
 }

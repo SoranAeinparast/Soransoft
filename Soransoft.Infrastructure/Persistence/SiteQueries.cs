@@ -171,5 +171,12 @@ namespace Soransoft.Infrastructure.Persistence
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.DisplayOrder)
                 .ToListAsync(ct);
+
+        public Task<List<PromoBanner>> GetActivePromoBannersAsync(PromoBannerPlacement? placement = null, CancellationToken ct = default)
+        {
+            var query = _db.PromoBanners.AsNoTracking().Where(b => b.IsActive);
+            if (placement.HasValue) query = query.Where(b => b.Placement == placement.Value);
+            return query.OrderBy(b => b.DisplayOrder).ThenBy(b => b.Id).ToListAsync(ct);
+        }
     }
 }

@@ -27,6 +27,7 @@ namespace Soransoft.Application.Services
             var latestArticles = await _queries.GetLatestArticlesAsync(2, ct);
             var tariffSections = await _queries.GetTariffSectionsAsync(ct);
             var timelines = await _queries.GetTimelinesAsync(ct);
+            var promoBanners = await _queries.GetActivePromoBannersAsync(ct: ct);
             var settings = await _settings.GetAllAsync(ct);
             var features = (await _features.GetAllAsync(ct)).ToDictionary(f => f.Key, f => f.IsEnabled);
 
@@ -57,6 +58,7 @@ namespace Soransoft.Application.Services
                     }).ToList(),
                 }).ToList(),
                 Timelines = timelines,
+                PromoBanners = promoBanners,
             };
         }
 
@@ -101,5 +103,8 @@ namespace Soransoft.Application.Services
 
         public Task<List<Slider>> GetSlidersAsync(CancellationToken ct = default) =>
             _queries.GetActiveSlidersAsync(ct);
+
+        public Task<List<PromoBanner>> GetPromoBannersAsync(PromoBannerPlacement? placement = null, CancellationToken ct = default) =>
+            _queries.GetActivePromoBannersAsync(placement, ct);
     }
 }
