@@ -7,7 +7,6 @@
     <form asp-action="Edit" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="Id" />
-        <input type="hidden" asp-for="Image" />
         <input type="hidden" asp-for="CreatedAt" />
         <partial name="FormFields" model="Model" />
         <button type="submit" class="btn sn-btn-primary">ذخیره تغییرات</button>

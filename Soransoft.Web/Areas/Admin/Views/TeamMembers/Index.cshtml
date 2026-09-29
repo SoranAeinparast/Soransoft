@@ -20,7 +20,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">تصویر</label>
-                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                    <partial name="_MediaImagePicker" model="null" view-data="@(new ViewDataDictionary(ViewData) { ["MediaInputName"] = "Image", ["MediaInputId"] = "team-image-new", ["MediaPreviewId"] = "team-image-new-preview" })" />
                 </div>
                 <div class="mb-3">
                     <label class="form-label">لینک لینکدین (اختیاری)</label>
@@ -113,11 +113,10 @@
                                             <input type="hidden" name="Id" value="@item.Id" />
                                             <input type="hidden" name="FullName" value="@item.FullName" />
                                             <input type="hidden" name="Role" value="@item.Role" />
-                                            <input type="hidden" name="Image" value="@item.Image" />
                                             <input type="hidden" name="LinkedinUrl" value="@item.LinkedinUrl" />
                                             <input type="hidden" name="DisplayOrder" value="@item.DisplayOrder" />
                                             <input type="hidden" name="IsActive" value="@item.IsActive.ToString().ToLower()" />
-                                            <input type="file" name="imageFile" class="form-control form-control-sm mb-2" accept="image/*" required />
+                                            <partial name="_MediaImagePicker" model="item.Image" view-data="@(new ViewDataDictionary(ViewData) { ["MediaInputName"] = "Image", ["MediaInputId"] = $"team-image-{item.Id}", ["MediaPreviewId"] = $"team-image-{item.Id}-preview" })" />
                                             <button type="submit" class="btn btn-sm btn-primary w-100">آپلود</button>
                                         </form>
                                     </details>

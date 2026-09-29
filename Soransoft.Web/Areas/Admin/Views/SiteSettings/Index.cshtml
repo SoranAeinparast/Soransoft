@@ -34,8 +34,7 @@
                 @Html.AntiForgeryToken()
                 <div class="col-md-3"><label class="form-label">کلید (انگلیسی)</label><input name="key" class="form-control" dir="ltr" placeholder="SupportEmail" required /></div>
                 <div class="col-md-3"><label class="form-label">عنوان نمایشی</label><input name="title" class="form-control" placeholder="ایمیل پشتیبانی" required /></div>
-                <div class="col-md-2"><label class="form-label">مقدار اولیه</label><input name="value" class="form-control" /></div>
-                <div class="col-md-2"><label class="form-label">فایل تصویر</label><input name="imageFile" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" /></div>
+                <div class="col-md-2"><label class="form-label">مقدار اولیه / تصویر</label><div class="input-group"><input id="new-setting-value" name="value" class="form-control" /><button type="button" class="btn btn-outline-primary" data-media-picker-trigger data-media-target="new-setting-value" data-media-preview="new-setting-preview" title="انتخاب تصویر"><i class="bi bi-images"></i></button></div><img id="new-setting-preview" class="sn-media-picker-preview d-none mt-2" alt="پیش‌نمایش" /></div>
                 <div class="col-md-2"><label class="form-label">گروه</label><input name="group" class="form-control" list="settingGroups" placeholder="General" /><datalist id="settingGroups">@foreach (var groupName in settingGroups) { <option value="@groupName"></option> }</datalist></div>
                 <div class="col-md-2"><label class="form-label">نوع</label><select name="type" class="form-select"><option value="text">متن</option><option value="textarea">متن بلند</option><option value="image">تصویر</option><option value="boolean">روشن/خاموش</option></select></div>
                 <div class="col-md-2"><button type="submit" class="btn sn-btn-primary w-100">افزودن</button></div>
@@ -77,12 +76,7 @@
                             }
                             else if (setting.Type == "image")
                             {
-                                <input name="settings[@i].Value" value="@setting.Value" class="form-control mb-2" dir="ltr" />
-                                <input name="settingFile_@setting.Id" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
-                                @if (!string.IsNullOrWhiteSpace(setting.Value))
-                                {
-                                    <img src="~/@setting.Value.TrimStart('~', '/')" alt="@setting.Title" class="sn-setting-preview" />
-                                }
+                                <partial name="_MediaImagePicker" model="setting.Value" view-data="@(new ViewDataDictionary(ViewData) { ["MediaInputName"] = $"settings[{i}].Value", ["MediaInputId"] = $"setting-image-{setting.Id}", ["MediaPreviewId"] = $"setting-image-{setting.Id}-preview" })" />
                             }
                             else
                             {
@@ -119,12 +113,7 @@
                             }
                             else if (setting.Type == "image")
                             {
-                                <input name="settings[@i].Value" value="@setting.Value" class="form-control mb-2" dir="ltr" />
-                                <input name="settingFile_@setting.Id" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
-                                @if (!string.IsNullOrWhiteSpace(setting.Value))
-                                {
-                                    <img src="~/@setting.Value.TrimStart('~', '/')" alt="@setting.Title" class="sn-setting-preview" />
-                                }
+                                <partial name="_MediaImagePicker" model="setting.Value" view-data="@(new ViewDataDictionary(ViewData) { ["MediaInputName"] = $"settings[{i}].Value", ["MediaInputId"] = $"setting-image-{setting.Id}", ["MediaPreviewId"] = $"setting-image-{setting.Id}-preview" })" />
                             }
                             else
                             {

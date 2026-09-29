@@ -14,11 +14,7 @@
 </div>
 <div class="mb-3">
     <label class="form-label">تصویر پس‌زمینه</label>
-    <input type="file" name="imageFile" class="form-control" accept="image/*" />
-    @if (!string.IsNullOrWhiteSpace(Model.Image))
-    {
-        <img src="@Model.Image" alt="" class="mt-2 rounded" style="max-height:90px;" />
-    }
+    <partial name="_MediaImagePicker" model="Model.Image" view-data="@(new ViewDataDictionary(ViewData) { ["MediaInputName"] = "Image", ["MediaInputId"] = "slider-image-input", ["MediaPreviewId"] = "slider-image-preview" })" />
 </div>
 <div class="row g-3">
     <div class="col-md-4 mb-3">

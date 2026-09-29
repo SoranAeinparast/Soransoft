@@ -47,11 +47,7 @@
     </div>
     <div class="col-12">
         <label class="form-label">تصویر (اختیاری)</label>
-        <input type="file" name="imageFile" class="form-control" accept="image/*" />
-        @if (!string.IsNullOrWhiteSpace(Model.Image))
-        {
-            <img src="@Model.Image" alt="" class="mt-2 rounded" style="max-height:100px;max-width:220px;object-fit:cover" />
-        }
+        <partial name="_MediaImagePicker" model="Model.Image" view-data="@(new ViewDataDictionary(ViewData) { ["MediaInputName"] = "Image", ["MediaInputId"] = "promo-image-input", ["MediaPreviewId"] = "promo-image-preview" })" />
     </div>
     <div class="col-6 col-md-3">
         <label asp-for="DisplayOrder" class="form-label">ترتیب نمایش</label>
