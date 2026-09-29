@@ -1,0 +1,190 @@
+@model List<Soransoft.Domain.Entities.SellableProject>
+@{
+    ViewData["Title"] = "پروژه‌های آماده ارائه به مشتری";
+    string Size(long? bytes) => bytes is null ? "—" : bytes < 1024 * 1024 ? $"{bytes / 1024:N0} KB" : $"{bytes / (1024 * 1024):N1} MB";
+}
+
+<style>
+    .portal-projects-page > .sn-admin-card,
+    .portal-projects-page > .portal-project-card { height: auto; }
+    .portal-projects-page .portal-project-card { padding: 1.1rem 1.25rem; }
+    .portal-projects-page .portal-project-card .collapse { min-height: 0; }
+</style>
+
+<div class="portal-projects-page">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h5 class="mb-1"><i class="bi bi-briefcase me-2"></i>پروژه‌های آماده ارائه به مشتری</h5>
+        <div class="small text-muted">کاتالوگ‌ها، دموها، فایل‌های تبلیغاتی و فرم‌های قابل استفاده توسط همکاران فروش</div>
+    </div>
+    <span class="badge bg-primary">@Model.Count پروژه</span>
+</div>
+
+<div class="sn-admin-card mb-3">
+    <h6 class="mb-3"><i class="bi bi-plus-circle me-2"></i>ایجاد پروژه جدید</h6>
+    <form asp-action="SaveProject" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="0" />
+        <div class="col-12 col-md-4">
+            <label class="form-label small">عنوان پروژه *</label>
+            <input name="title" class="form-control form-control-sm" required placeholder="مثلاً سامانه فروشگاهی حرفه‌ای" />
+        </div>
+        <div class="col-12 col-md-5">
+            <label class="form-label small">توضیح کوتاه</label>
+            <input name="description" class="form-control form-control-sm" placeholder="برای معرفی سریع پروژه" />
+        </div>
+        <div class="col-12 col-md-7"><label class="form-label small">تصویر شاخص پروژه</label><partial name="../Shared/_MediaImagePicker" model="null" view-data="@(new ViewDataDictionary(ViewData) { ["MediaInputName"] = "featuredImagePath", ["MediaInputId"] = "new-sellable-image", ["MediaPreviewId"] = "new-sellable-image-preview" })" /></div>
+        <div class="col-12 col-md-5"><label class="form-label small">یا آپلود مستقیم</label><input name="featuredImage" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp" class="form-control form-control-sm" /></div>
+        <div class="col-6 col-md-1">
+            <label class="form-label small">ترتیب</label>
+            <input name="displayOrder" type="number" class="form-control form-control-sm" value="0" min="0" />
+        </div>
+        <div class="col-6 col-md-1">
+             <div class="form-check form-switch mb-1"><input type="checkbox" name="isActive" value="true" checked class="form-check-input" id="newProjectActive" /><input type="hidden" name="isActive" value="false" /><label class="form-check-label small" for="newProjectActive">فعال</label></div>
+        </div>
+        <div class="col-12 col-md-1"><button class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg"></i></button></div>
+    </form>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="sn-admin-card text-center text-muted">هنوز پروژه‌ای برای ارائه به مشتری ثبت نشده است.</div>
+}
+
+@foreach (var project in Model)
+{
+    <div class="sn-admin-card portal-project-card mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h6 class="mb-1">@project.Title</h6>
+                <div class="small text-muted">@project.Description</div>
+                <div class="small mt-1">
+                    <span class="badge @(project.IsActive ? "bg-success" : "bg-secondary")">@(project.IsActive ? "فعال" : "غیرفعال")</span>
+                    <span class="badge bg-light text-dark border">@project.Documents.Count(d => d.IsActive) مستند</span>
+                    <span class="badge bg-light text-dark border">@project.PartnerAccess.Count(a => a.IsActive) همکار مجاز</span>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#project-@project.Id" aria-expanded="false">
+                <i class="bi bi-sliders me-1"></i>مدیریت پروژه
+            </button>
+        </div>
+
+        <div class="collapse mt-3" id="project-@project.Id">
+            <div class="border rounded p-3 bg-light mb-3">
+                 <form asp-action="SaveProject" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@project.Id" />
+                    <div class="col-12 col-md-4"><label class="form-label small">عنوان</label><input name="title" value="@project.Title" class="form-control form-control-sm" required /></div>
+                    <div class="col-12 col-md-4"><label class="form-label small">توضیح کوتاه</label><input name="description" value="@project.Description" class="form-control form-control-sm" /></div>
+                    <div class="col-6 col-md-1"><label class="form-label small">ترتیب</label><input name="displayOrder" value="@project.DisplayOrder" type="number" min="0" class="form-control form-control-sm" /></div>
+                    <div class="col-6 col-md-1"><div class="form-check form-switch mb-1"><input type="checkbox" name="isActive" value="true" class="form-check-input" @(project.IsActive ? "checked" : "") id="project-active-@project.Id" /><input type="hidden" name="isActive" value="false" /><label class="form-check-label small" for="project-active-@project.Id">فعال</label></div></div>
+                    <div class="col-6 col-md-1"><button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-save me-1"></i>ذخیره</button></div>
+                     <div class="col-6 col-md-1"><button type="submit" formaction="/Admin/PortalProjects/DeleteProject" name="id" value="@project.Id" class="btn btn-sm btn-outline-danger w-100" data-swal-confirm="پروژه و دسترسی‌های آن حذف شود؟"><i class="bi bi-trash"></i></button></div>
+                      <div class="col-12 col-md-7"><label class="form-label small">تصویر شاخص</label><partial name="../Shared/_MediaImagePicker" model="project.FeaturedImage" view-data="@(new ViewDataDictionary(ViewData) { ["MediaInputName"] = "featuredImagePath", ["MediaInputId"] = $"sellable-image-{project.Id}", ["MediaPreviewId"] = $"sellable-image-{project.Id}-preview" })" /></div>
+                      <div class="col-12 col-md-5"><label class="form-label small">یا آپلود مستقیم</label><input name="featuredImage" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp" class="form-control form-control-sm" /></div>
+                 </form>
+                 @if (!string.IsNullOrWhiteSpace(project.FeaturedImage))
+                 {
+                     <div class="d-flex align-items-center gap-2 mt-2 small">
+                         <img src="@project.FeaturedImage" alt="تصویر شاخص @project.Title" style="width:88px;height:58px;object-fit:cover;border-radius:8px;border:1px solid #dee2e6" />
+                         <span class="text-muted">تصویر شاخص فعلی در کاتالوگ همکاران نمایش داده می‌شود.</span>
+                         <form asp-action="DeleteFeaturedImage" method="post" class="ms-auto" data-swal-confirm="تصویر شاخص حذف شود؟">
+                             @Html.AntiForgeryToken()
+                             <input type="hidden" name="id" value="@project.Id" />
+                             <button class="btn btn-sm btn-outline-danger">حذف تصویر</button>
+                         </form>
+                     </div>
+                 }
+                <div class="small text-muted mt-2">شرح کامل پروژه را در کادر زیر وارد کنید. تصاویر معرفی را می‌توانید در بخش مستندات به‌صورت فایل اضافه کنید.</div>
+                <form asp-action="SaveProject" method="post" class="mt-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@project.Id" />
+                    <input type="hidden" name="title" value="@project.Title" />
+                    <input type="hidden" name="displayOrder" value="@project.DisplayOrder" />
+                    <input type="hidden" name="isActive" value="@(project.IsActive ? "true" : "false")" />
+                    <textarea name="description" class="form-control form-control-sm" rows="4" placeholder="شرح کامل، مزیت‌ها، مخاطب هدف و نکات ارائه">@project.Description</textarea>
+                    <button class="btn btn-sm btn-primary mt-2"><i class="bi bi-save me-1"></i>ذخیره شرح کامل</button>
+                </form>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12 col-xl-8">
+                    <div class="border rounded p-3 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0"><i class="bi bi-folder2-open me-1"></i>مستندات پروژه</h6>
+                            <span class="small text-muted">فایل تا ۲۰ مگابایت</span>
+                        </div>
+                        @foreach (var document in project.Documents)
+                        {
+                            <form asp-action="SaveDocument" method="post" enctype="multipart/form-data" class="border rounded p-2 mb-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="projectId" value="@project.Id" />
+                                <input type="hidden" name="id" value="@document.Id" />
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-12 col-md-3"><label class="form-label small">عنوان</label><input name="title" value="@document.Title" class="form-control form-control-sm" required /></div>
+                                    <div class="col-6 col-md-2"><label class="form-label small">دسته</label><input name="category" value="@document.Category" class="form-control form-control-sm" required /></div>
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small">نوع</label>
+                                        <select name="kind" class="form-select form-select-sm">
+                                            @if (document.Kind == SellableDocumentKind.Upload)
+                                            {
+                                                <option value="1" selected>فایل</option>
+                                                <option value="2">لینک</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="1">فایل</option>
+                                                <option value="2" selected>لینک</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-1"><label class="form-label small">ترتیب</label><input name="displayOrder" value="@document.DisplayOrder" type="number" min="0" class="form-control form-control-sm" /></div>
+                                    <div class="col-6 col-md-4"><label class="form-label small">لینک یا فایل جدید</label><input name="externalUrl" value="@document.ExternalUrl" class="form-control form-control-sm mb-1" placeholder="https://..." /><input name="file" type="file" class="form-control form-control-sm" /></div>
+                                    <div class="col-12 d-flex justify-content-between align-items-center"><div class="small text-muted">@(document.OriginalFileName ?? document.ExternalUrl ?? "بدون فایل") · @Size(document.SizeBytes)</div><div class="d-flex gap-2 align-items-center"><label class="small"><input type="checkbox" name="isActive" value="true" @(document.IsActive ? "checked" : "") /> فعال</label><input type="hidden" name="isActive" value="false" /><button class="btn btn-sm btn-outline-primary"><i class="bi bi-save me-1"></i>ذخیره</button></div></div>
+                                </div>
+                            </form>
+                            <form asp-action="DeleteDocument" method="post" class="d-inline" data-swal-confirm="این مستند حذف شود؟">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@document.Id" />
+                                <button class="btn btn-sm btn-link text-danger p-0 mb-2">حذف مستند</button>
+                            </form>
+                        }
+                        <form asp-action="SaveDocument" method="post" enctype="multipart/form-data" class="border rounded p-2 bg-light">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="projectId" value="@project.Id" /><input type="hidden" name="id" value="0" />
+                            <div class="row g-2 align-items-end"><div class="col-12 col-md-3"><label class="form-label small">عنوان مستند</label><input name="title" class="form-control form-control-sm" required placeholder="مثلاً کاتالوگ فروش" /></div><div class="col-6 col-md-2"><label class="form-label small">دسته</label><input name="category" class="form-control form-control-sm" required value="کاتالوگ" /></div><div class="col-6 col-md-2"><label class="form-label small">نوع</label><select name="kind" class="form-select form-select-sm"><option value="1">فایل</option><option value="2">لینک</option></select></div><div class="col-6 col-md-2"><input name="externalUrl" class="form-control form-control-sm" placeholder="لینک https (اختیاری)" /></div><div class="col-6 col-md-2"><input name="file" type="file" class="form-control form-control-sm" /></div><div class="col-12 col-md-1"><input type="hidden" name="displayOrder" value="0" /><input type="checkbox" name="isActive" value="true" checked class="form-check-input me-1" /> فعال <input type="hidden" name="isActive" value="false" /><button class="btn btn-sm btn-primary mt-1 w-100"><i class="bi bi-plus-lg me-1"></i>افزودن</button></div></div>
+                         </form>
+                    </div>
+                </div>
+
+                <div class="col-12 col-xl-4">
+                    <div class="border rounded p-3 mb-3">
+                        <h6><i class="bi bi-people me-1"></i>همکاران دارای دسترسی</h6>
+                        @if (project.PartnerAccess.Any(a => a.IsActive))
+                        {
+                            <div class="d-flex flex-wrap gap-1">@foreach (var access in project.PartnerAccess.Where(a => a.IsActive)) { <span class="badge bg-light text-dark border">@access.Partner.FullName</span> }</div>
+                        }
+                        else
+                        {
+                            <div class="small text-muted">از فرم قرارداد همکاری، پروژه‌های مجاز هر همکار فروش را انتخاب کنید.</div>
+                        }
+                    </div>
+                    <div class="border rounded p-3">
+                        <h6><i class="bi bi-chat-left-text me-1"></i>دستورالعمل و کامنت داخلی</h6>
+                        @foreach (var comment in project.Comments)
+                        {
+                            <div class="border rounded p-2 mb-2 small"><div>@comment.Body</div><div class="d-flex justify-content-between mt-1"><span class="text-muted">@PersianDisplay.DateTimeText(comment.CreatedAt)</span><form asp-action="DeleteComment" method="post" data-swal-confirm="حذف شود؟">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@comment.Id" /><button class="btn btn-sm btn-link text-danger p-0">حذف</button></form></div></div>
+                        }
+                        <form asp-action="SaveComment" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="projectId" value="@project.Id" /><input type="hidden" name="id" value="0" />
+                            <textarea name="body" class="form-control form-control-sm" rows="3" required placeholder="نکته مهم برای ارائه به مشتری یا دستورالعمل فروش..."></textarea>
+                            <button class="btn btn-sm btn-outline-primary mt-2"><i class="bi bi-plus-lg me-1"></i>ثبت دستورالعمل</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+</div>
