@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Soransoft.Application.Interfaces;
 using Soransoft.Application.Services;
 using Soransoft.Infrastructure.Persistence;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Soransoft.Web.Areas.Admin.Controllers
 {
@@ -159,8 +161,12 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             await _settings.InvalidateCacheAsync();
         }
 
-        private static string ServiceSlugRedirectKey(string slug) =>
-            $"{ServiceSlugRedirectPrefix}{slug.Trim().ToLowerInvariant()}";
+        private static string ServiceSlugRedirectKey(string slug)
+        {
+            var normalized = slug.Trim().ToLowerInvariant();
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized))).ToLowerInvariant();
+            return $"{ServiceSlugRedirectPrefix}{hash}";
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

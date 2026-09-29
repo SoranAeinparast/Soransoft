@@ -4,6 +4,8 @@ using Soransoft.Application.ViewModels;
 using Soransoft.Web.Models;
 using Soransoft.Domain.Enums;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Soransoft.Web.Controllers
 {
@@ -57,8 +59,12 @@ namespace Soransoft.Web.Controllers
             return View("ServicePage", service);
         }
 
-        private static string ServiceSlugRedirectKey(string slug) =>
-            $"{ServiceSlugRedirectPrefix}{slug.Trim().ToLowerInvariant()}";
+        private static string ServiceSlugRedirectKey(string slug)
+        {
+            var normalized = slug.Trim().ToLowerInvariant();
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized))).ToLowerInvariant();
+            return $"{ServiceSlugRedirectPrefix}{hash}";
+        }
 
         // GET /
         public async Task<IActionResult> Index(CancellationToken ct)
