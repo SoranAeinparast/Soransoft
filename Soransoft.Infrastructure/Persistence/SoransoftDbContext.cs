@@ -27,6 +27,7 @@ namespace Soransoft.Infrastructure.Persistence
         public DbSet<ConsultationRequest> ConsultationRequests => Set<ConsultationRequest>();
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
         public DbSet<Slider> Sliders => Set<Slider>();
+        public DbSet<PromoBanner> PromoBanners => Set<PromoBanner>();
         public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
         public DbSet<MenuItem> MenuItems => Set<MenuItem>();
         public DbSet<Admin> Admins => Set<Admin>();

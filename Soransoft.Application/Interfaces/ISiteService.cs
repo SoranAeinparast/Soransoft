@@ -23,6 +23,8 @@ namespace Soransoft.Application.Interfaces
         Task<List<ServiceCardViewModel>> GetServiceCardsAsync(CancellationToken ct = default);
         /// <summary>اسلایدهای فعال صفحه اصلی</summary>
         Task<List<Slider>> GetSlidersAsync(CancellationToken ct = default);
+        /// <summary>بنرهای پروموی فعال بر اساس محل نمایش</summary>
+        Task<List<PromoBanner>> GetPromoBannersAsync(PromoBannerPlacement? placement = null, CancellationToken ct = default);
     }
 
     /// <summary>سرویس فرم‌های عمومی (سفارش، تماس، مشاوره)</summary>

@@ -189,6 +189,21 @@ namespace Soransoft.Infrastructure.Persistence.Configurations
         }
     }
 
+    internal sealed class PromoBannerConfig : IEntityTypeConfiguration<PromoBanner>
+    {
+        public void Configure(EntityTypeBuilder<PromoBanner> b)
+        {
+            b.ToTable("PromoBanners");
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Text).HasMaxLength(1000);
+            b.Property(x => x.Badge).HasMaxLength(100);
+            b.Property(x => x.ButtonText).HasMaxLength(100);
+            b.Property(x => x.Image).HasMaxLength(300);
+            b.Property(x => x.Link).HasMaxLength(300);
+            b.HasIndex(x => new { x.Placement, x.DisplayOrder });
+        }
+    }
+
     internal sealed class SiteSettingConfig : IEntityTypeConfiguration<SiteSetting>
     {
         public void Configure(EntityTypeBuilder<SiteSetting> b)

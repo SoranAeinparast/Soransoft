@@ -133,7 +133,7 @@ namespace Soransoft.Infrastructure.Persistence
 
         public Task<List<TariffSection>> GetTariffSectionsAsync(CancellationToken ct = default) =>
             _db.TariffSections.AsNoTracking()
-                .Where(t => t.IsActive && _db.Services.Any(s => s.Kind == t.Kind && s.IsActive && !s.ComingSoon))
+                .Where(t => t.IsActive)
                 .OrderBy(t => t.DisplayOrder)
                 .Include(t => t.Packages.Where(p => p.IsActive).OrderBy(p => p.DisplayOrder))
                     .ThenInclude(p => p.Items.OrderBy(i => i.DisplayOrder))
@@ -171,5 +171,12 @@ namespace Soransoft.Infrastructure.Persistence
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.DisplayOrder)
                 .ToListAsync(ct);
+
+        public Task<List<PromoBanner>> GetActivePromoBannersAsync(PromoBannerPlacement? placement = null, CancellationToken ct = default)
+        {
+            var query = _db.PromoBanners.AsNoTracking().Where(b => b.IsActive);
+            if (placement.HasValue) query = query.Where(b => b.Placement == placement.Value);
+            return query.OrderBy(b => b.DisplayOrder).ThenBy(b => b.Id).ToListAsync(ct);
+        }
     }
 }

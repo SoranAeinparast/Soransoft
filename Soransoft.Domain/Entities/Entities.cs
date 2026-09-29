@@ -211,6 +211,22 @@ namespace Soransoft.Domain.Entities
         public bool IsActive { get; set; } = true;
     }
 
+    /// <summary>بنر پرومو با چند نوع و محل نمایش</summary>
+    public class PromoBanner : BaseDeletableEntity
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+        public string? Badge { get; set; }
+        public string? ButtonText { get; set; }
+        public string? Image { get; set; }
+        public string? Link { get; set; }
+        public PromoBannerType Type { get; set; } = PromoBannerType.FeaturedCard;
+        public PromoBannerPlacement Placement { get; set; } = PromoBannerPlacement.HomeAfterHero;
+        public int DisplayOrder { get; set; }
+        public bool IsActive { get; set; } = true;
+        public bool OpenInNewTab { get; set; }
+    }
+
     /// <summary>تنظیمات سایت (کلید/مقدار)</summary>
     public class SiteSetting : BaseEntity
     {
