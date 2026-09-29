@@ -3,6 +3,20 @@
     ViewData["Title"] = "تماس با ما";
     var settings = (IDictionary<string, string>)ViewBag.Settings;
     string S(string key, string def = "") => settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : def;
+    var address = S("Address");
+    var phone = S("Phone");
+    var mobile = S("Mobile");
+    var email = S("Email");
+    var workingHours = S("WorkingHours");
+    var instagramUrl = S("InstagramUrl");
+    var telegramUrl = S("TelegramUrl");
+    var whatsappUrl = S("WhatsappUrl");
+    var mapEmbedUrl = S("ContactMapEmbedUrl");
+    bool IsSafeExternalUrl(string value) => Uri.TryCreate(value, UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    var hasInstagram = IsSafeExternalUrl(instagramUrl);
+    var hasTelegram = IsSafeExternalUrl(telegramUrl);
+    var hasWhatsapp = IsSafeExternalUrl(whatsappUrl);
 }
 <section class="sn-page-hero">
     <div class="container text-center">
@@ -15,42 +29,77 @@
         <div class="row g-4">
             <div class="col-12 col-lg-5">
                 <div class="sn-contact-info">
+                    @if (!string.IsNullOrWhiteSpace(address))
+                    {
                     <div class="d-flex align-items-start gap-3 mb-4">
                         <i class="bi bi-geo-alt sn-contact-icon"></i>
                         <div>
                             <h5>آدرس</h5>
-                            <p class="mb-0 text-muted">@S("Address")</p>
+                            <p class="mb-0 text-muted">@address</p>
                         </div>
                     </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(phone))
+                    {
                     <div class="d-flex align-items-start gap-3 mb-4">
                         <i class="bi bi-telephone sn-contact-icon"></i>
                         <div>
                             <h5>تلفن ثابت</h5>
-                            <p class="mb-0" dir="ltr">@S("Phone")</p>
+                            <p class="mb-0" dir="ltr">@phone</p>
                         </div>
                     </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(mobile))
+                    {
                     <div class="d-flex align-items-start gap-3 mb-4">
                         <i class="bi bi-phone sn-contact-icon"></i>
                         <div>
                             <h5>موبایل</h5>
-                            <p class="mb-0" dir="ltr">@S("Mobile")</p>
+                            <p class="mb-0" dir="ltr">@mobile</p>
                         </div>
                     </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(email))
+                    {
                     <div class="d-flex align-items-start gap-3 mb-4">
                         <i class="bi bi-envelope sn-contact-icon"></i>
                         <div>
                             <h5>ایمیل</h5>
-                            <p class="mb-0" dir="ltr">@S("Email")</p>
+                            <p class="mb-0" dir="ltr">@email</p>
                         </div>
                     </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(workingHours))
+                    {
                     <div class="d-flex align-items-start gap-3">
                         <i class="bi bi-clock sn-contact-icon"></i>
                         <div>
                             <h5>ساعات کاری</h5>
-                            <p class="mb-0 text-muted">@S("WorkingHours")</p>
+                            <p class="mb-0 text-muted">@workingHours</p>
                         </div>
                     </div>
-                    @if (Uri.TryCreate(S("ContactMapEmbedUrl"), UriKind.Absolute, out var mapUrl)
+                    }
+                    @if (hasInstagram || hasTelegram || hasWhatsapp)
+                    {
+                        <div class="mt-4 pt-3 border-top">
+                            <h5 class="mb-3">شبکه‌های اجتماعی</h5>
+                            <div class="d-flex flex-wrap gap-3">
+                                @if (hasInstagram)
+                                {
+                                    <a href="@instagramUrl" target="_blank" rel="noopener" class="sn-social" aria-label="اینستاگرام" title="اینستاگرام"><i class="bi bi-instagram"></i></a>
+                                }
+                                @if (hasTelegram)
+                                {
+                                    <a href="@telegramUrl" target="_blank" rel="noopener" class="sn-social" aria-label="تلگرام" title="تلگرام"><i class="bi bi-telegram"></i></a>
+                                }
+                                @if (hasWhatsapp)
+                                {
+                                    <a href="@whatsappUrl" target="_blank" rel="noopener" class="sn-social" aria-label="واتساپ" title="واتساپ"><i class="bi bi-whatsapp"></i></a>
+                                }
+                            </div>
+                        </div>
+                    }
+                    @if (Uri.TryCreate(mapEmbedUrl, UriKind.Absolute, out var mapUrl)
                         && (mapUrl.Scheme == Uri.UriSchemeHttp || mapUrl.Scheme == Uri.UriSchemeHttps))
                     {
                         <div class="mt-4 rounded overflow-hidden">
