@@ -96,6 +96,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
             if (imageFile is not null && imageFile.Length > 0)
                 model.Image = await _storage.SaveImageAsync(imageFile, "sliders", ct);
+            else
+                model.Image = model.Image?.Trim() ?? string.Empty;
 
             _db.Sliders.Add(model);
             await _db.SaveChangesAsync(ct);
@@ -135,10 +137,9 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             item.DisplayOrder = model.DisplayOrder;
 
             if (imageFile is not null && imageFile.Length > 0)
-            {
-                await _storage.DeleteAsync(item.Image, ct);
                 item.Image = await _storage.SaveImageAsync(imageFile, "sliders", ct);
-            }
+            else
+                item.Image = model.Image?.Trim() ?? string.Empty;
 
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "اسلاید با موفقیت ویرایش شد";
@@ -152,7 +153,6 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             var item = await _db.Sliders.FindAsync(new object[] { id }, ct);
             if (item is not null)
             {
-                await _storage.DeleteAsync(item.Image, ct);
                 item.IsDeleted = true;
                 item.DeletedAt = DateTime.Now;
                 await _db.SaveChangesAsync(ct);

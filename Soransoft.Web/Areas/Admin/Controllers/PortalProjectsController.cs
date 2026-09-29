@@ -40,7 +40,7 @@ public sealed class PortalProjectsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SaveProject(int id, string title, string? description, int displayOrder, bool isActive, IFormFile? featuredImage, CancellationToken ct)
+    public async Task<IActionResult> SaveProject(int id, string title, string? description, int displayOrder, bool isActive, string? featuredImagePath, IFormFile? featuredImage, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -57,7 +57,6 @@ public sealed class PortalProjectsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var previousImage = project.FeaturedImage;
         string? newImagePath = null;
         try
         {
@@ -69,6 +68,10 @@ public sealed class PortalProjectsController : Controller
             {
                 project.FeaturedImage = await _storage.SaveImageAsync(featuredImage, "partners/sellable-projects/images", ct);
                 newImagePath = project.FeaturedImage;
+            }
+            else
+            {
+                project.FeaturedImage = string.IsNullOrWhiteSpace(featuredImagePath) ? null : featuredImagePath.Trim();
             }
             if (id == 0) _db.SellableProjects.Add(project);
             await _db.SaveChangesAsync(ct);
@@ -98,9 +101,6 @@ public sealed class PortalProjectsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        if (!string.IsNullOrWhiteSpace(previousImage) && !string.Equals(previousImage, project.FeaturedImage, StringComparison.Ordinal))
-            await _storage.DeleteAsync(previousImage, ct);
-
         TempData["Success"] = id == 0 ? "پروژه قابل ارائه ایجاد شد." : "پروژه قابل ارائه ویرایش شد.";
         return RedirectToAction(nameof(Index));
     }
@@ -125,7 +125,6 @@ public sealed class PortalProjectsController : Controller
             document.DeletedAt = DateTime.Now;
             await _storage.DeleteAsync(document.StoredPath, ct);
         }
-        await _storage.DeleteAsync(project.FeaturedImage, ct);
         project.IsDeleted = true;
         project.DeletedAt = DateTime.Now;
         _db.SellableProjectPartners.RemoveRange(project.PartnerAccess);
@@ -142,10 +141,8 @@ public sealed class PortalProjectsController : Controller
         var project = await _db.SellableProjects.FirstOrDefaultAsync(p => p.Id == id, ct);
         if (project is null) { TempData["Error"] = "پروژه یافت نشد."; return RedirectToAction(nameof(Index)); }
 
-        var previousImage = project.FeaturedImage;
         project.FeaturedImage = null;
         await _db.SaveChangesAsync(ct);
-        await _storage.DeleteAsync(previousImage, ct);
         TempData["Success"] = "تصویر شاخص حذف شد.";
         return RedirectToAction(nameof(Index));
     }

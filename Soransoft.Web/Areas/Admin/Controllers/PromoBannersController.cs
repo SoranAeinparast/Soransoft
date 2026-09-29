@@ -42,6 +42,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
             if (imageFile is not null && imageFile.Length > 0)
                 model.Image = await _storage.SaveImageAsync(imageFile, "promo-banners", ct);
+            else
+                model.Image = string.IsNullOrWhiteSpace(model.Image) ? null : model.Image.Trim();
 
             _db.PromoBanners.Add(model);
             await _db.SaveChangesAsync(ct);
@@ -81,10 +83,9 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             item.OpenInNewTab = model.OpenInNewTab;
 
             if (imageFile is not null && imageFile.Length > 0)
-            {
-                await _storage.DeleteAsync(item.Image, ct);
                 item.Image = await _storage.SaveImageAsync(imageFile, "promo-banners", ct);
-            }
+            else
+                item.Image = string.IsNullOrWhiteSpace(model.Image) ? null : model.Image.Trim();
 
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "بنر پرومو با موفقیت ویرایش شد";
@@ -98,7 +99,6 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             var item = await _db.PromoBanners.FindAsync(new object[] { id }, ct);
             if (item is not null)
             {
-                await _storage.DeleteAsync(item.Image, ct);
                 item.IsDeleted = true;
                 item.DeletedAt = DateTime.Now;
                 await _db.SaveChangesAsync(ct);
