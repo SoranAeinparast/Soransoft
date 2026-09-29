@@ -139,6 +139,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public async Task<IActionResult> Index(CancellationToken ct)
         {
             var settings = await _db.SiteSettings
+                .Where(s => !s.Key.StartsWith("ServiceSlugRedirect:"))
                 .OrderBy(s => s.Group).ThenBy(s => s.DisplayOrder)
                 .ToListAsync(ct);
             return View(settings);
@@ -161,13 +162,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                     TempData["Error"] = $"مقدار تنظیم «{entity.Title}» باید یک لینک امن http/https یا مسیر داخلی باشد.";
                     continue;
                 }
-                var oldValue = entity.Value;
                 entity.Value = value;
                 var image = form.Files.GetFile($"settingFile_{entity.Id}");
                 if (entity.Type.Equals("image", StringComparison.OrdinalIgnoreCase) && image is not null && image.Length > 0)
                 {
                     entity.Value = await _storage.SaveImageAsync(image, "site-settings", ct);
-                    await _storage.DeleteAsync(oldValue, ct);
                 }
                 entity.UpdatedAt = DateTime.Now;
             }

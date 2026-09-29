@@ -181,6 +181,21 @@ namespace Soransoft.Infrastructure.Storage
                 Match(sl.Image, "اسلایدر", sl.Title, "Image", $"/Admin/Sliders/Edit/{sl.Id}");
             }
 
+            // بنرهای پرومو — تصویر بنر
+            foreach (var banner in await _db.PromoBanners.AsNoTracking()
+                .Select(b => new { b.Id, b.Title, b.Image }).ToListAsync(ct))
+            {
+                Match(banner.Image, "بنر پرومو", banner.Title, "Image", $"/Admin/PromoBanners/Edit/{banner.Id}");
+            }
+
+            // پروژه‌های آماده ارائه — تصویر شاخص و تصاویر توضیحات
+            foreach (var project in await _db.SellableProjects.AsNoTracking()
+                .Select(p => new { p.Id, p.Title, p.FeaturedImage, p.Description }).ToListAsync(ct))
+            {
+                Match(project.FeaturedImage, "پروژه قابل ارائه", project.Title, "Image", "/Admin/PortalProjects");
+                Match(project.Description, "پروژه قابل ارائه", project.Title, "Description", "/Admin/PortalProjects");
+            }
+
             // اعضای تیم — تصویر
             foreach (var t in await _db.TeamMembers.AsNoTracking()
                 .Select(t => new { t.Id, t.FullName, t.Image }).ToListAsync(ct))

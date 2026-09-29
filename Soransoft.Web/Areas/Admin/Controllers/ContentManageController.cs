@@ -9,12 +9,15 @@ namespace Soransoft.Web.Areas.Admin.Controllers
     /// <summary>مدیریت سرویس‌ها</summary>
     public class ServicesController : AdminBaseController
     {
+        private const string ServiceSlugRedirectPrefix = "ServiceSlugRedirect:";
         private readonly SoransoftDbContext _db;
         private readonly IFileStorage _storage;
-        public ServicesController(SoransoftDbContext db, IFileStorage storage)
+        private readonly ISiteSettingService _settings;
+        public ServicesController(SoransoftDbContext db, IFileStorage storage, ISiteSettingService settings)
         {
             _db = db;
             _storage = storage;
+            _settings = settings;
         }
 
         public async Task<IActionResult> Index(CancellationToken ct) =>
@@ -42,6 +45,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             model.CreatedAt = DateTime.Now;
             if (imageFile is not null && imageFile.Length > 0)
                 model.Image = await _storage.SaveImageAsync(imageFile, "services", ct);
+            else
+                model.Image = model.Image?.Trim() ?? string.Empty;
             _db.Services.Add(model);
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "سرویس با موفقیت ایجاد شد";
@@ -69,6 +74,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             var item = await _db.Services.FirstOrDefaultAsync(s => s.Id == model.Id, ct);
             if (item is null) return NotFound();
 
+            var previousSlug = item.Slug;
             var slug = string.IsNullOrWhiteSpace(model.Slug)
                 ? SlugGenerator.Generate(model.Title)
                 : SlugGenerator.Generate(model.Slug, transliterate: false);
@@ -86,8 +92,17 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
             if (imageFile is not null && imageFile.Length > 0)
             {
-                await _storage.DeleteAsync(item.Image, ct);
                 item.Image = await _storage.SaveImageAsync(imageFile, "services", ct);
+            }
+            else
+            {
+                item.Image = model.Image?.Trim() ?? string.Empty;
+            }
+
+            if (!string.Equals(previousSlug, item.Slug, StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrWhiteSpace(previousSlug))
+            {
+                await PreserveServiceSlugAsync(previousSlug, item.Slug, ct);
             }
 
             await _db.SaveChangesAsync(ct);
@@ -100,10 +115,52 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             var baseSlug = string.IsNullOrWhiteSpace(slug) ? "service" : slug;
             var candidate = baseSlug;
             var suffix = 2;
-            while (await _db.Services.AnyAsync(s => s.Slug == candidate && (excludeId == null || s.Id != excludeId), ct))
+            while (await _db.Services.AnyAsync(s => s.Slug == candidate && (excludeId == null || s.Id != excludeId), ct)
+                || await _db.SiteSettings.AnyAsync(s => s.Key == ServiceSlugRedirectKey(candidate), ct))
                 candidate = $"{baseSlug}-{suffix++}";
             return candidate;
         }
+
+        private async Task PreserveServiceSlugAsync(string oldSlug, string newSlug, CancellationToken ct)
+        {
+            oldSlug = oldSlug.Trim().ToLowerInvariant();
+            newSlug = newSlug.Trim().ToLowerInvariant();
+
+            var aliases = await _db.SiteSettings
+                .Where(s => s.Key.StartsWith(ServiceSlugRedirectPrefix) && s.Value == oldSlug)
+                .ToListAsync(ct);
+            foreach (var alias in aliases)
+            {
+                alias.Value = newSlug;
+                alias.UpdatedAt = DateTime.Now;
+            }
+
+            var key = ServiceSlugRedirectKey(oldSlug);
+            var redirect = await _db.SiteSettings.FirstOrDefaultAsync(s => s.Key == key, ct);
+            if (redirect is null)
+            {
+                _db.SiteSettings.Add(new Soransoft.Domain.Entities.SiteSetting
+                {
+                    Key = key,
+                    Title = $"آدرس قدیمی سرویس: {oldSlug}",
+                    Value = newSlug,
+                    Group = "ریدایرکت‌ها",
+                    Type = "text",
+                    DisplayOrder = 1,
+                });
+            }
+            else
+            {
+                redirect.Value = newSlug;
+                redirect.UpdatedAt = DateTime.Now;
+            }
+
+            await _db.SaveChangesAsync(ct);
+            await _settings.InvalidateCacheAsync();
+        }
+
+        private static string ServiceSlugRedirectKey(string slug) =>
+            $"{ServiceSlugRedirectPrefix}{slug.Trim().ToLowerInvariant()}";
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -249,6 +306,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             }
             if (imageFile is not null && imageFile.Length > 0)
                 model.Image = await _storage.SaveImageAsync(imageFile, "portfolios", ct);
+            else
+                model.Image = model.Image?.Trim() ?? string.Empty;
             _db.Portfolios.Add(model);
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "نمونه‌کار با موفقیت ایجاد شد";
@@ -293,8 +352,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
             if (imageFile is not null && imageFile.Length > 0)
             {
-                await _storage.DeleteAsync(item.Image, ct);
                 item.Image = await _storage.SaveImageAsync(imageFile, "portfolios", ct);
+            }
+            else
+            {
+                item.Image = model.Image?.Trim() ?? string.Empty;
             }
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "نمونه‌کار با موفقیت ویرایش شد";
@@ -308,7 +370,6 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             var item = await _db.Portfolios.FindAsync(new object[] { id }, ct);
             if (item is not null)
             {
-                await _storage.DeleteAsync(item.Image, ct);
                 item.IsDeleted = true;
                 item.DeletedAt = DateTime.Now;
                 await _db.SaveChangesAsync(ct);
@@ -362,6 +423,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
             if (imageFile is not null && imageFile.Length > 0)
                 model.Image = await _storage.SaveImageAsync(imageFile, "articles", ct);
+            else
+                model.Image = model.Image?.Trim() ?? string.Empty;
             _db.Articles.Add(model);
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "مقاله با موفقیت ایجاد شد";
@@ -407,8 +470,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
             if (imageFile is not null && imageFile.Length > 0)
             {
-                await _storage.DeleteAsync(item.Image, ct);
                 item.Image = await _storage.SaveImageAsync(imageFile, "articles", ct);
+            }
+            else
+            {
+                item.Image = model.Image?.Trim() ?? string.Empty;
             }
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "مقاله با موفقیت ویرایش شد";
@@ -422,7 +488,6 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             var item = await _db.Articles.FindAsync(new object[] { id }, ct);
             if (item is not null)
             {
-                await _storage.DeleteAsync(item.Image, ct);
                 item.IsDeleted = true;
                 item.DeletedAt = DateTime.Now;
                 await _db.SaveChangesAsync(ct);
@@ -768,6 +833,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             {
                 if (imageFile is not null && imageFile.Length > 0)
                     model.Image = await _storage.SaveImageAsync(imageFile, "team", ct);
+                else
+                    model.Image = model.Image?.Trim() ?? string.Empty;
                 _db.TeamMembers.Add(model);
                 await _db.SaveChangesAsync(ct);
                 TempData["Success"] = "عضو تیم ایجاد شد";
@@ -801,8 +868,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
                     if (imageFile is not null && imageFile.Length > 0)
                     {
-                        await _storage.DeleteAsync(item.Image, ct);
                         item.Image = await _storage.SaveImageAsync(imageFile, "team", ct);
+                    }
+                    else
+                    {
+                        item.Image = model.Image?.Trim() ?? string.Empty;
                     }
                     await _db.SaveChangesAsync(ct);
                     TempData["Success"] = "عضو تیم ویرایش شد";
