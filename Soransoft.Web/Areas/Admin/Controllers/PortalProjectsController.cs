@@ -71,7 +71,13 @@ public sealed class PortalProjectsController : Controller
             }
             else if (featuredImagePath is not null)
             {
-                project.FeaturedImage = string.IsNullOrWhiteSpace(featuredImagePath) ? null : featuredImagePath.Trim();
+                var normalizedImagePath = NormalizePublicImagePath(featuredImagePath);
+                if (!string.IsNullOrWhiteSpace(featuredImagePath) && normalizedImagePath is null)
+                {
+                    TempData["Error"] = "مسیر تصویر شاخص معتبر نیست. تصویر را از کتابخانه رسانه انتخاب کنید.";
+                    return RedirectToAction(nameof(Index));
+                }
+                project.FeaturedImage = normalizedImagePath;
             }
             if (id == 0) _db.SellableProjects.Add(project);
             await _db.SaveChangesAsync(ct);
@@ -342,4 +348,15 @@ public sealed class PortalProjectsController : Controller
     private static bool IsSafeExternalUrl(string? value) =>
         Uri.TryCreate(value?.Trim(), UriKind.Absolute, out var uri)
         && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+    private static string? NormalizePublicImagePath(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var path = value.Trim();
+        if (path.StartsWith("~/", StringComparison.Ordinal)) path = path[1..];
+        if (!path.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase)
+            || path.Contains("..", StringComparison.Ordinal))
+            return null;
+        return path;
+    }
 }

@@ -33,6 +33,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 TotalTariffPackages = await _db.TariffPackages.CountAsync(ct),
                 TotalTeamMembers = await _db.TeamMembers.CountAsync(ct),
                 TotalSiteUsers = await _db.SiteUsers.CountAsync(ct),
+                TotalSitePages = await _db.SitePages.CountAsync(ct),
                 TotalArticleVisits = await _db.Articles.SumAsync(a => (int?)a.VisitCount, ct) ?? 0,
                 RecentErrors = await _db.ErrorLogs.CountAsync(e => e.CreatedAt >= DateTime.Today, ct),
                 LatestOrders = await _db.ProjectOrders.OrderByDescending(o => o.CreatedAt).Take(5).ToListAsync(ct),

@@ -59,6 +59,7 @@ namespace Soransoft.Web.Models.Admin
         public int TotalTeamMembers { get; set; }
         public int TotalSiteUsers { get; set; }
         public int TotalMediaFiles { get; set; }
+        public int TotalSitePages { get; set; }
     }
 
     public class SlidersIndexViewModel

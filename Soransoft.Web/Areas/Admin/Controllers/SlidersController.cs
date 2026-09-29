@@ -25,6 +25,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         public async Task<IActionResult> Index(CancellationToken ct)
         {
             var settings = await _settings.GetAllAsync(ct);
+            await FillPagesAsync(ct);
             return View(new SlidersIndexViewModel
             {
                 Sliders = await _db.Sliders.OrderBy(s => s.DisplayOrder).ToListAsync(ct),
@@ -77,7 +78,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Create() => View(new Slider());
+        public async Task<IActionResult> Create(CancellationToken ct)
+        {
+            await FillPagesAsync(ct);
+            return View(new Slider());
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -86,11 +91,13 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             if (!IsSafeLink(model.Link))
             {
                 TempData["Error"] = "لینک اسلاید باید http/https یا مسیر داخلی باشد.";
+                await FillPagesAsync(ct);
                 return View(model);
             }
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                await FillPagesAsync(ct);
                 return View(model);
             }
 
@@ -109,6 +116,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         {
             var item = await _db.Sliders.FindAsync(new object[] { id }, ct);
             if (item is null) return NotFound();
+            await FillPagesAsync(ct);
             return View(item);
         }
 
@@ -119,11 +127,13 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             if (!IsSafeLink(model.Link))
             {
                 TempData["Error"] = "لینک اسلاید باید http/https یا مسیر داخلی باشد.";
+                await FillPagesAsync(ct);
                 return View(model);
             }
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                await FillPagesAsync(ct);
                 return View(model);
             }
 
@@ -169,6 +179,13 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             return Uri.TryCreate(value, UriKind.Absolute, out var uri)
                 && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
+
+        private async Task FillPagesAsync(CancellationToken ct) =>
+            ViewBag.Pages = await _db.SitePages.AsNoTracking()
+                .Where(p => p.IsPublished)
+                .OrderBy(p => p.DisplayOrder)
+                .ThenBy(p => p.Title)
+                .ToListAsync(ct);
 
         private static string GetSetting(IDictionary<string, string> settings, string key, string fallback) =>
             settings.TryGetValue(key, out var value) ? value : fallback;

@@ -247,8 +247,15 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         private readonly SoransoftDbContext _db;
         public MenuItemsController(SoransoftDbContext db) => _db = db;
 
-        public async Task<IActionResult> Index(CancellationToken ct) =>
-            View(await _db.MenuItems.OrderBy(m => m.Position).ThenBy(m => m.DisplayOrder).ToListAsync(ct));
+        public async Task<IActionResult> Index(CancellationToken ct)
+        {
+            ViewBag.Pages = await _db.SitePages.AsNoTracking()
+                .Where(p => p.IsPublished)
+                .OrderBy(p => p.DisplayOrder)
+                .ThenBy(p => p.Title)
+                .ToListAsync(ct);
+            return View(await _db.MenuItems.OrderBy(m => m.Position).ThenBy(m => m.DisplayOrder).ToListAsync(ct));
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
