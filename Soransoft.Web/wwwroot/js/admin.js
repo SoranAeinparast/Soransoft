@@ -4,9 +4,24 @@
     document.addEventListener('DOMContentLoaded', function () {
         var burger = document.getElementById('adminBurger');
         var sidebar = document.querySelector('.sn-admin-sidebar');
+        var closeButton = document.getElementById('adminSidebarClose');
+        var backdrop = document.getElementById('adminSidebarBackdrop');
         if (burger && sidebar) {
+            function setSidebarOpen(isOpen) {
+                sidebar.classList.toggle('show', isOpen);
+                document.body.classList.toggle('sn-sidebar-open', isOpen);
+            }
+
             burger.addEventListener('click', function () {
-                sidebar.classList.toggle('show');
+                setSidebarOpen(!sidebar.classList.contains('show'));
+            });
+            if (closeButton) closeButton.addEventListener('click', function () { setSidebarOpen(false); });
+            if (backdrop) backdrop.addEventListener('click', function () { setSidebarOpen(false); });
+            sidebar.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', function () { setSidebarOpen(false); });
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') setSidebarOpen(false);
             });
         }
 
