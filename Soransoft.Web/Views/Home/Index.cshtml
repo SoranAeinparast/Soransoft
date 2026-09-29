@@ -2,6 +2,7 @@
 @using Soransoft.Application.Interfaces
 @using Soransoft.Domain.Enums
 @using Soransoft.Domain.Entities
+@using System.Globalization
 @inject ISiteService Site
 @model Soransoft.Application.ViewModels.HomeViewModel
 @{
@@ -12,13 +13,19 @@
     var hasSlider = sliders.Any();
     bool F(string key) => !Model.Features.TryGetValue(key, out var enabled) || enabled;
     var logoPath = S("LogoImage", "images/soransoft-logo.png");
+    var sliderTransition = S("SliderTransition", "fade") == "slide" ? "slide" : "fade";
+    var sliderHeight = int.TryParse(S("SliderHeight", "560"), out var configuredHeight) ? Math.Clamp(configuredHeight, 300, 800) : 560;
+    var sliderOpacity = decimal.TryParse(S("SliderOverlayOpacity", "0.25"), NumberStyles.Number, CultureInfo.InvariantCulture, out var configuredOpacity)
+        ? Math.Clamp(configuredOpacity, 0, 1) : .25m;
+    var sliderInterval = int.TryParse(S("SliderInterval", "5000"), out var configuredInterval) ? Math.Clamp(configuredInterval, 2000, 30000) : 5000;
+    var sliderStyle = $"--sn-slider-height:{sliderHeight}px;--sn-slider-overlay-opacity:{sliderOpacity.ToString("0.##", CultureInfo.InvariantCulture)};";
     static string ArticleUrl(string slug, int id) => string.IsNullOrWhiteSpace(slug) ? $"/Article/{id}" : $"/Article/{Uri.EscapeDataString(slug)}";
 }
 
 <!-- هیرو / اسلایدر -->
 @if (F(SiteFeatures.HomeHero) && hasSlider)
 {
-    <section class="sn-hero p-0">
+    <section class="sn-hero p-0" style="@sliderStyle">
         @* کمان‌های تزئینی و عناصر شناور روی اسلایدر — مانند مرجع *@
         <div class="sn-arc sn-arc1"></div>
         <div class="sn-arc sn-arc2"></div>
@@ -27,7 +34,7 @@
         <i class="bi bi-code-slash sn-float-icon sn-f3"></i>
         <i class="bi bi-brush sn-float-icon sn-f4"></i>
 
-        <div id="heroSlider" class="carousel slide carousel-fade" data-bs-ride="carousel">
+        <div id="heroSlider" class="carousel slide @(sliderTransition == "fade" ? "carousel-fade" : "")" data-bs-ride="carousel" data-bs-interval="@sliderInterval">
             <div class="carousel-inner">
                 @{ var idx = 0; }
                 @foreach (var slide in sliders)
@@ -102,6 +109,8 @@ else if (F(SiteFeatures.HomeHero))
         </div>
     }
 }
+
+<partial name="_PromoBanners" model="Model.PromoBanners.Where(b => b.Placement == PromoBannerPlacement.HomeAfterHero)" />
 
 @if (F(SiteFeatures.HomeServices) && F(SiteFeatures.Services))
 {
@@ -317,3 +326,5 @@ else if (F(SiteFeatures.HomeHero))
     </div>
 </section>
 }
+
+<partial name="_PromoBanners" model="Model.PromoBanners.Where(b => b.Placement == PromoBannerPlacement.HomeBeforeFooter)" />
