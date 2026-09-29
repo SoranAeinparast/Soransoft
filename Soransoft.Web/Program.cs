@@ -221,10 +221,33 @@ app.UseWhen(
     branch => branch.UseStaticFiles());
 
 app.UseRouting();
-
 app.UseRequestLocalization();
 
 app.UseAuthentication();
+
+app.Use(async (context, next) =>
+{
+    var feature = context.RequestServices.GetRequiredService<ISiteFeatureService>();
+    var path = context.Request.Path;
+    var key = path.StartsWithSegments("/Partner")
+        ? SiteFeatures.PartnerPortal
+        : path.StartsWithSegments("/Account") || path.StartsWithSegments("/Panel")
+            ? SiteFeatures.SiteAccount
+            : path.StartsWithSegments("/verify/card")
+                ? SiteFeatures.CardVerification
+                : path.StartsWithSegments("/documents")
+                    ? SiteFeatures.PartnerPortal
+                    : null;
+
+    if (key is not null && !context.User.IsInRole("Admin") && !await feature.IsEnabledAsync(key, context.RequestAborted))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 
 app.MapControllers();

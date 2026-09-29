@@ -7,6 +7,7 @@ namespace Soransoft.Web.Models
     public class OurServicesViewModel
     {
         public List<ServiceCardViewModel> Services { get; set; } = new();
+        public IDictionary<string, string> Settings { get; set; } = new Dictionary<string, string>();
     }
 
     public class ArticlesViewModel
@@ -17,6 +18,7 @@ namespace Soransoft.Web.Models
         public int CurrentPage { get; set; }
         public int PageSize { get; set; }
         public int? SelectedCategoryId { get; set; }
+        public IDictionary<string, string> Settings { get; set; } = new Dictionary<string, string>();
     }
 
     public class AboutUsViewModel

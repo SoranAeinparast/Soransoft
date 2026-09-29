@@ -6,7 +6,7 @@
 }
 <section class="sn-page-hero">
     <div class="container text-center">
-        <h1 class="sn-hero-title">تمــــــــاس بـــــا مـــــا</h1>
+        <h1 class="sn-hero-title">@S("ContactHeroTitle", "تمــــــــاس بـــــا مـــــا")</h1>
     </div>
 </section>
 
@@ -50,11 +50,18 @@
                             <p class="mb-0 text-muted">@S("WorkingHours")</p>
                         </div>
                     </div>
+                    @if (Uri.TryCreate(S("ContactMapEmbedUrl"), UriKind.Absolute, out var mapUrl)
+                        && (mapUrl.Scheme == Uri.UriSchemeHttp || mapUrl.Scheme == Uri.UriSchemeHttps))
+                    {
+                        <div class="mt-4 rounded overflow-hidden">
+                            <iframe src="@mapUrl" title="نقشه محل شرکت" loading="lazy" style="width:100%;min-height:220px;border:0"></iframe>
+                        </div>
+                    }
                 </div>
             </div>
             <div class="col-12 col-lg-7">
                 <div class="sn-form-card">
-                    <h4 class="mb-4 text-center">منتظر تماس شما هستیم</h4>
+                    <h4 class="mb-4 text-center">@S("ContactFormTitle", "منتظر تماس شما هستیم")</h4>
                     @if (TempData["Success"] is string success)
                     {
                         <div class="alert alert-success text-center">@success</div>
@@ -88,7 +95,7 @@
                                 <span asp-validation-for="Message" class="text-danger small"></span>
                             </div>
                             <div class="col-12">
-                                <button type="submit" class="btn sn-btn-primary btn-lg w-100">ارسال پیام</button>
+                                <button type="submit" class="btn sn-btn-primary btn-lg w-100">@S("ContactSubmitText", "ارسال پیام")</button>
                             </div>
                         </div>
                     </form>

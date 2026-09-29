@@ -2,10 +2,12 @@
 @{
     ViewData["Title"] = "مقالات";
     var totalPages = (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
+    string S(string key, string def = "") => Model.Settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
+    static string ArticleUrl(string slug, int id) => string.IsNullOrWhiteSpace(slug) ? $"/Article/{id}" : $"/Article/{Uri.EscapeDataString(slug)}";
 }
 <section class="sn-page-hero">
     <div class="container text-center">
-        <h1 class="sn-hero-title">مقــاله‌ها</h1>
+        <h1 class="sn-hero-title">@S("BlogHeroTitle", "مقــاله‌ها")</h1>
     </div>
 </section>
 
@@ -14,10 +16,10 @@
         <div class="row g-4">
             <div class="col-12 col-lg-3">
                 <aside class="sn-sidebar">
-                    <h5 class="sn-sidebar-title">دسته‌بندی‌ها</h5>
+                    <h5 class="sn-sidebar-title">@S("BlogCategoriesTitle", "دسته‌بندی‌ها")</h5>
                     <ul class="list-unstyled sn-cat-list">
                         <li class="@(!Model.SelectedCategoryId.HasValue ? "active" : "")">
-                            <a href="/Articles">همه مقالات</a>
+                            <a href="/Articles">@S("BlogAllTitle", "همه مقالات")</a>
                         </li>
                         @foreach (var cat in Model.Categories)
                         {
@@ -31,7 +33,7 @@
             <div class="col-12 col-lg-9">
                 @if (!Model.Articles.Any())
                 {
-                    <p class="text-muted">مقاله‌ای یافت نشد.</p>
+                    <p class="text-muted">@S("BlogEmptyText", "مقاله‌ای یافت نشد.")</p>
                 }
                 <div class="row g-4">
                     @foreach (var article in Model.Articles)
@@ -49,15 +51,19 @@
                                     }
                                 </div>
                                 <div class="sn-article-body">
+                                    @if (article.IsFeatured)
+                                    {
+                                        <span class="sn-badge">ویژه</span>
+                                    }
                                     <span class="sn-badge">@article.CategoryTitle</span>
-                                    <h3><a href="/Article/@article.Slug">@article.Title</a></h3>
+                                    <h3><a href="@ArticleUrl(article.Slug, article.Id)">@article.Title</a></h3>
                                     <p>@(article.Summary.Length > 150 ? article.Summary[..150] + "…" : article.Summary)</p>
                                     <div class="sn-article-meta">
                                         <span><i class="bi bi-person me-1"></i>@article.AuthorName</span>
                                         <span><i class="bi bi-calendar3 me-1"></i>@PersianDisplay.Date(article.PublishedAt)</span>
                                         <span><i class="bi bi-eye me-1"></i>@article.VisitCount</span>
                                     </div>
-                                    <a href="/Article/@article.Slug" class="sn-readmore">مطالعه <i class="bi bi-arrow-left"></i></a>
+                                    <a href="@ArticleUrl(article.Slug, article.Id)" class="sn-readmore">مطالعه <i class="bi bi-arrow-left"></i></a>
                                 </div>
                             </article>
                         </div>

@@ -1,6 +1,9 @@
 @model Soransoft.Domain.Entities.Article
+@inject Soransoft.Application.Interfaces.ISiteSettingService Settings
 @{
     ViewData["Title"] = Model.Title;
+    var settings = await Settings.GetAllAsync();
+    string S(string key, string def = "") => settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
 }
 <section class="sn-page-hero">
     <div class="container text-center">
@@ -26,7 +29,7 @@
                     @Html.Raw(SafeHtml.Sanitize(Model.Body))
                 </div>
                 <div class="text-center mt-5">
-                    <a href="/Articles" class="btn sn-btn-outline">همه مقالات</a>
+                    <a href="/Articles" class="btn sn-btn-outline">@S("ArticleBackCta", "همه مقالات")</a>
                 </div>
             </div>
         </div>
