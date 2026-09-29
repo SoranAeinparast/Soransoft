@@ -121,7 +121,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         {
             if (string.IsNullOrWhiteSpace(value)) return true;
             value = value.Trim();
-            if (value.StartsWith('/', StringComparison.Ordinal) && !value.StartsWith("//", StringComparison.Ordinal)) return true;
+            if (value.StartsWith("/", StringComparison.Ordinal) && !value.StartsWith("//", StringComparison.Ordinal)) return true;
             return Uri.TryCreate(value, UriKind.Absolute, out var uri)
                 && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }

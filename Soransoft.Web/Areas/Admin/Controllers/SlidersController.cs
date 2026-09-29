@@ -30,10 +30,10 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 Sliders = await _db.Sliders.OrderBy(s => s.DisplayOrder).ToListAsync(ct),
                 Settings = new SliderSettingsViewModel
                 {
-                    TransitionEffect = settings.GetValueOrDefault("SliderTransition", "fade") == "slide" ? "slide" : "fade",
-                    Height = ParseInt(settings.GetValueOrDefault("SliderHeight", "560"), 560, 300, 800),
-                    OverlayOpacity = ParseDecimal(settings.GetValueOrDefault("SliderOverlayOpacity", "0.25"), .25m, 0, 1),
-                    Interval = ParseInt(settings.GetValueOrDefault("SliderInterval", "5000"), 5000, 2000, 30000),
+                    TransitionEffect = GetSetting(settings, "SliderTransition", "fade") == "slide" ? "slide" : "fade",
+                    Height = ParseInt(GetSetting(settings, "SliderHeight", "560"), 560, 300, 800),
+                    OverlayOpacity = ParseDecimal(GetSetting(settings, "SliderOverlayOpacity", "0.25"), .25m, 0, 1),
+                    Interval = ParseInt(GetSetting(settings, "SliderInterval", "5000"), 5000, 2000, 30000),
                 }
             });
         }
@@ -165,10 +165,13 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         {
             if (string.IsNullOrWhiteSpace(value)) return true;
             value = value.Trim();
-            if (value.StartsWith('/', StringComparison.Ordinal) && !value.StartsWith("//", StringComparison.Ordinal)) return true;
+            if (value.StartsWith("/", StringComparison.Ordinal) && !value.StartsWith("//", StringComparison.Ordinal)) return true;
             return Uri.TryCreate(value, UriKind.Absolute, out var uri)
                 && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
+
+        private static string GetSetting(IDictionary<string, string> settings, string key, string fallback) =>
+            settings.TryGetValue(key, out var value) ? value : fallback;
 
         private static int ParseInt(string value, int fallback, int min, int max) =>
             int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
