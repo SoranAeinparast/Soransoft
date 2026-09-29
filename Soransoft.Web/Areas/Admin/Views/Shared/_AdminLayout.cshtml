@@ -24,6 +24,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} | پنل مدیریت" : "پنل مدیریت سوران سافت")</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/tinymce/skins/ui/oxide/skin.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.3/dist/sweetalert2.min.css" />
@@ -43,7 +44,8 @@
                 <a href="/Admin/Dashboard" class="@(controller == "Dashboard" ? "active" : "")"><i class="bi bi-speedometer2"></i> داشبورد</a>
 
                 <div class="sn-admin-nav-group sn-nav-group-content">مدیریت محتوا</div>
-                <a href="/Admin/Sliders" class="@(controller == "Sliders" ? "active" : "")"><i class="bi bi-images"></i> اسلایدر صفحه اصلی</a>
+                 <a href="/Admin/Sliders" class="@(controller == "Sliders" ? "active" : "")"><i class="bi bi-images"></i> اسلایدر صفحه اصلی</a>
+                 <a href="/Admin/PromoBanners" class="@(controller == "PromoBanners" ? "active" : "")"><i class="bi bi-megaphone"></i> بنرهای پرومو</a>
                 <a href="/Admin/Services" class="@(controller == "Services" ? "active" : "")"><i class="bi bi-gear"></i> سرویس‌ها</a>
                 <a href="/Admin/Portfolios" class="@(controller == "Portfolios" ? "active" : "")"><i class="bi bi-collection"></i> نمونه‌کارها</a>
                 <a href="/Admin/Articles" class="@(controller == "Articles" ? "active" : "")"><i class="bi bi-journal-text"></i> مقالات</a>

@@ -232,17 +232,51 @@ body.dark_mode .sn-theme-toggle .bi-moon-stars { display: inline-block; }
     inset: 0;
     background-size: cover;
     background-position: center;
-    opacity: .14;
+    opacity: var(--sn-slider-overlay-opacity, .14);
 }
 
 .sn-hero-slide {
     padding: 5.5rem 1rem;
     position: relative;
-    min-height: 340px;
+    min-height: var(--sn-slider-height, 340px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+.sn-hero .carousel-inner,
+.sn-hero .carousel-item { min-height: var(--sn-slider-height, 340px); }
+
+.sn-promo-section { padding: 1.5rem 0 0; }
+.sn-promo-card {
+    min-height: 180px;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    border-radius: 22px;
+    background: var(--sn-surface);
+    box-shadow: var(--sn-neu);
+}
+.sn-promo-card img { width: 34%; min-height: 180px; object-fit: cover; }
+.sn-promo-card-body { padding: 1.4rem 1.5rem; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.sn-promo-card-body h2 { margin: .45rem 0; font-size: 1.25rem; }
+.sn-promo-card-body p { margin: 0 0 1rem; color: var(--sn-muted); }
+.sn-promo-badge { color: var(--sn-primary-dark); font-size: .8rem; font-weight: 700; }
+.sn-promo-ticker { overflow: hidden; background: var(--sn-primary); color: #fff; padding: .6rem 0; }
+.sn-promo-ticker-track { width: max-content; min-width: 100%; display: flex; justify-content: center; gap: 1.5rem; animation: snPromoTicker 22s linear infinite; }
+.sn-promo-ticker-link { color: inherit; text-decoration: none; display: flex; gap: 1.5rem; }
+.sn-promo-ticker span { opacity: .9; }
+@keyframes snPromoTicker { from { transform: translateX(0); } to { transform: translateX(-12%); } }
+.sn-promo-fixed { position: fixed; z-index: 1040; bottom: 1rem; right: 1rem; max-width: min(360px, calc(100vw - 2rem)); border-radius: 16px; overflow: hidden; background: var(--sn-surface); box-shadow: 0 12px 30px rgba(0,0,0,.2); }
+.sn-promo-fixed a, .sn-promo-fixed > span { display: flex; align-items: center; gap: .75rem; padding: .65rem .8rem; color: inherit; text-decoration: none; }
+.sn-promo-fixed img { width: 72px; height: 54px; object-fit: cover; border-radius: 10px; }
+.sn-promo-fixed span { display: flex; flex-direction: column; gap: .15rem; font-size: .82rem; }
+@media (max-width: 576px) {
+    .sn-promo-card { display: block; }
+    .sn-promo-card img { width: 100%; height: 130px; min-height: 0; }
+    .sn-promo-ticker-track { justify-content: flex-start; animation-duration: 18s; }
+    .sn-promo-fixed { bottom: .75rem; right: .75rem; }
 }
 
 .sn-hero-indicators {

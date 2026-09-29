@@ -22,6 +22,7 @@
     var partnerPortalEnabled = await Features.IsEnabledAsync(SiteFeatures.PartnerPortal);
     var consultationEnabled = await Features.IsEnabledAsync(SiteFeatures.Consultation);
     var contactEnabled = await Features.IsEnabledAsync(SiteFeatures.Contact);
+    var siteWidePromoBanners = await Site.GetPromoBannersAsync(Soransoft.Domain.Enums.PromoBannerPlacement.SiteWide);
 
     // ---------- سئو: Open Graph / Twitter Card / Canonical ----------
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host.Value}".TrimEnd('/');
@@ -128,6 +129,8 @@
             </nav>
         </div>
     </header>
+
+    <partial name="_PromoBanners" model="siteWidePromoBanners" />
 
     <!-- منوی موبایل -->
     <div class="offcanvas offcanvas-start sn-mobile-menu" tabindex="-1" id="mobileMenu">

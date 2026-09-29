@@ -1,0 +1,75 @@
+@model IEnumerable<Soransoft.Domain.Entities.PromoBanner>
+@using Soransoft.Domain.Enums
+
+@foreach (var ticker in Model.Where(b => b.Type == PromoBannerType.ScrollingText))
+{
+    <div class="sn-promo-ticker" role="status">
+        <div class="sn-promo-ticker-track">
+            @if (!string.IsNullOrWhiteSpace(ticker.Link))
+            {
+                <a href="@ticker.Link" class="sn-promo-ticker-link" target="@(ticker.OpenInNewTab ? "_blank" : null)" rel="@(ticker.OpenInNewTab ? "noopener" : null)">
+                    <strong>@ticker.Title</strong><span>@ticker.Text</span>
+                </a>
+            }
+            else
+            {
+                <strong>@ticker.Title</strong><span>@ticker.Text</span>
+            }
+        </div>
+    </div>
+}
+
+@{ var cards = Model.Where(b => b.Type == PromoBannerType.FeaturedCard).ToList(); }
+@if (cards.Count > 0)
+{
+    <section class="sn-promo-section">
+        <div class="container">
+            <div class="row g-3">
+                @foreach (var banner in cards)
+                {
+                    <div class="col-12 col-md-@(cards.Count == 1 ? "12" : "6")">
+                        <article class="sn-promo-card">
+                            @if (!string.IsNullOrWhiteSpace(banner.Image))
+                            {
+                                <img src="@banner.Image" alt="@banner.Title" loading="lazy" />
+                            }
+                            <div class="sn-promo-card-body">
+                                @if (!string.IsNullOrWhiteSpace(banner.Badge))
+                                {
+                                    <span class="sn-promo-badge">@banner.Badge</span>
+                                }
+                                <h2>@banner.Title</h2>
+                                @if (!string.IsNullOrWhiteSpace(banner.Text))
+                                {
+                                    <p>@banner.Text</p>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(banner.Link))
+                                {
+                                    <a href="@banner.Link" class="btn sn-btn-primary" target="@(banner.OpenInNewTab ? "_blank" : null)" rel="@(banner.OpenInNewTab ? "noopener" : null)">@(string.IsNullOrWhiteSpace(banner.ButtonText) ? "بیشتر بدانید" : banner.ButtonText)</a>
+                                }
+                            </div>
+                        </article>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@foreach (var banner in Model.Where(b => b.Type == PromoBannerType.FixedAd))
+{
+    <div class="sn-promo-fixed" role="complementary">
+        @if (!string.IsNullOrWhiteSpace(banner.Link))
+        {
+            <a href="@banner.Link" target="@(banner.OpenInNewTab ? "_blank" : null)" rel="@(banner.OpenInNewTab ? "noopener" : null)">
+                @if (!string.IsNullOrWhiteSpace(banner.Image)) { <img src="@banner.Image" alt="@banner.Title" /> }
+                <span><strong>@banner.Title</strong>@banner.Text</span>
+            </a>
+        }
+        else
+        {
+            @if (!string.IsNullOrWhiteSpace(banner.Image)) { <img src="@banner.Image" alt="@banner.Title" /> }
+            <span><strong>@banner.Title</strong>@banner.Text</span>
+        }
+    </div>
+}
