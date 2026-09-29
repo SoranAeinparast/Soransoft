@@ -1505,6 +1505,9 @@ namespace Soransoft.Infrastructure.Persistence.Migrations
                     b.Property<int>("Placement")
                         .HasColumnType("int");
 
+                    b.Property<int>("ScrollDirection")
+                        .HasColumnType("int");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasMaxLength(1000)
