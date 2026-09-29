@@ -71,4 +71,26 @@ namespace Soransoft.Domain.Enums
         /// <summary>فوتر</summary>
         Footer = 3
     }
+
+    /// <summary>نوع بنر تبلیغاتی/پرومو</summary>
+    public enum PromoBannerType
+    {
+        /// <summary>نوار متن متحرک</summary>
+        ScrollingText = 1,
+        /// <summary>کارت ویژه</summary>
+        FeaturedCard = 2,
+        /// <summary>بنر ثابت تبلیغاتی</summary>
+        FixedAd = 3
+    }
+
+    /// <summary>محل قرارگیری بنر پرومو</summary>
+    public enum PromoBannerPlacement
+    {
+        /// <summary>در همه صفحات</summary>
+        SiteWide = 1,
+        /// <summary>پس از هیرو صفحه اصلی</summary>
+        HomeAfterHero = 2,
+        /// <summary>پیش از فوتر صفحه اصلی</summary>
+        HomeBeforeFooter = 3
+    }
 }
