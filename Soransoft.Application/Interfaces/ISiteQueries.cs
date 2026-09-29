@@ -19,6 +19,7 @@ namespace Soransoft.Application.Interfaces
         /// <summary>مقالات منتشرشده برای نقشه سایت</summary>
         Task<List<ArticleSitemapItem>> GetPublishedArticleSitemapItemsAsync(CancellationToken ct = default);
         Task<Service?> GetServiceBySlugAsync(string slug, CancellationToken ct = default);
+        Task<Service?> GetServiceByKindAsync(ServiceKind kind, CancellationToken ct = default);
         Task<List<ArticleCategory>> GetArticleCategoriesAsync(CancellationToken ct = default);
         Task<List<TeamMember>> GetTeamMembersAsync(CancellationToken ct = default);
         Task<List<TariffSection>> GetTariffSectionsAsync(CancellationToken ct = default);
