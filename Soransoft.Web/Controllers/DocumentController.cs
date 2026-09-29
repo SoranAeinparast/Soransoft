@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
+using Soransoft.Infrastructure.Storage;
 using System.Security.Claims;
 
 namespace Soransoft.Web.Controllers
@@ -21,12 +22,14 @@ namespace Soransoft.Web.Controllers
 
         private readonly SoransoftDbContext _db;
         private readonly string _documentsRoot;
+        private readonly string _persistentProfileRoot;
         private readonly FileExtensionContentTypeProvider _contentTypes = new();
 
-        public DocumentController(SoransoftDbContext db, IWebHostEnvironment environment)
+        public DocumentController(SoransoftDbContext db, IWebHostEnvironment environment, IConfiguration configuration)
         {
             _db = db;
             _documentsRoot = Path.GetFullPath(Path.Combine(environment.ContentRootPath, "App_Data", "PrivateDocuments"));
+            _persistentProfileRoot = PersistentProfileStorage.ResolveRoot(environment, configuration);
         }
 
         [HttpGet("download")]
@@ -193,10 +196,22 @@ namespace Soransoft.Web.Controllers
         {
             try
             {
-                var root = _documentsRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                    + Path.DirectorySeparatorChar;
-                var fullPath = Path.GetFullPath(Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar)));
-                return fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase) ? fullPath : null;
+                var roots = PersistentProfileStorage.IsProfilePath(relativePath)
+                    ? new[] { _persistentProfileRoot, _documentsRoot }
+                    : new[] { _documentsRoot };
+
+                string? firstPath = null;
+                foreach (var rootPath in roots)
+                {
+                    var root = rootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                        + Path.DirectorySeparatorChar;
+                    var fullPath = Path.GetFullPath(Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+                    if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase)) return null;
+                    firstPath ??= fullPath;
+                    if (System.IO.File.Exists(fullPath)) return fullPath;
+                }
+
+                return firstPath;
             }
             catch (ArgumentException)
             {

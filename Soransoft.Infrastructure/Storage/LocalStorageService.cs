@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Soransoft.Application.Interfaces;
 using Soransoft.Infrastructure.Imaging;
 using System.Security;
@@ -14,14 +15,16 @@ namespace Soransoft.Infrastructure.Storage
         private readonly string[] _allowedImageExt = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp" };
         private readonly string[] _allowedDocExt = { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".zip", ".rar", ".mp4", ".webm", ".mov", ".png", ".jpg", ".jpeg", ".webp" };
         private readonly string _privateDocumentsRoot;
+        private readonly string _persistentProfileRoot;
         private const long MaxImageSize = 20 * 1024 * 1024; // 20MB قبل از بهینه‌سازی
         private const long MaxDocSize = 20 * 1024 * 1024;   // 20MB
 
-        public LocalFileStorage(IWebHostEnvironment env, IImageOptimizer optimizer)
+        public LocalFileStorage(IWebHostEnvironment env, IImageOptimizer optimizer, IConfiguration configuration)
         {
             _env = env;
             _optimizer = optimizer;
             _privateDocumentsRoot = Path.GetFullPath(Path.Combine(_env.ContentRootPath, "App_Data", "PrivateDocuments"));
+            _persistentProfileRoot = PersistentProfileStorage.ResolveRoot(_env, configuration);
         }
 
         public async Task<string> SaveImageAsync(IFormFile file, string folder, CancellationToken ct = default)
@@ -47,7 +50,10 @@ namespace Soransoft.Infrastructure.Storage
             if (file.Length > MaxDocSize) throw new InvalidOperationException("حجم فایل نباید بیشتر از ۲۰ مگابایت باشد.");
 
             var safeFolder = NormalizeFolder(folder);
-            var dir = ResolveUnderRoot(_privateDocumentsRoot, safeFolder);
+            var storageRoot = PersistentProfileStorage.IsProfileFolder(safeFolder)
+                ? _persistentProfileRoot
+                : _privateDocumentsRoot;
+            var dir = ResolveUnderRoot(storageRoot, safeFolder);
             Directory.CreateDirectory(dir);
 
             var fileName = $"{Guid.NewGuid():N}{ext}";
@@ -67,7 +73,7 @@ namespace Soransoft.Infrastructure.Storage
             try
             {
                 full = privateRelativePath is not null
-                    ? ResolveUnderRoot(_privateDocumentsRoot, privateRelativePath)
+                    ? ResolveStoredPrivatePath(privateRelativePath)
                     : ResolvePublicUploadPath(relativePath);
             }
             catch (SecurityException)
@@ -80,7 +86,22 @@ namespace Soransoft.Infrastructure.Storage
             }
 
             if (full is not null && File.Exists(full)) File.Delete(full);
+            if (privateRelativePath is not null && PersistentProfileStorage.IsProfilePath(privateRelativePath))
+            {
+                var legacy = ResolveUnderRoot(_privateDocumentsRoot, privateRelativePath);
+                if (File.Exists(legacy)) File.Delete(legacy);
+            }
             return Task.CompletedTask;
+        }
+
+        private string ResolveStoredPrivatePath(string relativePath)
+        {
+            if (!PersistentProfileStorage.IsProfilePath(relativePath))
+                return ResolveUnderRoot(_privateDocumentsRoot, relativePath);
+
+            var persistent = ResolveUnderRoot(_persistentProfileRoot, relativePath);
+            if (File.Exists(persistent)) return persistent;
+            return ResolveUnderRoot(_privateDocumentsRoot, relativePath);
         }
 
         private string NormalizeFolder(string folder)

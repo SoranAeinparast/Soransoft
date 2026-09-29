@@ -7,6 +7,7 @@ using Soransoft.Application.DependencyInjection;
 using Soransoft.Application.Interfaces;
 using Soransoft.Infrastructure.Persistence;
 using Soransoft.Infrastructure.DependencyInjection;
+using Soransoft.Infrastructure.Storage;
 using Soransoft.Web.Infrastructure;
 using Soransoft.Web.Middleware;
 using System.Globalization;
@@ -183,6 +184,7 @@ using (var scope = app.Services.CreateScope())
             db,
             app.Environment.ContentRootPath,
             app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"),
+            PersistentProfileStorage.ResolveRoot(app.Environment, app.Configuration),
             startupLogger);
         await DbSeeder.SeedAsync(db, hasher, builder.Configuration);
     }

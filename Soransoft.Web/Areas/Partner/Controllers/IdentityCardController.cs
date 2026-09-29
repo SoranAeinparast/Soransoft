@@ -4,6 +4,7 @@ using QRCoder;
 using SkiaSharp;
 using Soransoft.Domain.Entities;
 using Soransoft.Infrastructure.Persistence;
+using Soransoft.Infrastructure.Storage;
 using Soransoft.Web.Services;
 using System.Globalization;
 using PartnerEntity = Soransoft.Domain.Entities.Partner;
@@ -16,12 +17,14 @@ namespace Soransoft.Web.Areas.Partner.Controllers
         private readonly SoransoftDbContext _db;
         private readonly IWebHostEnvironment _environment;
         private readonly IConfiguration _configuration;
+        private readonly string _persistentProfileRoot;
 
         public IdentityCardController(SoransoftDbContext db, IWebHostEnvironment environment, IConfiguration configuration)
         {
             _db = db;
             _environment = environment;
             _configuration = configuration;
+            _persistentProfileRoot = PersistentProfileStorage.ResolveRoot(environment, configuration);
         }
 
         [HttpGet]
@@ -140,9 +143,19 @@ namespace Soransoft.Web.Areas.Partner.Controllers
             if (index < 0) return null;
             var relative = Uri.UnescapeDataString(storedPath[(index + marker.Length)..].Split('&', 2)[0]).Replace('\\', '/').Trim('/');
             if (string.IsNullOrWhiteSpace(relative) || relative.Split('/').Any(x => x is "." or ".." || x.Contains(':') || x.Contains('\0'))) return null;
-            var root = Path.GetFullPath(Path.Combine(_environment.ContentRootPath, "App_Data", "PrivateDocuments"));
-            var full = Path.GetFullPath(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
-            return full.StartsWith(root.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ? full : null;
+            var roots = PersistentProfileStorage.IsProfilePath(relative)
+                ? new[] { _persistentProfileRoot, Path.Combine(_environment.ContentRootPath, "App_Data", "PrivateDocuments") }
+                : new[] { Path.Combine(_environment.ContentRootPath, "App_Data", "PrivateDocuments") };
+            string? first = null;
+            foreach (var rootPath in roots)
+            {
+                var root = Path.GetFullPath(rootPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                var full = Path.GetFullPath(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
+                if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) return null;
+                first ??= full;
+                if (System.IO.File.Exists(full)) return full;
+            }
+            return first;
         }
 
         private static string PersonnelCode(int id) => $"P-{id.ToString("D5", CultureInfo.InvariantCulture)}";
