@@ -24,6 +24,7 @@ namespace Soransoft.Infrastructure.DependencyInjection
             services.AddSingleton<IImageOptimizer, SkiaImageOptimizer>();
             services.AddScoped<IFileStorage, LocalFileStorage>();
             services.AddScoped<ISiteSettingService, SiteSettingService>();
+            services.AddScoped<ISiteFeatureService, SiteFeatureService>();
             services.AddScoped<ISiteContext, SiteContext>();
             services.AddScoped<ISiteQueries, SiteQueries>();
             services.AddScoped<IFormService, FormService>();

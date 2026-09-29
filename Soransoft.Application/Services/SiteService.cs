@@ -10,11 +10,13 @@ namespace Soransoft.Application.Services
     {
         private readonly ISiteQueries _queries;
         private readonly ISiteSettingService _settings;
+        private readonly ISiteFeatureService _features;
 
-        public SiteService(ISiteQueries queries, ISiteSettingService settings)
+        public SiteService(ISiteQueries queries, ISiteSettingService settings, ISiteFeatureService features)
         {
             _queries = queries;
             _settings = settings;
+            _features = features;
         }
 
         public async Task<HomeViewModel> GetHomePageAsync(CancellationToken ct = default)
@@ -26,10 +28,12 @@ namespace Soransoft.Application.Services
             var tariffSections = await _queries.GetTariffSectionsAsync(ct);
             var timelines = await _queries.GetTimelinesAsync(ct);
             var settings = await _settings.GetAllAsync(ct);
+            var features = (await _features.GetAllAsync(ct)).ToDictionary(f => f.Key, f => f.IsEnabled);
 
             return new HomeViewModel
             {
                 Settings = settings,
+                Features = features,
                 Services = services,
                 Portfolios = portfolios,
                 LatestArticles = latestArticles,
@@ -79,6 +83,9 @@ namespace Soransoft.Application.Services
 
         public Task<Service?> GetServiceBySlugAsync(string slug, CancellationToken ct = default) =>
             _queries.GetServiceBySlugAsync(slug, ct);
+
+        public Task<Service?> GetServiceByKindAsync(ServiceKind kind, CancellationToken ct = default) =>
+            _queries.GetServiceByKindAsync(kind, ct);
 
         public Task<List<ArticleCategory>> GetArticleCategoriesAsync(CancellationToken ct = default) =>
             _queries.GetArticleCategoriesAsync(ct);

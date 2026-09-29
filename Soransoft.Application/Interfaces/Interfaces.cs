@@ -48,6 +48,8 @@ namespace Soransoft.Application.Interfaces
         Task<IDictionary<string, string>> GetAllAsync(CancellationToken ct = default);
         Task<IDictionary<string, SiteSetting>> GetAllEntitiesAsync(CancellationToken ct = default);
         Task UpdateAsync(IEnumerable<(string Key, string Value)> updates, CancellationToken ct = default);
+        Task SetAsync(string key, string value, CancellationToken ct = default);
+        Task InvalidateCacheAsync();
     }
 
     /// <summary>زمینه‌ی سایت</summary>

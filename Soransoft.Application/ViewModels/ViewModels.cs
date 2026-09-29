@@ -121,6 +121,7 @@ namespace Soransoft.Application.ViewModels
     {
         public string Title { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
+        public string? FeatureKey { get; set; }
     }
 
     /// <summary>مدل ویوی صفحه اصلی</summary>
@@ -134,16 +135,19 @@ namespace Soransoft.Application.ViewModels
         public List<TariffSectionViewModel> TariffSections { get; set; } = new();
         public List<ServiceTimelineViewModel> Timelines { get; set; } = new();
         public IDictionary<string, string> Settings { get; set; } = new Dictionary<string, string>();
+        public IDictionary<string, bool> Features { get; set; } = new Dictionary<string, bool>();
     }
 
     /// <summary>کارت سرویس</summary>
     public class ServiceCardViewModel
     {
         public int Id { get; set; }
+        public ServiceKind Kind { get; set; }
         public string Title { get; set; } = string.Empty;
         public string ShortDescription { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public string Icon { get; set; } = "bi-globe2";
+        public string Image { get; set; } = string.Empty;
         public bool ComingSoon { get; set; }
         public string? CtaText { get; set; }
     }
@@ -173,6 +177,7 @@ namespace Soransoft.Application.ViewModels
         public string CategoryTitle { get; set; } = string.Empty;
         public DateTime PublishedAt { get; set; }
         public int VisitCount { get; set; }
+        public bool IsFeatured { get; set; }
     }
 
     /// <summary>بخش تعرفه برای ویو</summary>
