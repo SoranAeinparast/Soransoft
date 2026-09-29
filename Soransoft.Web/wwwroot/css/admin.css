@@ -141,6 +141,9 @@ a .sn-stat-card { color: inherit; }
 
 /* پروژه‌های تیم فنی */
 .sn-dev-project-card { height: auto; }
+.sn-dev-projects-page > .sn-admin-card { height: auto; }
+.sn-dev-projects-page > .row { align-items: start; }
+.sn-dev-projects-page .sn-admin-card { overflow: visible; }
 .sn-dev-project-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .sn-dev-project-head h6 { font-size: 1rem; font-weight: 800; }
 .sn-dev-project-stats { display: flex; flex-wrap: wrap; gap: .45rem 1rem; margin-top: 1rem; padding-top: .75rem; border-top: 1px solid #edf2f3; color: #687b85; font-size: .78rem; }
@@ -348,6 +351,11 @@ a .sn-stat-card { color: inherit; }
 
 .sn-media-pick:hover, .sn-media-pick:focus { border-color: #00b3a4; }
 .sn-media-pick img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.sn-media-picker-field { display: grid; gap: .55rem; }
+.sn-media-picker-input { background: #f8fbfc; }
+.sn-media-picker-button { white-space: nowrap; }
+.sn-media-picker-clear { min-width: 40px; }
+.sn-media-picker-preview { width: 160px; height: 90px; object-fit: contain; padding: .25rem; background: #f8fbfc; border: 1px solid #dfe9ec; border-radius: 10px; }
 
 /* ---------- Login ---------- */
 .sn-admin-login {

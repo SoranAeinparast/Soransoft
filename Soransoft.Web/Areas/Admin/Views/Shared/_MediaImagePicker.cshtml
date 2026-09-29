@@ -1,0 +1,22 @@
+@model string?
+@{
+    var inputName = ViewData["MediaInputName"] as string ?? "Image";
+    var inputId = ViewData["MediaInputId"] as string ?? $"media-{Guid.NewGuid():N}";
+    var previewId = ViewData["MediaPreviewId"] as string ?? $"{inputId}-preview";
+    var value = Model?.Trim() ?? string.Empty;
+    var previewUrl = value.StartsWith("/", StringComparison.Ordinal) || value.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+        ? value
+        : "~/" + value.TrimStart('~', '/');
+}
+<div class="sn-media-picker-field">
+    <div class="input-group">
+        <input id="@inputId" name="@inputName" value="@value" class="form-control sn-media-picker-input" dir="ltr" readonly data-media-input />
+        <button type="button" class="btn btn-outline-primary sn-media-picker-button" data-media-picker-trigger data-media-target="@inputId" data-media-preview="@previewId">
+            <i class="bi bi-images me-1"></i> انتخاب از رسانه
+        </button>
+        <button type="button" class="btn btn-outline-secondary sn-media-picker-clear" data-media-picker-clear data-media-target="@inputId" data-media-preview="@previewId" title="حذف انتخاب">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <img id="@previewId" src="@previewUrl" alt="پیش‌نمایش تصویر" class="sn-media-picker-preview @(string.IsNullOrWhiteSpace(value) ? "d-none" : "")" />
+</div>

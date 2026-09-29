@@ -26,6 +26,7 @@
         }
 
         initRichTextEditors();
+        initMediaFieldPickers();
     });
 
     // ---------- ویرایشگر متن پیشرفته (TinyMCE) ----------
@@ -115,6 +116,40 @@
                             if (tinymce.get(editor.id)) editor.save();
                         });
                     }
+                }
+            });
+        });
+    }
+
+    // ---------- انتخاب تصویر برای فیلدهای محتوایی ----------
+    function initMediaFieldPickers() {
+        document.querySelectorAll('[data-media-picker-trigger]').forEach(function (trigger) {
+            trigger.addEventListener('click', function () {
+                var input = document.getElementById(trigger.dataset.mediaTarget);
+                var preview = document.getElementById(trigger.dataset.mediaPreview);
+                if (!input) return;
+                openMediaLibraryPicker(function (url) {
+                    input.value = url;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    if (preview) {
+                        preview.src = url;
+                        preview.classList.remove('d-none');
+                    }
+                });
+            });
+        });
+
+        document.querySelectorAll('[data-media-picker-clear]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var input = document.getElementById(button.dataset.mediaTarget);
+                var preview = document.getElementById(button.dataset.mediaPreview);
+                if (input) {
+                    input.value = '';
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                if (preview) {
+                    preview.removeAttribute('src');
+                    preview.classList.add('d-none');
                 }
             });
         });

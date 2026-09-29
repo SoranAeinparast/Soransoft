@@ -127,28 +127,28 @@
     @if (loadTinyMce)
     {
         <script src="~/lib/tinymce/tinymce.min.js" asp-append-version="true"></script>
-        @* مودال انتخاب تصویر از کتابخانه رسانه داخل TinyMCE *@
-        <div class="modal fade" id="snMediaPickerModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header py-2">
-                        <h6 class="modal-title"><i class="bi bi-images me-2"></i>انتخاب تصویر از کتابخانه رسانه</h6>
-                        <div class="ms-auto d-flex align-items-center gap-2">
-                            <label class="btn btn-sm btn-outline-primary mb-0">
-                                <i class="bi bi-upload me-1"></i> آپلود جدید
-                                <input type="file" id="snMediaPickerUpload" accept=".jpg,.jpeg,.png,.gif,.webp,.svg" hidden />
-                            </label>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
-                        </div>
+    }
+    @* انتخاب تصویر از کتابخانه رسانه برای TinyMCE و تمام فرم‌های مدیریتی *@
+    <div class="modal fade" id="snMediaPickerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title"><i class="bi bi-images me-2"></i>انتخاب تصویر از کتابخانه رسانه</h6>
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        <label class="btn btn-sm btn-outline-primary mb-0">
+                            <i class="bi bi-upload me-1"></i> آپلود جدید
+                            <input type="file" id="snMediaPickerUpload" accept=".jpg,.jpeg,.png,.gif,.webp,.svg" hidden />
+                        </label>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
                     </div>
-                    <div class="modal-body">
-                        <small class="text-danger d-block mb-2" id="snMediaPickerStatus"></small>
-                        <div class="sn-media-modal-grid" id="snMediaPickerGrid"></div>
-                    </div>
+                </div>
+                <div class="modal-body">
+                    <small class="text-danger d-block mb-2" id="snMediaPickerStatus"></small>
+                    <div class="sn-media-modal-grid" id="snMediaPickerGrid"></div>
                 </div>
             </div>
         </div>
-    }
+    </div>
     <script src="~/js/admin.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
