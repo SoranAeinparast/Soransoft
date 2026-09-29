@@ -1,4 +1,5 @@
 @model PromoBanner
+@using Soransoft.Domain.Enums
 <div class="row g-3">
     <div class="col-12 col-md-6">
         <label asp-for="Title" class="form-label">عنوان</label>
@@ -27,6 +28,14 @@
             <option value="2">کارت ویژه</option>
             <option value="3">بنر ثابت تبلیغاتی</option>
         </select>
+    </div>
+    <div class="col-12 col-md-6">
+        <label asp-for="ScrollDirection" class="form-label">جهت حرکت متن اسکرولی</label>
+        <select asp-for="ScrollDirection" class="form-select">
+            <option value="@((int)PromoBannerScrollDirection.RightToLeft)">راست به چپ</option>
+            <option value="@((int)PromoBannerScrollDirection.LeftToRight)">چپ به راست</option>
+        </select>
+        <small class="text-muted">این گزینه فقط برای نوع «متن اسکرولی» اعمال می‌شود.</small>
     </div>
     <div class="col-12 col-md-6">
         <label class="form-label">محل نمایش</label>

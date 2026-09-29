@@ -264,10 +264,12 @@ body.dark_mode .sn-theme-toggle .bi-moon-stars { display: inline-block; }
 .sn-promo-card-body p { margin: 0 0 1rem; color: var(--sn-muted); }
 .sn-promo-badge { color: var(--sn-primary-dark); font-size: .8rem; font-weight: 700; }
 .sn-promo-ticker { overflow: hidden; background: var(--sn-primary); color: #fff; padding: .6rem 0; }
-.sn-promo-ticker-track { width: max-content; min-width: 100%; display: flex; justify-content: center; gap: 1.5rem; animation: snPromoTicker 22s linear infinite; }
+.sn-promo-ticker-track { width: max-content; min-width: 100%; display: flex; justify-content: center; gap: 1.5rem; animation: snPromoTickerRtl 22s linear infinite; }
 .sn-promo-ticker-link { color: inherit; text-decoration: none; display: flex; gap: 1.5rem; }
 .sn-promo-ticker span { opacity: .9; }
-@keyframes snPromoTicker { from { transform: translateX(0); } to { transform: translateX(-12%); } }
+.sn-promo-ticker-track.sn-promo-ticker-ltr { animation-name: snPromoTickerLtr; }
+@keyframes snPromoTickerRtl { from { transform: translateX(0); } to { transform: translateX(-12%); } }
+@keyframes snPromoTickerLtr { from { transform: translateX(0); } to { transform: translateX(12%); } }
 .sn-promo-fixed { position: fixed; z-index: 1040; bottom: 1rem; right: 1rem; max-width: min(360px, calc(100vw - 2rem)); border-radius: 16px; overflow: hidden; background: var(--sn-surface); box-shadow: 0 12px 30px rgba(0,0,0,.2); }
 .sn-promo-fixed a, .sn-promo-fixed > span { display: flex; align-items: center; gap: .75rem; padding: .65rem .8rem; color: inherit; text-decoration: none; }
 .sn-promo-fixed img { width: 72px; height: 54px; object-fit: cover; border-radius: 10px; }

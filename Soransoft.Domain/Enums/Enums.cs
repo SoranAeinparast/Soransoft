@@ -83,6 +83,15 @@ namespace Soransoft.Domain.Enums
         FixedAd = 3
     }
 
+    /// <summary>جهت حرکت متن اسکرولی بنر پرومو</summary>
+    public enum PromoBannerScrollDirection
+    {
+        /// <summary>حرکت از راست به چپ</summary>
+        RightToLeft = 1,
+        /// <summary>حرکت از چپ به راست</summary>
+        LeftToRight = 2
+    }
+
     /// <summary>محل قرارگیری بنر پرومو</summary>
     public enum PromoBannerPlacement
     {

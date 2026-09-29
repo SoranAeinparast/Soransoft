@@ -74,6 +74,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             item.ButtonText = model.ButtonText?.Trim();
             item.Link = model.Link?.Trim();
             item.Type = model.Type;
+            item.ScrollDirection = model.ScrollDirection;
             item.Placement = model.Placement;
             item.DisplayOrder = model.DisplayOrder;
             item.IsActive = model.IsActive;
@@ -111,6 +112,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             if (string.IsNullOrWhiteSpace(model.Title))
                 return false;
             if (!Enum.IsDefined(typeof(PromoBannerType), model.Type) || !Enum.IsDefined(typeof(PromoBannerPlacement), model.Placement))
+                return false;
+            if (!Enum.IsDefined(typeof(PromoBannerScrollDirection), model.ScrollDirection))
                 return false;
             if (!IsSafeLink(model.Link))
                 return false;

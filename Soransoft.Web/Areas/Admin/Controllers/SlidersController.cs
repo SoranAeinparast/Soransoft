@@ -40,7 +40,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveSettings(SliderSettingsViewModel model, CancellationToken ct)
+        public async Task<IActionResult> SaveSettings([Bind(Prefix = "Settings")] SliderSettingsViewModel model, CancellationToken ct)
         {
             var values = new Dictionary<string, string>
             {

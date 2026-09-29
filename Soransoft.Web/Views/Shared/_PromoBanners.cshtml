@@ -4,7 +4,7 @@
 @foreach (var ticker in Model.Where(b => b.Type == PromoBannerType.ScrollingText))
 {
     <div class="sn-promo-ticker" role="status">
-        <div class="sn-promo-ticker-track">
+        <div class="sn-promo-ticker-track @(ticker.ScrollDirection == PromoBannerScrollDirection.LeftToRight ? "sn-promo-ticker-ltr" : "sn-promo-ticker-rtl")">
             @if (!string.IsNullOrWhiteSpace(ticker.Link))
             {
                 <a href="@ticker.Link" class="sn-promo-ticker-link" target="@(ticker.OpenInNewTab ? "_blank" : null)" rel="@(ticker.OpenInNewTab ? "noopener" : null)">
