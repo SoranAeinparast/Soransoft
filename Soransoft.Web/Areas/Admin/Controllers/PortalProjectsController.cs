@@ -69,7 +69,7 @@ public sealed class PortalProjectsController : Controller
                 project.FeaturedImage = await _storage.SaveImageAsync(featuredImage, "partners/sellable-projects/images", ct);
                 newImagePath = project.FeaturedImage;
             }
-            else
+            else if (featuredImagePath is not null)
             {
                 project.FeaturedImage = string.IsNullOrWhiteSpace(featuredImagePath) ? null : featuredImagePath.Trim();
             }

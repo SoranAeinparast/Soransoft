@@ -215,6 +215,7 @@ var legacyPrivateDocumentPaths = new[]
     "/uploads/partners/agreements",
     "/uploads/partners/wallet-docs",
     "/uploads/partners/contract-stages",
+    "/uploads/partners/sellable-projects",
 };
 app.UseWhen(
     context => !legacyPrivateDocumentPaths.Any(path => context.Request.Path.StartsWithSegments(path)),

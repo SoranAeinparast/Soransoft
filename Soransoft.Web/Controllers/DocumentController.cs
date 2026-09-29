@@ -23,6 +23,7 @@ namespace Soransoft.Web.Controllers
         private readonly SoransoftDbContext _db;
         private readonly string _documentsRoot;
         private readonly string _persistentProfileRoot;
+        private readonly string _legacyUploadsRoot;
         private readonly FileExtensionContentTypeProvider _contentTypes = new();
 
         public DocumentController(SoransoftDbContext db, IWebHostEnvironment environment, IConfiguration configuration)
@@ -30,6 +31,7 @@ namespace Soransoft.Web.Controllers
             _db = db;
             _documentsRoot = Path.GetFullPath(Path.Combine(environment.ContentRootPath, "App_Data", "PrivateDocuments"));
             _persistentProfileRoot = PersistentProfileStorage.ResolveRoot(environment, configuration);
+            _legacyUploadsRoot = Path.GetFullPath(Path.Combine(environment.WebRootPath ?? Path.Combine(environment.ContentRootPath, "wwwroot"), "uploads"));
         }
 
         [HttpGet("download")]
@@ -197,8 +199,8 @@ namespace Soransoft.Web.Controllers
             try
             {
                 var roots = PersistentProfileStorage.IsProfilePath(relativePath)
-                    ? new[] { _persistentProfileRoot, _documentsRoot }
-                    : new[] { _documentsRoot };
+                    ? new[] { _persistentProfileRoot, _documentsRoot, _legacyUploadsRoot }
+                    : new[] { _documentsRoot, _legacyUploadsRoot };
 
                 string? firstPath = null;
                 foreach (var rootPath in roots)
@@ -223,6 +225,14 @@ namespace Soransoft.Web.Controllers
         {
             const string marker = "?path=";
             if (string.IsNullOrWhiteSpace(storedPath)) return null;
+
+            const string legacyPrefix = "uploads/";
+            var normalizedStoredPath = storedPath.TrimStart('/');
+            if (normalizedStoredPath.StartsWith(legacyPrefix + "partners/", StringComparison.OrdinalIgnoreCase))
+            {
+                var legacyPath = normalizedStoredPath[legacyPrefix.Length..].Split('?', 2)[0];
+                return NormalizeRelativePath(legacyPath);
+            }
 
             var markerIndex = storedPath.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
             if (markerIndex < 0 || !storedPath[..markerIndex].TrimEnd('/').EndsWith("/documents/download", StringComparison.OrdinalIgnoreCase))

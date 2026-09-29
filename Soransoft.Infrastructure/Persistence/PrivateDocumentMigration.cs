@@ -36,6 +36,9 @@ public static class PrivateDocumentMigration
         foreach (var transaction in await db.WalletTransactions.IgnoreQueryFilters().ToListAsync(ct))
             changed |= await MoveAsync(transaction.DocumentFile, value => transaction.DocumentFile = value, oldRoot, privateRoot, logger, ct);
 
+        foreach (var document in await db.SellableProjectDocuments.IgnoreQueryFilters().ToListAsync(ct))
+            changed |= await MoveAsync(document.StoredPath, value => document.StoredPath = value, oldRoot, privateRoot, logger, ct);
+
         foreach (var partner in await db.Partners.IgnoreQueryFilters().ToListAsync(ct))
         {
             changed |= await MoveAsync(partner.PersonalPhotoPath, value => partner.PersonalPhotoPath = value, oldRoot, privateRoot, logger, ct);
@@ -71,11 +74,12 @@ public static class PrivateDocumentMigration
         ILogger logger,
         CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(storedPath) ||
-            !storedPath.StartsWith("/uploads/partners/", StringComparison.OrdinalIgnoreCase))
+        var normalizedStoredPath = storedPath?.TrimStart('/');
+        if (string.IsNullOrWhiteSpace(normalizedStoredPath) ||
+            !normalizedStoredPath.StartsWith("uploads/partners/", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        var relativePath = storedPath.TrimStart('/')["uploads/".Length..].Replace('\\', '/');
+        var relativePath = normalizedStoredPath["uploads/".Length..].Replace('\\', '/');
         if (relativePath.Split('/').Any(segment => segment is "." or ".." || segment.Contains(':')))
         {
             logger.LogWarning("Legacy private document path rejected: {Path}", storedPath);
