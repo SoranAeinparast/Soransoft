@@ -83,6 +83,44 @@
         });
     }
 
+    // ---- بستن مطمئن منوی موبایل حتی در صورت اجرا نشدن data API بوت‌استرپ ----
+    function bindMobileMenu() {
+        var menu = document.getElementById('mobileMenu');
+        if (!menu) return;
+        var closeButton = menu.querySelector('[data-bs-dismiss="offcanvas"]');
+
+        function fallbackClose() {
+            menu.classList.remove('show');
+            menu.style.visibility = '';
+            menu.setAttribute('aria-hidden', 'true');
+            menu.removeAttribute('aria-modal');
+            menu.removeAttribute('role');
+            document.querySelectorAll('.offcanvas-backdrop').forEach(function (backdrop) { backdrop.remove(); });
+            document.body.classList.remove('offcanvas-backdrop', 'modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }
+
+        function closeMenu() {
+            if (window.bootstrap && bootstrap.Offcanvas) {
+                bootstrap.Offcanvas.getOrCreateInstance(menu).hide();
+                window.setTimeout(function () {
+                    if (menu.classList.contains('show')) fallbackClose();
+                }, 450);
+            } else {
+                fallbackClose();
+            }
+        }
+
+        if (closeButton) closeButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            closeMenu();
+        });
+        menu.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', closeMenu);
+        });
+    }
+
     // ---- نوار سبز چسبان مشاوره (مانند stick_message مرجع) ----
     function bindStickMessage() {
         var bar = document.getElementById('snStickMessage');
@@ -115,6 +153,7 @@
         hideToast();
         bindConsultationForm();
         bindThemeToggle();
+        bindMobileMenu();
         bindStickMessage();
     });
 })();
