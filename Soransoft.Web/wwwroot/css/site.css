@@ -89,6 +89,11 @@ img { max-width: 100%; }
 
 .sn-logo::after { content: "."; color: var(--sn-primary); }
 
+.sn-brand-link { display: inline-flex; align-items: center; line-height: 0; }
+.sn-brand-logo { display: block; width: 178px; max-width: 48vw; height: auto; object-fit: contain; }
+.sn-nav-mobile .sn-brand-logo { width: 148px; }
+.sn-footer .sn-brand-logo { width: 170px; margin-inline: auto; }
+
 .sn-menu-link {
     color: var(--sn-text);
     font-weight: 500;
@@ -268,6 +273,8 @@ body.dark_mode .sn-theme-toggle .bi-moon-stars { display: inline-block; }
     font-size: .85rem;
     animation: snFloatSlow 5s ease-in-out infinite;
 }
+
+.sn-hero-brand-logo { display: block; width: min(245px, 62vw); height: auto; }
 
 .sn-hero-title {
     font-weight: 900;

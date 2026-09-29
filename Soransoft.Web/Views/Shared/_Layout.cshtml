@@ -72,7 +72,9 @@
     <header class="sn-header">
         <div class="container">
             <nav class="sn-nav d-none d-lg-flex align-items-center justify-content-between">
-                <a asp-controller="Home" asp-action="Index" class="sn-logo">@S("LogoText", "SORANSOFT")</a>
+                <a asp-controller="Home" asp-action="Index" class="sn-brand-link" aria-label="سوران‌سافت">
+                    <img src="~/images/soransoft-logo.png" class="sn-brand-logo" alt="سوران‌سافت" />
+                </a>
                 <ul class="sn-menu list-unstyled d-flex align-items-center gap-4 mb-0">
                     @foreach (var item in mainMenu)
                     {
@@ -103,7 +105,9 @@
                 </div>
             </nav>
             <nav class="sn-nav-mobile d-flex d-lg-none align-items-center justify-content-between">
-                <a asp-controller="Home" asp-action="Index" class="sn-logo">@S("LogoText", "SORANSOFT")</a>
+                <a asp-controller="Home" asp-action="Index" class="sn-brand-link" aria-label="سوران‌سافت">
+                    <img src="~/images/soransoft-logo.png" class="sn-brand-logo" alt="سوران‌سافت" />
+                </a>
                 <div class="d-flex align-items-center gap-2">
                     <button type="button" class="sn-theme-toggle" id="snThemeToggleM" aria-label="تغییر حالت روز/شب">
                         <i class="bi bi-sun"></i>
@@ -120,7 +124,9 @@
     <!-- منوی موبایل -->
     <div class="offcanvas offcanvas-start sn-mobile-menu" tabindex="-1" id="mobileMenu">
         <div class="offcanvas-header">
-            <span class="sn-logo">@S("LogoText", "SORANSOFT")</span>
+            <span class="sn-brand-link" aria-label="سوران‌سافت">
+                <img src="~/images/soransoft-logo.png" class="sn-brand-logo" alt="سوران‌سافت" />
+            </span>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="بستن"></button>
         </div>
         <div class="offcanvas-body">
@@ -187,7 +193,9 @@
                     <p class="mb-0"><i class="bi bi-envelope me-2"></i><span dir="ltr">@S("Email")</span></p>
                 </div>
                 <div class="col-12 col-md-4 text-center text-md-start">
-                    <a asp-controller="Home" asp-action="Index" class="sn-logo">@S("LogoText", "SORANSOFT")</a>
+                    <a asp-controller="Home" asp-action="Index" class="sn-brand-link" aria-label="سوران‌سافت">
+                        <img src="~/images/soransoft-logo.png" class="sn-brand-logo" alt="سوران‌سافت" />
+                    </a>
                 </div>
             </div>
             <div class="sn-footer-bottom text-center mt-4 pt-3">
