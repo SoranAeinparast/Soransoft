@@ -17,7 +17,7 @@
         * { box-sizing: border-box; }
         body { background: #e9eef1; color: #1f2d35; font-family: Tahoma, Arial, sans-serif; font-size: 11pt; }
         .sheet { width: 210mm; min-height: 297mm; margin: 12mm auto; padding: 13mm 14mm; background: #fff; box-shadow: 0 4px 24px rgba(25,45,60,.12); }
-        .brand { color: #008f83; letter-spacing: .12em; font-weight: 800; font-size: 13pt; }
+        .brand img { display: block; width: 48mm; height: auto; }
         .document-title { border-bottom: 2px solid #00a596; padding-bottom: 6mm; margin-bottom: 6mm; }
         .document-title h1 { font-size: 17pt; margin: 3mm 0 1mm; }
         .meta { display: flex; justify-content: space-between; gap: 10mm; color: #61727c; font-size: 9pt; }
@@ -42,7 +42,7 @@
     <div class="actions"><button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> چاپ فرم A4</button><button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.close()">بستن</button></div>
     <main class="sheet">
         <header class="document-title">
-            <div class="brand">SORANSOFT</div>
+            <div class="brand"><img src="~/images/soransoft-logo.png" alt="سوران‌سافت" /></div>
             <h1>فرم رسمی معرفی مشتری و ثبت سرنخ فروش</h1>
             <div class="meta"><span>شماره فرم: <strong dir="ltr">@Value(Model.FormNo)</strong></span><span>تاریخ ثبت: <strong>@PersianDisplay.DateTimeText(Model.CreatedAt)</strong></span><span>وضعیت: <strong>@Model.Stage</strong></span></div>
         </header>
