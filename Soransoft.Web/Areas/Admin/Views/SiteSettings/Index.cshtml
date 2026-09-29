@@ -15,7 +15,7 @@
 <div class="collapse mb-4" id="newSettingForm">
     <div class="sn-admin-card">
         <h6 class="fw-bold mb-3">افزودن تنظیم جدید</h6>
-        <form asp-action="Create" method="post" class="row g-2 align-items-end">
+        <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
             @Html.AntiForgeryToken()
             <div class="col-md-3">
                 <label class="form-label">کلید (انگلیسی)</label>
@@ -30,6 +30,10 @@
                 <input name="value" class="form-control" />
             </div>
             <div class="col-md-2">
+                <label class="form-label">فایل تصویر</label>
+                <input name="imageFile" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+            </div>
+            <div class="col-md-2">
                 <label class="form-label">گروه</label>
                 <input name="group" class="form-control" list="settingGroups" placeholder="General" />
                 <datalist id="settingGroups">
@@ -42,6 +46,7 @@
                     <option value="text">متن</option>
                     <option value="textarea">متن بلند</option>
                     <option value="image">تصویر</option>
+                    <option value="boolean">روشن/خاموش</option>
                 </select>
             </div>
             <div class="col-md-1">
@@ -51,7 +56,7 @@
     </div>
 </div>
 
-<form asp-action="Save" method="post">
+<form asp-action="Save" method="post" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
     @for (int g = 0; g < groups.Count; g++)
     {
@@ -70,6 +75,23 @@
                         @if (setting.Type == "textarea")
                         {
                             <textarea name="settings[@i].Value" class="form-control" rows="2">@setting.Value</textarea>
+                        }
+                        else if (setting.Type == "boolean")
+                        {
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="settings[@i].Value" value="true" class="form-check-input" @(bool.TryParse(setting.Value, out var enabled) && enabled ? "checked" : null) />
+                                <label class="form-check-label">فعال</label>
+                            </div>
+                            <input type="hidden" name="settings[@i].Value" value="false" />
+                        }
+                        else if (setting.Type == "image")
+                        {
+                            <input name="settings[@i].Value" value="@setting.Value" class="form-control mb-2" dir="ltr" />
+                            <input name="settingFile_@setting.Id" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+                            @if (!string.IsNullOrWhiteSpace(setting.Value))
+                            {
+                                <img src="~/@setting.Value.TrimStart('~', '/')" alt="@setting.Title" class="mt-2 rounded" style="max-width:180px;max-height:80px;object-fit:contain" />
+                            }
                         }
                         else
                         {

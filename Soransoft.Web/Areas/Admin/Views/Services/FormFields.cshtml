@@ -23,6 +23,14 @@
     <label class="form-label">متن کامل (HTML)</label>
     <partial name="_RichTextEditor" for="FullDescription" view-data="@(new ViewDataDictionary(ViewData) { ["EditorHeight"] = 440 })" />
 </div>
+<div class="mb-3">
+    <label class="form-label">تصویر صفحه سرویس</label>
+    <input type="file" name="imageFile" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+    @if (!string.IsNullOrWhiteSpace(Model.Image))
+    {
+        <img src="~/@Model.Image.TrimStart('~', '/')" alt="@Model.Title" class="mt-2 rounded" style="max-width:220px;max-height:120px;object-fit:cover" />
+    }
+</div>
 <div class="row g-3">
     <div class="col-md-6 mb-3">
         <label class="form-label">شعار صفحه</label>

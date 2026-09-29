@@ -4,6 +4,7 @@
 @using Soransoft.Domain.Entities
 @inject IAntiforgery Antiforgery
 @inject SoransoftDbContext Db
+@inject Soransoft.Application.Interfaces.ISiteSettingService SiteSettings
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
@@ -13,6 +14,8 @@
         .CountAsync(r => r.Status == PasswordResetStatus.Pending);
     // فقط صفحاتی که ویرایشگر متنی دارند، اسکریپت TinyMCE را بارگذاری می‌کنند
     var loadTinyMce = ViewData["LoadRichEditor"] as bool? == true;
+    var configuredLogo = await SiteSettings.GetAsync("LogoImage");
+    var logoPath = string.IsNullOrWhiteSpace(configuredLogo) ? "images/soransoft-logo.png" : configuredLogo;
 }
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -33,7 +36,7 @@
         <aside class="sn-admin-sidebar">
             <button type="button" class="sn-sidebar-close d-lg-none" id="adminSidebarClose" aria-label="بستن منوی کناری"><i class="bi bi-x-lg"></i></button>
             <div class="sn-admin-brand">
-                <img src="~/images/soransoft-logo.png" class="sn-admin-brand-logo" alt="سوران‌سافت" />
+                <img src="~/@logoPath.TrimStart('~', '/')" class="sn-admin-brand-logo" alt="سوران‌سافت" />
                 <small>پنل مدیریت</small>
             </div>
             <nav class="sn-admin-nav">
@@ -77,8 +80,9 @@
                     }
                 </a>
 
-                <div class="sn-admin-nav-group sn-nav-group-system">سیستم</div>
-                <a href="/Admin/MenuItems" class="@(controller == "MenuItems" ? "active" : "")"><i class="bi bi-list"></i> منوها</a>
+                 <div class="sn-admin-nav-group sn-nav-group-system">سیستم</div>
+                 <a href="/Admin/Features" class="@(controller == "Features" ? "active" : "")"><i class="bi bi-toggle2-on"></i> قابلیت‌های سایت</a>
+                 <a href="/Admin/MenuItems" class="@(controller == "MenuItems" ? "active" : "")"><i class="bi bi-list"></i> منوها</a>
                 <a href="/Admin/Account/ChangePassword" class="@(action == "ChangePassword" ? "active" : "")"><i class="bi bi-key"></i> تغییر رمز عبور</a>
                 <a href="/Admin/SiteSettings" class="@(controller == "SiteSettings" ? "active" : "")"><i class="bi bi-sliders"></i> تنظیمات سایت</a>
                 <a href="/Admin/ErrorLogs" class="@(controller == "ErrorLogs" ? "active" : "")"><i class="bi bi-bug"></i> لاگ خطاها</a>

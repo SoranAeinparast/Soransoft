@@ -5,7 +5,7 @@
 }
 <h5 class="mb-4">ویرایش سرویس: @Model.Title</h5>
 <div class="sn-admin-card">
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="Id" />
         <input type="hidden" asp-for="CreatedAt" />

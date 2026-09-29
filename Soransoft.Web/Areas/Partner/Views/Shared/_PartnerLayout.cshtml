@@ -1,4 +1,5 @@
 @using System.Security.Claims
+@inject Soransoft.Application.Interfaces.ISiteSettingService SiteSettings
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
@@ -16,6 +17,8 @@
     var isSalesSide = role is PartnerRole.Sales or PartnerRole.SalesManager;
     var isDevSide = role is PartnerRole.Developer or PartnerRole.TechManager;
     var canSeeAllSales = User.HasClaim("CanSeeAllSales", "1");
+    var configuredLogo = await SiteSettings.GetAsync("LogoImage");
+    var logoPath = string.IsNullOrWhiteSpace(configuredLogo) ? "images/soransoft-logo.png" : configuredLogo;
 }
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -36,7 +39,7 @@
             <div class="sn-portal-sidebar-inner">
                 <div class="sn-admin-brand sn-portal-brand">
                     <div>
-                        <img src="~/images/soransoft-logo.png" class="sn-portal-logo" alt="سوران‌سافت" />
+                        <img src="~/@logoPath.TrimStart('~', '/')" class="sn-portal-logo" alt="سوران‌سافت" />
                         <small>پرتال همکاران</small>
                     </div>
                 </div>

@@ -27,6 +27,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Slider model, IFormFile? imageFile, CancellationToken ct)
         {
+            if (!IsSafeLink(model.Link))
+            {
+                TempData["Error"] = "لینک اسلاید باید http/https یا مسیر داخلی باشد.";
+                return View(model);
+            }
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
@@ -53,6 +58,11 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Slider model, IFormFile? imageFile, CancellationToken ct)
         {
+            if (!IsSafeLink(model.Link))
+            {
+                TempData["Error"] = "لینک اسلاید باید http/https یا مسیر داخلی باشد.";
+                return View(model);
+            }
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
@@ -93,6 +103,15 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 TempData["Success"] = "اسلاید حذف شد";
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        private static bool IsSafeLink(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return true;
+            value = value.Trim();
+            if (value.StartsWith('/', StringComparison.Ordinal) && !value.StartsWith("//", StringComparison.Ordinal)) return true;
+            return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
     }
 }
