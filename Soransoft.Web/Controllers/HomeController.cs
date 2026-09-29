@@ -9,6 +9,7 @@ namespace Soransoft.Web.Controllers
 {
     public class HomeController : Controller
     {
+        private const string ServiceSlugRedirectPrefix = "ServiceSlugRedirect:";
         private readonly ISiteService _site;
         private readonly ISiteSettingService _settings;
         private readonly IFormService _forms;
@@ -39,11 +40,25 @@ namespace Soransoft.Web.Controllers
 
         private async Task<IActionResult> RenderServiceBySlugAsync(string slug, CancellationToken ct)
         {
-            var service = await _site.GetServiceBySlugAsync(slug, ct);
-            if (service is null) return NotFound();
+            var normalizedSlug = slug.Trim().ToLowerInvariant();
+            var service = await _site.GetServiceBySlugAsync(normalizedSlug, ct);
+            if (service is null)
+            {
+                var replacementSlug = await _settings.GetAsync(ServiceSlugRedirectKey(normalizedSlug), ct);
+                if (!string.IsNullOrWhiteSpace(replacementSlug)
+                    && !string.Equals(normalizedSlug, replacementSlug.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return RedirectPermanent($"/Service/{Uri.EscapeDataString(replacementSlug.Trim())}");
+                }
+
+                return NotFound();
+            }
             ViewData["Title"] = service.Title;
             return View("ServicePage", service);
         }
+
+        private static string ServiceSlugRedirectKey(string slug) =>
+            $"{ServiceSlugRedirectPrefix}{slug.Trim().ToLowerInvariant()}";
 
         // GET /
         public async Task<IActionResult> Index(CancellationToken ct)
