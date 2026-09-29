@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using Soransoft.Application.Interfaces;
 using System.Text;
 
@@ -9,20 +8,14 @@ namespace Soransoft.Web.Controllers
     public class SeoController : Controller
     {
         private readonly ISeoService _seo;
-        private readonly IMemoryCache _cache;
-        public SeoController(ISeoService seo, IMemoryCache cache) { _seo = seo; _cache = cache; }
+        public SeoController(ISeoService seo) => _seo = seo;
 
         // GET /sitemap.xml
         [HttpGet("sitemap.xml")]
-        [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> Sitemap(CancellationToken ct)
         {
             var baseUrl = BuildBaseUrl();
-            string xml = await _cache.GetOrCreateAsync($"sitemap:{baseUrl}", async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-                return await BuildSitemapXmlAsync(baseUrl, ct);
-            }) ?? string.Empty;
+            var xml = await BuildSitemapXmlAsync(baseUrl, ct);
 
             return Content(xml, "application/xml", Encoding.UTF8);
         }

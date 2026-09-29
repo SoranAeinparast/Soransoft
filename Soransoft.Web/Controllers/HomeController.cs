@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Soransoft.Application.Interfaces;
 using Soransoft.Application.ViewModels;
 using Soransoft.Web.Models;
+using Soransoft.Domain.Enums;
 using System.Security.Claims;
 
 namespace Soransoft.Web.Controllers
@@ -12,15 +13,36 @@ namespace Soransoft.Web.Controllers
         private readonly ISiteSettingService _settings;
         private readonly IFormService _forms;
         private readonly IUserAccountService _accounts;
+        private readonly ISiteFeatureService _features;
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ISiteService site, ISiteSettingService settings, IFormService forms, IUserAccountService accounts, ILogger<HomeController> logger)
+        public HomeController(ISiteService site, ISiteSettingService settings, IFormService forms, IUserAccountService accounts, ISiteFeatureService features, ILogger<HomeController> logger)
         {
             _site = site;
             _settings = settings;
             _forms = forms;
             _accounts = accounts;
+            _features = features;
             _logger = logger;
+        }
+
+        private async Task<IActionResult?> RequireFeatureAsync(string key, CancellationToken ct) =>
+            await _features.IsEnabledAsync(key, ct) ? null : NotFound();
+
+        private async Task<IActionResult> RenderServiceAsync(ServiceKind kind, CancellationToken ct)
+        {
+            var service = await _site.GetServiceByKindAsync(kind, ct);
+            if (service is null) return NotFound();
+            ViewData["Title"] = service.Title;
+            return View("ServicePage", service);
+        }
+
+        private async Task<IActionResult> RenderServiceBySlugAsync(string slug, CancellationToken ct)
+        {
+            var service = await _site.GetServiceBySlugAsync(slug, ct);
+            if (service is null) return NotFound();
+            ViewData["Title"] = service.Title;
+            return View("ServicePage", service);
         }
 
         // GET /
@@ -34,9 +56,13 @@ namespace Soransoft.Web.Controllers
         [HttpGet("OurServices")]
         public async Task<IActionResult> OurServices(CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Services, ct);
+            if (unavailable is not null) return unavailable;
+
             var model = new OurServicesViewModel
             {
                 Services = await _site.GetServiceCardsAsync(ct),
+                Settings = await _settings.GetAllAsync(ct),
             };
             ViewData["Title"] = "خدمات ما";
             return View(model);
@@ -46,37 +72,50 @@ namespace Soransoft.Web.Controllers
         [HttpGet("SiteProject")]
         public async Task<IActionResult> SiteProject(CancellationToken ct)
         {
-            var service = await _site.GetServiceBySlugAsync("site-project", ct);
-            if (service is null) return NotFound();
-            ViewData["Title"] = service.Title;
-            return View("ServicePage", service);
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Services, ct);
+            if (unavailable is not null) return unavailable;
+
+            return await RenderServiceAsync(ServiceKind.Site, ct);
         }
 
         // GET /SeoProject — صفحه اختصاصی سئو
         [HttpGet("SeoProject")]
         public async Task<IActionResult> SeoProject(CancellationToken ct)
         {
-            var service = await _site.GetServiceBySlugAsync("seo", ct);
-            if (service is null) return NotFound();
-            ViewData["Title"] = service.Title;
-            return View("ServicePage", service);
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Services, ct);
+            if (unavailable is not null) return unavailable;
+
+            return await RenderServiceAsync(ServiceKind.Seo, ct);
         }
 
         // GET /ContentProject — صفحه اختصاصی تولید محتوا
         [HttpGet("ContentProject")]
         public async Task<IActionResult> ContentProject(CancellationToken ct)
         {
-            var service = await _site.GetServiceBySlugAsync("content", ct);
-            if (service is null) return NotFound();
-            ViewData["Title"] = service.Title;
-            return View("ServicePage", service);
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Services, ct);
+            if (unavailable is not null) return unavailable;
+
+            return await RenderServiceAsync(ServiceKind.Content, ct);
+        }
+
+        // GET /Service/{slug} — صفحه عمومی هر سرویس قابل مدیریت
+        [HttpGet("Service/{slug}")]
+        public async Task<IActionResult> ServiceBySlug(string slug, CancellationToken ct)
+        {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Services, ct);
+            if (unavailable is not null) return unavailable;
+            return await RenderServiceBySlugAsync(slug, ct);
         }
 
         // GET /Portfolio
         [HttpGet("Portfolio")]
         public async Task<IActionResult> Portfolio(CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Portfolio, ct);
+            if (unavailable is not null) return unavailable;
+
             var model = await _site.GetPortfoliosAsync(ct);
+            ViewBag.Settings = await _settings.GetAllAsync(ct);
             ViewData["Title"] = "نمونه کارها";
             return View(model);
         }
@@ -85,6 +124,9 @@ namespace Soransoft.Web.Controllers
         [HttpGet("Articles")]
         public async Task<IActionResult> Articles(int? categoryId, int page = 1, CancellationToken ct = default)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Blog, ct);
+            if (unavailable is not null) return unavailable;
+
             const int pageSize = 10;
             page = Math.Max(1, page);
             var model = new ArticlesViewModel
@@ -95,6 +137,7 @@ namespace Soransoft.Web.Controllers
                 CurrentPage = page,
                 PageSize = pageSize,
                 SelectedCategoryId = categoryId,
+                Settings = await _settings.GetAllAsync(ct),
             };
             ViewData["Title"] = "مقالات";
             return View(model);
@@ -104,6 +147,9 @@ namespace Soransoft.Web.Controllers
         [HttpGet("Article/{slug}")]
         public async Task<IActionResult> ArticleBySlug(string slug, CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Blog, ct);
+            if (unavailable is not null) return unavailable;
+
             var article = await _site.GetArticleBySlugAsync(slug, ct);
             if (article is null) return NotFound();
 
@@ -116,6 +162,9 @@ namespace Soransoft.Web.Controllers
         [HttpGet("Article/{id:int}")]
         public async Task<IActionResult> Article(int id, CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Blog, ct);
+            if (unavailable is not null) return unavailable;
+
             var article = await _site.GetArticleAsync(id, ct);
             if (article is null) return NotFound();
 
@@ -160,6 +209,9 @@ namespace Soransoft.Web.Controllers
         [HttpGet("Tariff")]
         public async Task<IActionResult> Tariff(CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Pricing, ct);
+            if (unavailable is not null) return unavailable;
+
             var model = await _site.GetHomePageAsync(ct);
             ViewData["Title"] = "تعرفه";
             return View(model);
@@ -169,6 +221,9 @@ namespace Soransoft.Web.Controllers
         [HttpGet("OrderProject")]
         public async Task<IActionResult> OrderProject(CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.ProjectOrder, ct);
+            if (unavailable is not null) return unavailable;
+
             var model = new OrderProjectViewModel();
 
             // پیش‌پر کردن فرم برای کاربر واردشده
@@ -192,6 +247,13 @@ namespace Soransoft.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> OrderProject(OrderProjectViewModel model, CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.ProjectOrder, ct);
+            if (unavailable is not null) return unavailable;
+
+            var availableServices = await _site.GetServiceCardsAsync(ct);
+            if (!availableServices.Any(service => service.Kind == model.ProjectType && !service.ComingSoon))
+                ModelState.AddModelError(nameof(model.ProjectType), "این سرویس در حال حاضر قابل سفارش نیست.");
+
             if (!ModelState.IsValid)
                 return View(model);
 
@@ -210,6 +272,13 @@ namespace Soransoft.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitConsultation(ConsultationRequestViewModel model, CancellationToken ct)
         {
+            if (!await _features.IsEnabledAsync(SiteFeatures.Consultation, ct))
+                return Json(OperationResult.Fail("فرم مشاوره در حال حاضر غیرفعال است."));
+
+            var availableServices = await _site.GetServiceCardsAsync(ct);
+            if (!availableServices.Any(service => service.Kind == model.ServiceKind && !service.ComingSoon))
+                return Json(OperationResult.Fail("این سرویس در حال حاضر قابل انتخاب نیست."));
+
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values
@@ -227,6 +296,9 @@ namespace Soransoft.Web.Controllers
         [HttpGet("AboutUs")]
         public async Task<IActionResult> AboutUs(CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.About, ct);
+            if (unavailable is not null) return unavailable;
+
             var model = new AboutUsViewModel
             {
                 Settings = await _settings.GetAllAsync(ct),
@@ -240,6 +312,9 @@ namespace Soransoft.Web.Controllers
         [HttpGet("ContactUs")]
         public async Task<IActionResult> ContactUs(CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Contact, ct);
+            if (unavailable is not null) return unavailable;
+
             ViewBag.Settings = await _settings.GetAllAsync(ct);
             return View(new ContactUsViewModel());
         }
@@ -249,6 +324,9 @@ namespace Soransoft.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ContactUs(ContactUsViewModel model, CancellationToken ct)
         {
+            var unavailable = await RequireFeatureAsync(SiteFeatures.Contact, ct);
+            if (unavailable is not null) return unavailable;
+
             ViewBag.Settings = await _settings.GetAllAsync(ct);
             if (!ModelState.IsValid)
                 return View(model);

@@ -1,10 +1,16 @@
 @model Soransoft.Web.Controllers.CardVerificationResult
+@inject Soransoft.Application.Interfaces.ISiteSettingService Settings
 @{
     Layout = null;
     ViewData["Title"] = "استعلام کارت شناسایی";
+    var settings = await Settings.GetAllAsync();
+    var logoPath = settings.TryGetValue("LogoImage", out var configuredLogo) && !string.IsNullOrWhiteSpace(configuredLogo)
+        ? configuredLogo
+        : "images/soransoft-logo.png";
+    var logoUrl = Url.Content("~/" + logoPath.TrimStart('/'));
 }
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>@ViewData["Title"]</title><link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" /></head>
-<body class="bg-light"><main class="container py-5" style="max-width:620px"><div class="card shadow-sm border-0"><div class="card-body p-4 text-center"><img src="~/images/soransoft-logo.png" alt="سوران‌سافت" style="width:220px;max-width:80%;height:auto" /><div class="display-5 @(Model.IsValid ? "text-success" : "text-danger")">@(Model.IsValid ? "✓" : "!")</div><h1 class="h4 mt-3">استعلام کارت شناسایی</h1><p class="@(Model.IsValid ? "text-success" : "text-danger")">@Model.Message</p>@if (Model.FullName is not null) { <dl class="row text-start mt-4 mb-0"><dt class="col-5">نام همکار</dt><dd class="col-7">@Model.FullName</dd><dt class="col-5">کد پرسنلی</dt><dd class="col-7" dir="ltr">@Model.PersonnelCode</dd><dt class="col-5">سمت</dt><dd class="col-7">@Model.Role</dd><dt class="col-5">پایان اعتبار</dt><dd class="col-7">@(Model.ExpiresAt?.ToString("yyyy/MM/dd", System.Globalization.CultureInfo.GetCultureInfo("fa-IR")) ?? "ثبت نشده")</dd></dl> }<div class="small text-muted mt-4">سامانه رسمی استعلام کارت همکاران سوران‌سافت</div></div></div></main></body>
+<body class="bg-light"><main class="container py-5" style="max-width:620px"><div class="card shadow-sm border-0"><div class="card-body p-4 text-center"><img src="@logoUrl" alt="سوران‌سافت" style="width:220px;max-width:80%;height:auto" /><div class="display-5 @(Model.IsValid ? "text-success" : "text-danger")">@(Model.IsValid ? "✓" : "!")</div><h1 class="h4 mt-3">استعلام کارت شناسایی</h1><p class="@(Model.IsValid ? "text-success" : "text-danger")">@Model.Message</p>@if (Model.FullName is not null) { <dl class="row text-start mt-4 mb-0"><dt class="col-5">نام همکار</dt><dd class="col-7">@Model.FullName</dd><dt class="col-5">کد پرسنلی</dt><dd class="col-7" dir="ltr">@Model.PersonnelCode</dd><dt class="col-5">سمت</dt><dd class="col-7">@Model.Role</dd><dt class="col-5">پایان اعتبار</dt><dd class="col-7">@(Model.ExpiresAt?.ToString("yyyy/MM/dd", System.Globalization.CultureInfo.GetCultureInfo("fa-IR")) ?? "ثبت نشده")</dd></dl> }<div class="small text-muted mt-4">سامانه رسمی استعلام کارت همکاران سوران‌سافت</div></div></div></main></body>
 </html>
