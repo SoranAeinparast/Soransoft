@@ -242,27 +242,94 @@ namespace Soransoft.Infrastructure.Persistence
 
         private static async Task SeedSettingsAsync(SoransoftDbContext db, CancellationToken ct)
         {
-            if (await db.SiteSettings.AnyAsync(ct)) return;
             var settings = new List<SiteSetting>
             {
                 new() { Key = "SiteName", Title = "نام سایت", Value = "سوران سافت", Group = "عمومی", Type = "text", DisplayOrder = 1 },
                 new() { Key = "SiteTagline", Title = "شعار سایت", Value = "هر چه در فکر شماست، ما می‌سازیم", Group = "عمومی", Type = "text", DisplayOrder = 2 },
                 new() { Key = "SiteDescription", Title = "توضیح متا", Value = "طراحی سایت، سئو، اپلیکیشن موبایل و تولید محتوا", Group = "عمومی", Type = "textarea", DisplayOrder = 3 },
                 new() { Key = "LogoText", Title = "متن لوگو", Value = "SORANSOFT", Group = "عمومی", Type = "text", DisplayOrder = 4 },
-                new() { Key = "Phone", Title = "تلفن ثابت", Value = "021-28 4 28 140", Group = "تماس", Type = "text", DisplayOrder = 5 },
-                new() { Key = "Mobile", Title = "موبایل", Value = "09120000000", Group = "تماس", Type = "text", DisplayOrder = 6 },
-                new() { Key = "Address", Title = "آدرس", Value = "تهران، خیابان ولیعصر، مرکز نوآوری سوران", Group = "تماس", Type = "textarea", DisplayOrder = 7 },
-                new() { Key = "WorkingHours", Title = "ساعات کاری", Value = "شنبه تا پنجشنبه ۹ تا ۱۸", Group = "تماس", Type = "text", DisplayOrder = 8 },
-                new() { Key = "Email", Title = "ایمیل", Value = "info@soransoft.ir", Group = "تماس", Type = "text", DisplayOrder = 9 },
-                new() { Key = "InstagramUrl", Title = "اینستاگرام", Value = "https://instagram.com/soransoft", Group = "شبکه‌های اجتماعی", Type = "text", DisplayOrder = 10 },
-                new() { Key = "TelegramUrl", Title = "تلگرام", Value = "https://t.me/soransoft", Group = "شبکه‌های اجتماعی", Type = "text", DisplayOrder = 11 },
-                new() { Key = "WhatsappUrl", Title = "واتساپ", Value = "https://wa.me/989120000000", Group = "شبکه‌های اجتماعی", Type = "text", DisplayOrder = 12 },
-                new() { Key = "AboutText", Title = "متن درباره ما", Value = "تیم سوران سافت با بیش از یک دهه تجربه در طراحی وب، سئو و تولید محتوا، کنار شماست تا کسب‌وکارتان را آنلاین کنند.", Group = "درباره", Type = "textarea", DisplayOrder = 13 },
-                new() { Key = "FooterNote", Title = "متن فوتر", Value = "Designed with ❤️ by Soransoft team", Group = "عمومی", Type = "text", DisplayOrder = 14 },
-                new() { Key = "ConsultationNote", Title = "یادداشت فرم مشاوره", Value = "جهت دریافت مشاوره رایگان و قیمت دقیق اطلاعات زیر را پر کنید", Group = "عمومی", Type = "text", DisplayOrder = 15 },
+                new() { Key = "LogoImage", Title = "تصویر لوگو", Value = "images/soransoft-logo.png", Group = "عمومی", Type = "image", DisplayOrder = 5 },
+                new() { Key = "OgImage", Title = "تصویر اشتراک‌گذاری", Value = "images/soransoft-logo.png", Group = "عمومی", Type = "image", DisplayOrder = 6 },
+                new() { Key = "Phone", Title = "تلفن ثابت", Value = "021-28 4 28 140", Group = "تماس", Type = "text", DisplayOrder = 7 },
+                new() { Key = "Mobile", Title = "موبایل", Value = "09120000000", Group = "تماس", Type = "text", DisplayOrder = 8 },
+                new() { Key = "Address", Title = "آدرس", Value = "تهران، خیابان ولیعصر، مرکز نوآوری سوران", Group = "تماس", Type = "textarea", DisplayOrder = 9 },
+                new() { Key = "WorkingHours", Title = "ساعات کاری", Value = "شنبه تا پنجشنبه ۹ تا ۱۸", Group = "تماس", Type = "text", DisplayOrder = 10 },
+                new() { Key = "Email", Title = "ایمیل", Value = "info@soransoft.ir", Group = "تماس", Type = "text", DisplayOrder = 11 },
+                new() { Key = "InstagramUrl", Title = "اینستاگرام", Value = "https://instagram.com/soransoft", Group = "شبکه‌های اجتماعی", Type = "text", DisplayOrder = 12 },
+                new() { Key = "TelegramUrl", Title = "تلگرام", Value = "https://t.me/soransoft", Group = "شبکه‌های اجتماعی", Type = "text", DisplayOrder = 13 },
+                new() { Key = "WhatsappUrl", Title = "واتساپ", Value = "https://wa.me/989120000000", Group = "شبکه‌های اجتماعی", Type = "text", DisplayOrder = 14 },
+                new() { Key = "AboutText", Title = "متن درباره ما", Value = "تیم سوران سافت با بیش از یک دهه تجربه در طراحی وب، سئو و تولید محتوا، کنار شماست تا کسب‌وکارتان را آنلاین کنند.", Group = "درباره", Type = "textarea", DisplayOrder = 15 },
+                new() { Key = "FooterNote", Title = "متن فوتر", Value = "Designed with ❤️ by Soransoft team", Group = "عمومی", Type = "text", DisplayOrder = 16 },
+                new() { Key = "ConsultationNote", Title = "یادداشت فرم مشاوره", Value = "جهت دریافت مشاوره رایگان و قیمت دقیق اطلاعات زیر را پر کنید", Group = "عمومی", Type = "text", DisplayOrder = 17 },
+                new() { Key = "HomeHeroCta", Title = "دکمه هیرو صفحه اصلی", Value = "مشاهده خدمات", Group = "صفحه اصلی", Type = "text", DisplayOrder = 16 },
+                new() { Key = "HomeServicesTitle", Title = "عنوان خدمات صفحه اصلی", Value = "خدمات ما", Group = "صفحه اصلی", Type = "text", DisplayOrder = 17 },
+                new() { Key = "HomeServicesSubtitle", Title = "توضیح خدمات صفحه اصلی", Value = "برآوردن سخت‌ترین انتظارات مشتری تخصص ماست! در تک تک مراحل کنار شما هستیم", Group = "صفحه اصلی", Type = "textarea", DisplayOrder = 18 },
+                new() { Key = "HomeTimelineTitle", Title = "عنوان تایم‌لاین صفحه اصلی", Value = "هوشمندانه انتخاب کن", Group = "صفحه اصلی", Type = "text", DisplayOrder = 19 },
+                new() { Key = "HomeTimelineSubtitle", Title = "توضیح تایم‌لاین صفحه اصلی", Value = "مراحل تکمیل پروژه خود را رصد کنید", Group = "صفحه اصلی", Type = "text", DisplayOrder = 20 },
+                new() { Key = "HomeTimelineLabel", Title = "برچسب تایم‌لاین", Value = "زمان تقریبی", Group = "صفحه اصلی", Type = "text", DisplayOrder = 21 },
+                new() { Key = "HomePortfolioTitle", Title = "عنوان نمونه‌کار صفحه اصلی", Value = "نمونه کارهای ما", Group = "صفحه اصلی", Type = "text", DisplayOrder = 22 },
+                new() { Key = "HomePortfolioSubtitle", Title = "توضیح نمونه‌کار صفحه اصلی", Value = "تمام نمونه کارها دارای دموی آنلاین هستند", Group = "صفحه اصلی", Type = "text", DisplayOrder = 23 },
+                new() { Key = "HomePortfolioAllCta", Title = "دکمه همه نمونه‌کارها", Value = "همه نمونه کارها", Group = "صفحه اصلی", Type = "text", DisplayOrder = 24 },
+                new() { Key = "HomePricingTitle", Title = "عنوان تعرفه صفحه اصلی", Value = "تعرفه‌های خدمات", Group = "صفحه اصلی", Type = "text", DisplayOrder = 25 },
+                new() { Key = "HomePricingSubtitle", Title = "توضیح تعرفه صفحه اصلی", Value = "تعرفه ها حدودی هستند و طبیعتا بنا بر نیاز شما تغییر می کنند", Group = "صفحه اصلی", Type = "text", DisplayOrder = 26 },
+                new() { Key = "HomeArticlesTitle", Title = "عنوان مقالات صفحه اصلی", Value = "آخرین مقالات", Group = "صفحه اصلی", Type = "text", DisplayOrder = 27 },
+                new() { Key = "OurServicesTitle", Title = "عنوان صفحه خدمات", Value = "خدمات سایت سوران سافت", Group = "صفحات عمومی", Type = "text", DisplayOrder = 30 },
+                new() { Key = "PortfolioHeroTitle", Title = "عنوان صفحه نمونه‌کار", Value = "مهمان های کهکشان سوران سافت", Group = "صفحات عمومی", Type = "text", DisplayOrder = 31 },
+                new() { Key = "PortfolioHeroSubtitle", Title = "زیرعنوان صفحه نمونه‌کار", Value = "نمونه کارهای ما", Group = "صفحات عمومی", Type = "text", DisplayOrder = 32 },
+                new() { Key = "PortfolioHeroText", Title = "توضیح صفحه نمونه‌کار", Value = "مجموعه ای بی نظیر از مهمان های سوران سافت", Group = "صفحات عمومی", Type = "text", DisplayOrder = 33 },
+                new() { Key = "TariffHeroTitle", Title = "عنوان صفحه تعرفه", Value = "تعرفه‌های خدمات", Group = "صفحات عمومی", Type = "text", DisplayOrder = 34 },
+                new() { Key = "TariffHeroText", Title = "توضیح صفحه تعرفه", Value = "تعرفه ها حدودی هستند و طبیعتا بنا بر نیاز شما تغییر می کنند", Group = "صفحات عمومی", Type = "text", DisplayOrder = 35 },
+                new() { Key = "TariffContentNote", Title = "یادداشت تعرفه تولید محتوا", Value = "برای سایت دو زبانه 20 درصد به مبالغ فوق اضافه می شود", Group = "صفحات عمومی", Type = "text", DisplayOrder = 36 },
+                new() { Key = "AboutHeroTitle", Title = "عنوان صفحه درباره ما", Value = "دربــــــــاره مـــــــــا", Group = "صفحات عمومی", Type = "text", DisplayOrder = 37 },
+                new() { Key = "AboutHeroText", Title = "توضیح صفحه درباره ما", Value = "ما کی هستیم؟ چی هستیم؟ چی کار می کنیم؟ اینجا کجاست؟! الان میگم!", Group = "صفحات عمومی", Type = "text", DisplayOrder = 38 },
+                new() { Key = "AboutParagraph1", Title = "پاراگراف اول درباره ما", Value = "سوران سافت مجموعه‌ای است که قرار است خدمات صفر تا صد سایت و اپلیکیشن را به شما ارائه دهد.", Group = "درباره", Type = "textarea", DisplayOrder = 39 },
+                new() { Key = "AboutParagraph2", Title = "پاراگراف دوم درباره ما", Value = "برای تمامی خدمات بالا مشاوره رایگان داریم. کافیست با ما تماس بگیرید تا درباره‌ی ریز هزینه‌ها و فرآیند انجام خدمات صحبت کنیم.", Group = "درباره", Type = "textarea", DisplayOrder = 40 },
+                new() { Key = "AboutTeamTitle", Title = "عنوان تیم درباره ما", Value = "یک تیم پر از سابقه", Group = "درباره", Type = "text", DisplayOrder = 41 },
+                new() { Key = "AboutCtaText", Title = "متن دعوت به تماس", Value = "اگر در هر زمینه‌ای به کمک تیم سوران سافت نیاز دارید فقط کافیه با ما تماس بگیرید", Group = "درباره", Type = "text", DisplayOrder = 42 },
+                new() { Key = "AboutCtaButton", Title = "دکمه تماس درباره ما", Value = "تماس با ما", Group = "درباره", Type = "text", DisplayOrder = 43 },
+                new() { Key = "ContactHeroTitle", Title = "عنوان صفحه تماس", Value = "تمــــــــاس بـــــا مـــــا", Group = "تماس", Type = "text", DisplayOrder = 44 },
+                new() { Key = "ContactFormTitle", Title = "عنوان فرم تماس", Value = "منتظر تماس شما هستیم", Group = "تماس", Type = "text", DisplayOrder = 45 },
+                new() { Key = "ContactSubmitText", Title = "دکمه ارسال تماس", Value = "ارسال پیام", Group = "تماس", Type = "text", DisplayOrder = 46 },
+                new() { Key = "ContactMapEmbedUrl", Title = "آدرس نقشه تماس", Value = "", Group = "تماس", Type = "text", DisplayOrder = 47 },
+                new() { Key = "OrderHeroTitle", Title = "عنوان سفارش پروژه", Value = "سفــارش پروژه", Group = "تعاملات", Type = "text", DisplayOrder = 48 },
+                new() { Key = "OrderHeroText", Title = "توضیح سفارش پروژه", Value = "فرم زیر را پر کنید تا کارشناسان ما در اسرع وقت با شما تماس بگیرند", Group = "تعاملات", Type = "text", DisplayOrder = 49 },
+                new() { Key = "OrderSubmitText", Title = "دکمه سفارش پروژه", Value = "ارسال سفارش", Group = "تعاملات", Type = "text", DisplayOrder = 50 },
+                new() { Key = "ConsultationTitle", Title = "عنوان فرم مشاوره", Value = "به مشاوره رایگان نیاز دارید؟", Group = "تعاملات", Type = "text", DisplayOrder = 51 },
+                new() { Key = "ConsultationSubmitText", Title = "دکمه فرم مشاوره", Value = "ارسال درخواست", Group = "تعاملات", Type = "text", DisplayOrder = 52 },
+                new() { Key = "FooterSocialTitle", Title = "عنوان شبکه‌های اجتماعی", Value = "ما را دنبال کنید", Group = "عمومی", Type = "text", DisplayOrder = 53 },
+                new() { Key = "StickyConsultationText", Title = "متن نوار مشاوره", Value = "جهت دریافت مشاوره رایگان", Group = "عمومی", Type = "text", DisplayOrder = 54 },
+                new() { Key = "StickyConsultationLinkText", Title = "متن لینک نوار مشاوره", Value = "اینجا کلیک کنید", Group = "عمومی", Type = "text", DisplayOrder = 55 },
+                new() { Key = "ServiceIntroHeading", Title = "عنوان معرفی سرویس", Value = "معرفی", Group = "خدمات", Type = "text", DisplayOrder = 56 },
+                new() { Key = "ServiceFeaturesHeading", Title = "عنوان مزایای سرویس", Value = "مزایا با سوران سافت", Group = "خدمات", Type = "text", DisplayOrder = 57 },
+                new() { Key = "ServiceStepsHeading", Title = "عنوان مراحل سرویس", Value = "مراحل انجام", Group = "خدمات", Type = "text", DisplayOrder = 58 },
+                new() { Key = "ServiceOrderCta", Title = "دکمه سفارش سرویس", Value = "ثبت سفارش", Group = "خدمات", Type = "text", DisplayOrder = 59 },
+                new() { Key = "TariffPopularLabel", Title = "برچسب تعرفه محبوب", Value = "محبوب", Group = "تعرفه", Type = "text", DisplayOrder = 60 },
+                new() { Key = "TariffInstallmentLabel", Title = "برچسب اقساط", Value = "امکان اقساط", Group = "تعرفه", Type = "text", DisplayOrder = 61 },
+                new() { Key = "TariffSupportLabel", Title = "برچسب پشتیبانی", Value = "1 سال پشتیبانی رایگان", Group = "تعرفه", Type = "text", DisplayOrder = 62 },
+                new() { Key = "TariffOrderCta", Title = "دکمه سفارش تعرفه", Value = "سفارش", Group = "تعرفه", Type = "text", DisplayOrder = 63 },
+                new() { Key = "BlogHeroTitle", Title = "عنوان صفحه مقالات", Value = "مقالات", Group = "مقالات", Type = "text", DisplayOrder = 64 },
+                new() { Key = "BlogCategoriesTitle", Title = "عنوان دسته‌بندی مقالات", Value = "دسته‌بندی‌ها", Group = "مقالات", Type = "text", DisplayOrder = 65 },
+                new() { Key = "BlogAllTitle", Title = "عنوان همه مقالات", Value = "همه مقالات", Group = "مقالات", Type = "text", DisplayOrder = 66 },
+                new() { Key = "BlogEmptyText", Title = "متن خالی مقالات", Value = "مقاله‌ای یافت نشد.", Group = "مقالات", Type = "text", DisplayOrder = 67 },
+                new() { Key = "ArticleBackCta", Title = "دکمه بازگشت مقالات", Value = "همه مقالات", Group = "مقالات", Type = "text", DisplayOrder = 68 },
             };
-            db.SiteSettings.AddRange(settings);
-            await db.SaveChangesAsync(ct);
+            settings.AddRange(SiteFeatures.All.Select((feature, index) => new SiteSetting
+            {
+                Key = SiteFeatures.SettingKey(feature.Key),
+                Title = feature.Title,
+                Value = feature.DefaultEnabled ? "true" : "false",
+                Group = feature.Group,
+                Type = "boolean",
+                DisplayOrder = 100 + index,
+            }));
+
+            var existingKeys = await db.SiteSettings.Select(s => s.Key).ToHashSetAsync(ct);
+            var missing = settings.Where(s => !existingKeys.Contains(s.Key)).ToList();
+            if (missing.Count > 0)
+            {
+                db.SiteSettings.AddRange(missing);
+                await db.SaveChangesAsync(ct);
+            }
         }
 
         private static async Task SeedMenusAsync(SoransoftDbContext db, CancellationToken ct)
