@@ -25,6 +25,7 @@
 
 .sn-admin-brand .sn-logo { color: #fff; font-size: 1.15rem; }
 .sn-admin-brand small { color: #00b3a4; display: block; margin-top: .2rem; }
+.sn-admin-brand-logo { display: block; width: 174px; max-width: 100%; height: auto; margin: 0 auto .35rem; }
 
 .sn-admin-nav a {
     display: flex;
@@ -542,6 +543,7 @@ a .sn-stat-card { color: inherit; }
 
 .sn-portal .sn-portal-brand .sn-logo { color: var(--portal-ink); font-size: 1.05rem; letter-spacing: 2px; }
 .sn-portal .sn-portal-brand small { display: block; margin-top: .18rem; color: var(--portal-primary-dark); font-size: .7rem; font-weight: 700; }
+.sn-portal .sn-portal-logo { display: block; width: 158px; max-width: 100%; height: auto; margin-bottom: .18rem; }
 
 .sn-portal-user-chip {
     display: flex;
