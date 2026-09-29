@@ -16,7 +16,7 @@
         {
             @foreach (var page in pages)
             {
-                <option value="/Page/@Uri.EscapeDataString(page.Slug)">@page.Title</option>
+                <option value="/Page/@Uri.EscapeDataString(page.Slug)">@(page.Title)</option>
             }
         }
     </datalist>
