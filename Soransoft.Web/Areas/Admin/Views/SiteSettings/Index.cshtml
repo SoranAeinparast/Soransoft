@@ -1,115 +1,144 @@
 @model List<SiteSetting>
 @{
     ViewData["Title"] = "تنظیمات سایت";
-    var groups = Model.GroupBy(s => s.Group).ToList();
-    // ایندکس باید به‌ازای هر تنظیم یکتا باشد، نه هر گروه؛ وگرنه مدل‌بایندر همه موارد هم‌نام را فقط یک‌بار می‌پذیرد
+    var footerKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "SiteName", "SiteDescription", "AboutText", "LogoImage", "Address", "Phone", "Mobile",
+        "WorkingHours", "Email", "InstagramUrl", "TelegramUrl", "WhatsappUrl", "FooterSocialTitle", "FooterNote"
+    };
+    var footerSettings = Model.Where(s => footerKeys.Contains(s.Key)).OrderBy(s => s.DisplayOrder).ToList();
+    var groups = Model.Where(s => !footerKeys.Contains(s.Key)).GroupBy(s => s.Group).ToList();
+    var settingGroups = Model.Select(s => s.Group).Where(g => !string.IsNullOrWhiteSpace(g)).Distinct().OrderBy(g => g).ToList();
     var settingIndex = 0;
 }
-<h5 class="mb-4">تنظیمات سایت</h5>
 
-<div class="d-flex justify-content-end mb-3">
-    <button class="btn sn-btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#newSettingForm" aria-expanded="false">
-        <i class="bi bi-plus-lg me-1"></i> تنظیم جدید
-    </button>
-</div>
-<div class="collapse mb-4" id="newSettingForm">
-    <div class="sn-admin-card">
-        <h6 class="fw-bold mb-3">افزودن تنظیم جدید</h6>
-        <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
-            @Html.AntiForgeryToken()
-            <div class="col-md-3">
-                <label class="form-label">کلید (انگلیسی)</label>
-                <input name="key" class="form-control" dir="ltr" placeholder="SupportEmail" required />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">عنوان نمایشی</label>
-                <input name="title" class="form-control" placeholder="ایمیل پشتیبانی" required />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">مقدار اولیه</label>
-                <input name="value" class="form-control" />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">فایل تصویر</label>
-                <input name="imageFile" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">گروه</label>
-                <input name="group" class="form-control" list="settingGroups" placeholder="General" />
-                <datalist id="settingGroups">
-                    @foreach (var g in groups) { <option value="@g.Key"></option> }
-                </datalist>
-            </div>
-            <div class="col-md-1">
-                <label class="form-label">نوع</label>
-                <select name="type" class="form-select">
-                    <option value="text">متن</option>
-                    <option value="textarea">متن بلند</option>
-                    <option value="image">تصویر</option>
-                    <option value="boolean">روشن/خاموش</option>
-                </select>
-            </div>
-            <div class="col-md-1">
-                <button type="submit" class="btn sn-btn-primary w-100">افزودن</button>
-            </div>
-        </form>
+<div class="sn-settings-page">
+    <header class="sn-admin-page-head sn-settings-page-head">
+        <div>
+            <span class="sn-admin-eyebrow"><i class="bi bi-sliders2"></i> کنترل هویت و محتوای سایت</span>
+            <h1>تنظیمات سایت</h1>
+            <p>اطلاعات عمومی، فوتر، لینک‌ها و تنظیمات قابل مدیریت سایت را یکجا ویرایش کنید.</p>
+        </div>
+        <span class="sn-settings-count"><i class="bi bi-database-check"></i> @Model.Count تنظیم ذخیره‌شده</span>
+    </header>
+
+    <div class="d-flex justify-content-end mb-3">
+        <button class="btn sn-btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#newSettingForm" aria-expanded="false">
+            <i class="bi bi-plus-lg me-1"></i> تنظیم جدید
+        </button>
     </div>
-</div>
+    <div class="collapse mb-4" id="newSettingForm">
+        <div class="sn-admin-card sn-settings-create-card">
+            <div class="sn-settings-card-head"><div><span class="sn-card-kicker">تنظیمات توسعه‌پذیر</span><h2>افزودن تنظیم جدید</h2></div><i class="bi bi-plus-circle"></i></div>
+            <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                @Html.AntiForgeryToken()
+                <div class="col-md-3"><label class="form-label">کلید (انگلیسی)</label><input name="key" class="form-control" dir="ltr" placeholder="SupportEmail" required /></div>
+                <div class="col-md-3"><label class="form-label">عنوان نمایشی</label><input name="title" class="form-control" placeholder="ایمیل پشتیبانی" required /></div>
+                <div class="col-md-2"><label class="form-label">مقدار اولیه</label><input name="value" class="form-control" /></div>
+                <div class="col-md-2"><label class="form-label">فایل تصویر</label><input name="imageFile" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" /></div>
+                <div class="col-md-2"><label class="form-label">گروه</label><input name="group" class="form-control" list="settingGroups" placeholder="General" /><datalist id="settingGroups">@foreach (var groupName in settingGroups) { <option value="@groupName"></option> }</datalist></div>
+                <div class="col-md-2"><label class="form-label">نوع</label><select name="type" class="form-select"><option value="text">متن</option><option value="textarea">متن بلند</option><option value="image">تصویر</option><option value="boolean">روشن/خاموش</option></select></div>
+                <div class="col-md-2"><button type="submit" class="btn sn-btn-primary w-100">افزودن</button></div>
+            </form>
+        </div>
+    </div>
 
-<form asp-action="Save" method="post" enctype="multipart/form-data">
-    @Html.AntiForgeryToken()
-    @for (int g = 0; g < groups.Count; g++)
-    {
-        var group = groups[g];
-        <div class="sn-admin-card mb-4">
-            <h6 class="fw-bold mb-3">@group.Key</h6>
-            @foreach (var setting in group)
+    <form asp-action="Save" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <section class="sn-admin-card sn-settings-feature-card mb-4" id="footer-settings">
+            <div class="sn-settings-card-head">
+                <div><span class="sn-card-kicker"><i class="bi bi-layout-text-sidebar-reverse"></i> نمایش در پایین سایت</span><h2>مدیریت فوتر</h2><p>اطلاعاتی که خالی بمانند، به‌صورت خودکار از فوتر عمومی حذف می‌شوند.</p></div>
+                <div class="sn-settings-feature-icon"><i class="bi bi-layout-three-columns"></i></div>
+            </div>
+            @if (!footerSettings.Any())
             {
-                var i = settingIndex++;
-                <input type="hidden" name="settings[@i].Key" value="" />
-                <input type="hidden" name="settings.Index" value="@i" />
-                <div class="row align-items-center mb-2">
-                    <label class="col-12 col-md-4 col-form-label">@setting.Title <small class="text-muted" dir="ltr">(@setting.Key)</small></label>
-                    <div class="col-12 col-md-8">
-                        <input type="hidden" name="settings[@i].Id" value="@setting.Id" />
-                        @if (setting.Type == "textarea")
-                        {
-                            <textarea name="settings[@i].Value" class="form-control" rows="2">@setting.Value</textarea>
-                        }
-                        else if (setting.Type == "boolean")
-                        {
-                            <div class="form-check form-switch">
-                                <input type="checkbox" name="settings[@i].Value" value="true" class="form-check-input" @(bool.TryParse(setting.Value, out var enabled) && enabled ? "checked" : null) />
-                                <label class="form-check-label">فعال</label>
-                            </div>
-                            <input type="hidden" name="settings[@i].Value" value="false" />
-                        }
-                        else if (setting.Type == "image")
-                        {
-                            <input name="settings[@i].Value" value="@setting.Value" class="form-control mb-2" dir="ltr" />
-                            <input name="settingFile_@setting.Id" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
-                            @if (!string.IsNullOrWhiteSpace(setting.Value))
+                <div class="sn-settings-empty">تنظیمات فوتر هنوز ایجاد نشده‌اند.</div>
+            }
+            else
+            {
+                <div class="sn-settings-grid">
+                    @foreach (var setting in footerSettings)
+                    {
+                        var i = settingIndex++;
+                        <div class="sn-setting-editor @(setting.Type == "textarea" ? "is-wide" : "")">
+                            <input type="hidden" name="settings[@i].Key" value="@setting.Key" />
+                            <input type="hidden" name="settings.Index" value="@i" />
+                            <input type="hidden" name="settings[@i].Id" value="@setting.Id" />
+                            <label class="form-label">@setting.Title <small dir="ltr">(@setting.Key)</small></label>
+                            @if (setting.Type == "textarea")
                             {
-                                <img src="~/@setting.Value.TrimStart('~', '/')" alt="@setting.Title" class="mt-2 rounded" style="max-width:180px;max-height:80px;object-fit:contain" />
+                                <textarea name="settings[@i].Value" class="form-control" rows="3">@setting.Value</textarea>
                             }
-                        }
-                        else
-                        {
-                            <input name="settings[@i].Value" value="@setting.Value" class="form-control" />
-                        }
-                    </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-12 text-end">
-                        <button type="submit" form="delete-setting-@setting.Id" class="btn btn-sm btn-link text-danger p-0"
-                                onclick="return confirm('این تنظیم برای همیشه حذف شود؟')">حذف تنظیم</button>
-                    </div>
+                            else if (setting.Type == "boolean")
+                            {
+                                <div class="form-check form-switch sn-setting-switch"><input type="checkbox" name="settings[@i].Value" value="true" class="form-check-input" @(bool.TryParse(setting.Value, out var footerEnabled) && footerEnabled ? "checked" : null) /><label class="form-check-label">فعال</label></div>
+                                <input type="hidden" name="settings[@i].Value" value="false" />
+                            }
+                            else if (setting.Type == "image")
+                            {
+                                <input name="settings[@i].Value" value="@setting.Value" class="form-control mb-2" dir="ltr" />
+                                <input name="settingFile_@setting.Id" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+                                @if (!string.IsNullOrWhiteSpace(setting.Value))
+                                {
+                                    <img src="~/@setting.Value.TrimStart('~', '/')" alt="@setting.Title" class="sn-setting-preview" />
+                                }
+                            }
+                            else
+                            {
+                                <input name="settings[@i].Value" value="@setting.Value" class="form-control" />
+                            }
+                            <button type="submit" form="delete-setting-@setting.Id" class="sn-setting-delete" onclick="return confirm('این تنظیم برای همیشه حذف شود؟')">حذف تنظیم</button>
+                        </div>
+                    }
                 </div>
             }
-        </div>
-    }
-    <button type="submit" class="btn sn-btn-primary px-5">ذخیره تنظیمات</button>
-</form>
+        </section>
+
+        @foreach (var group in groups)
+        {
+            <section class="sn-admin-card sn-settings-group-card mb-4">
+                <div class="sn-settings-card-head"><div><span class="sn-card-kicker">تنظیمات تکمیلی</span><h2>@group.Key</h2></div><i class="bi bi-sliders"></i></div>
+                @foreach (var setting in group)
+                {
+                    var i = settingIndex++;
+                    <div class="sn-setting-row">
+                        <input type="hidden" name="settings[@i].Key" value="@setting.Key" />
+                        <input type="hidden" name="settings.Index" value="@i" />
+                        <label class="sn-setting-label">@setting.Title <small dir="ltr">(@setting.Key)</small></label>
+                        <div class="sn-setting-control">
+                            <input type="hidden" name="settings[@i].Id" value="@setting.Id" />
+                            @if (setting.Type == "textarea")
+                            {
+                                <textarea name="settings[@i].Value" class="form-control" rows="2">@setting.Value</textarea>
+                            }
+                            else if (setting.Type == "boolean")
+                            {
+                                <div class="form-check form-switch sn-setting-switch"><input type="checkbox" name="settings[@i].Value" value="true" class="form-check-input" @(bool.TryParse(setting.Value, out var enabled) && enabled ? "checked" : null) /><label class="form-check-label">فعال</label></div>
+                                <input type="hidden" name="settings[@i].Value" value="false" />
+                            }
+                            else if (setting.Type == "image")
+                            {
+                                <input name="settings[@i].Value" value="@setting.Value" class="form-control mb-2" dir="ltr" />
+                                <input name="settingFile_@setting.Id" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+                                @if (!string.IsNullOrWhiteSpace(setting.Value))
+                                {
+                                    <img src="~/@setting.Value.TrimStart('~', '/')" alt="@setting.Title" class="sn-setting-preview" />
+                                }
+                            }
+                            else
+                            {
+                                <input name="settings[@i].Value" value="@setting.Value" class="form-control" />
+                            }
+                        </div>
+                        <button type="submit" form="delete-setting-@setting.Id" class="sn-setting-delete" onclick="return confirm('این تنظیم برای همیشه حذف شود؟')">حذف تنظیم</button>
+                    </div>
+                }
+            </section>
+        }
+        <button type="submit" class="btn sn-btn-primary px-5"><i class="bi bi-check2 me-1"></i> ذخیره همه تنظیمات</button>
+    </form>
+</div>
 
 @foreach (var setting in Model)
 {
