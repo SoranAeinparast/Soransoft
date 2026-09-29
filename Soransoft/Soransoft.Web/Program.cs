@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Soransoft.Application.DependencyInjection;
 using Soransoft.Application.Interfaces;
 using Soransoft.Infrastructure.Persistence;
@@ -170,6 +171,8 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 });
 
 var app = builder.Build();
+var persistentMediaRoot = PersistentPublicMediaStorage.ResolveRoot(app.Environment, builder.Configuration);
+Directory.CreateDirectory(persistentMediaRoot);
 
 // ---------- Database ----------
 using (var scope = app.Services.CreateScope())
@@ -180,6 +183,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await db.Database.MigrateAsync();
+        await PublicMediaMigration.RunAsync(app.Environment, builder.Configuration, startupLogger);
         await PrivateDocumentMigration.RunAsync(
             db,
             app.Environment.ContentRootPath,
@@ -221,6 +225,14 @@ app.UseWhen(
     context => !legacyPrivateDocumentPaths.Any(path => context.Request.Path.StartsWithSegments(path))
         || context.Request.Path.StartsWithSegments("/uploads/partners/sellable-projects/images"),
     branch => branch.UseStaticFiles());
+app.UseWhen(
+    context => !legacyPrivateDocumentPaths.Any(path => context.Request.Path.StartsWithSegments(path))
+        || context.Request.Path.StartsWithSegments("/uploads/partners/sellable-projects/images"),
+    branch => branch.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(persistentMediaRoot),
+        RequestPath = "/uploads",
+    }));
 
 app.UseRouting();
 app.UseRequestLocalization();
