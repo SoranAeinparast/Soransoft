@@ -121,6 +121,24 @@ a .sn-stat-card { color: inherit; }
 .sn-admin-table { font-size: .88rem; }
 .sn-admin-table th { font-weight: 700; color: #47596a; white-space: nowrap; }
 
+/* تعرفه‌ها: هر فیلد و وضعیت باید برچسب مستقل و قابل تشخیص داشته باشد. */
+.sn-tariff-package-list { display: grid; gap: 1rem; }
+.sn-tariff-package { padding: 1rem; background: #fbfdfd; border: 1px solid #dfe9ec; border-radius: 12px; }
+.sn-tariff-editor-fields { display: grid; grid-template-columns: minmax(190px, 1.4fr) repeat(4, minmax(120px, 1fr)); gap: .75rem; }
+.sn-tariff-field > label, .sn-tariff-order > label { display: block; margin-bottom: .35rem; color: #526771; font-size: .75rem; font-weight: 800; }
+.sn-tariff-order { display: flex; align-items: center; gap: .5rem; margin-top: .5rem; }
+.sn-tariff-order > label { margin: 0; white-space: nowrap; }
+.sn-tariff-order .form-control { width: 76px; }
+.sn-tariff-editor-flags { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem 1rem; margin-top: .9rem; padding-top: .8rem; border-top: 1px solid #e7eff1; }
+.sn-tariff-check { display: inline-flex; align-items: center; gap: .45rem; min-height: 36px; padding: .35rem .65rem; color: #405563; background: #fff; border: 1px solid #dbe7ea; border-radius: 8px; cursor: pointer; font-size: .78rem; font-weight: 700; }
+.sn-tariff-check:hover { border-color: #76cfc5; background: #f0fbf9; }
+.sn-tariff-check .form-check-input { float: none; margin: 0; }
+.sn-tariff-save { margin-inline-start: auto; }
+.sn-tariff-items { margin-top: 1rem; padding-top: .8rem; border-top: 1px dashed #d8e4e7; color: #526771; font-size: .78rem; }
+.sn-tariff-item-form { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .4rem .25rem .55rem; background: #fff; border: 1px solid #dfe9ec; border-radius: 8px; }
+.sn-tariff-item-form .form-control { width: 190px; border: 0; box-shadow: none; background: transparent; }
+.sn-tariff-item-add { background: #f6fafb; border-style: dashed; }
+
 /* ---------- Forms ---------- */
 .sn-admin-card .form-label { font-weight: 600; font-size: .85rem; }
 
@@ -466,6 +484,9 @@ a .sn-stat-card { color: inherit; }
 
 @media (max-width: 767px) {
     .sn-admin-content { padding: 1rem; }
+    .sn-tariff-editor-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sn-tariff-field-title { grid-column: 1 / -1; }
+    .sn-tariff-save { margin-inline-start: 0; }
     .sn-profile-hero { align-items: flex-start; flex-direction: column; padding: 1.35rem; border-radius: 16px; }
     .sn-profile-hero-actions { width: 100%; }
     .sn-profile-hero-actions .btn { flex: 1; }

@@ -5,10 +5,12 @@
         if (typeof Swal === 'undefined' || !title) return;
         Swal.mixin({
             toast: true,
-            position: document.documentElement.dir === 'rtl' ? 'top-start' : 'top-end',
+            position: 'top',
             showConfirmButton: false,
-            timer: 4200,
-            timerProgressBar: true
+            timer: 2400,
+            timerProgressBar: true,
+            width: 'min(420px, calc(100vw - 2rem))',
+            customClass: { popup: 'sn-swal-toast' }
         }).fire({ icon: icon, title: title });
     }
 

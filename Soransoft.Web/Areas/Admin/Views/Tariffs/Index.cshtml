@@ -28,8 +28,8 @@
             </div>
             <div class="col-md-2">
                 <div class="form-check form-switch mt-4">
-                    <input type="hidden" name="IsActive" value="false" />
                     <input type="checkbox" name="IsActive" value="true" checked class="form-check-input" id="nsActive" />
+                    <input type="hidden" name="IsActive" value="false" />
                     <label class="form-check-label" for="nsActive">فعال</label>
                 </div>
             </div>
@@ -106,10 +106,10 @@
                     <label class="form-label">ترتیب</label>
                     <input name="DisplayOrder" value="@sec.DisplayOrder" class="form-control" type="number" />
                 </div>
-                <div class="col-md-2">
-                    <div class="form-check form-switch mt-4">
-                        <input type="hidden" name="IsActive" value="false" />
+                    <div class="col-md-2">
+                        <div class="form-check form-switch mt-4">
                         <input type="checkbox" name="IsActive" value="true" @(sec.IsActive ? "checked" : "") class="form-check-input" id="es-@sec.Id" />
+                        <input type="hidden" name="IsActive" value="false" />
                         <label class="form-check-label" for="es-@sec.Id">فعال</label>
                     </div>
                 </div>
@@ -134,106 +134,113 @@
                 </div>
                 <div class="row g-2 mt-1">
                     <div class="col-md-3 form-check form-switch ms-md-2">
-                        <input type="hidden" name="IsInstallmentAvailable" value="false" />
                         <input type="checkbox" name="IsInstallmentAvailable" value="true" class="form-check-input" id="ci-@sec.Id" />
+                        <input type="hidden" name="IsInstallmentAvailable" value="false" />
                         <label class="form-check-label small" for="ci-@sec.Id">اقساطی</label>
                     </div>
                     <div class="col-md-3 form-check form-switch">
-                        <input type="hidden" name="HasFreeSupport" value="false" />
                         <input type="checkbox" name="HasFreeSupport" value="true" class="form-check-input" id="cs-@sec.Id" />
+                        <input type="hidden" name="HasFreeSupport" value="false" />
                         <label class="form-check-label small" for="cs-@sec.Id">پشتیبانی رایگان</label>
                     </div>
                     <div class="col-md-2 form-check form-switch">
-                        <input type="hidden" name="IsActive" value="false" />
                         <input type="checkbox" name="IsActive" value="true" checked class="form-check-input" id="ca-@sec.Id" />
+                        <input type="hidden" name="IsActive" value="false" />
                         <label class="form-check-label small" for="ca-@sec.Id">فعال</label>
                     </div>
                     <div class="col-md-2 form-check form-switch">
-                        <input type="hidden" name="IsPopular" value="false" />
                         <input type="checkbox" name="IsPopular" value="true" class="form-check-input" id="cp-@sec.Id" />
+                        <input type="hidden" name="IsPopular" value="false" />
                         <label class="form-check-label small" for="cp-@sec.Id">محبوب‌ترین</label>
                     </div>
                 </div>
             </form>
         </div>
 
-        <div class="table-responsive">
-            <table class="table sn-admin-table align-middle">
-                <thead>
-                    <tr><th style="width:180px">عنوان</th><th>قیمت / یادداشت</th><th>مدت</th><th>اقساط</th><th>پشتیبانی</th><th>محبوب</th><th>فعال</th><th style="width:120px"></th></tr>
-                </thead>
-                <tbody>
-                    @foreach (var pkg in sec.Packages.OrderBy(p => p.DisplayOrder))
-                    {
-                        <tr>
-                            <td colspan="8" class="p-0 border-bottom-0">
-                                <form asp-action="EditPackage" method="post" class="row g-1 align-items-center px-2 py-2 m-0">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="Id" value="@pkg.Id" />
-                                    <input type="hidden" name="TariffSectionId" value="@pkg.TariffSectionId" />
-                                    <div class="col-3">
-                                        <input name="Title" value="@pkg.Title" class="form-control form-control-sm" />
-                                        <div class="small text-muted mt-1">ترتیب: <input name="DisplayOrder" value="@pkg.DisplayOrder" class="form-control form-control-sm d-inline-block" style="width:60px" type="number" /></div>
-                                    </div>
-                                    <div class="col-2">
-                                        <input name="Price" value="@pkg.Price" class="form-control form-control-sm mb-1" type="number" placeholder="قیمت" />
-                                        <input name="PriceNote" value="@pkg.PriceNote" class="form-control form-control-sm" placeholder="یادداشت" />
-                                    </div>
-                                    <div class="col-2">
-                                        <input name="PriceSuffix" value="@pkg.PriceSuffix" class="form-control form-control-sm mb-1" placeholder="پسوند" />
-                                        <input name="Duration" value="@pkg.Duration" class="form-control form-control-sm" placeholder="مدت" />
-                                    </div>
-                                    <div class="col-1 text-center">
-                                        <input type="hidden" name="IsInstallmentAvailable" value="false" />
-                                        <input type="checkbox" name="IsInstallmentAvailable" value="true" @(pkg.IsInstallmentAvailable ? "checked" : "") class="form-check-input" />
-                                    </div>
-                                    <div class="col-1 text-center">
-                                        <input type="hidden" name="HasFreeSupport" value="false" />
-                                        <input type="checkbox" name="HasFreeSupport" value="true" @(pkg.HasFreeSupport ? "checked" : "") class="form-check-input" />
-                                    </div>
-                                    <div class="col-1 text-center">
-                                        <input type="hidden" name="IsPopular" value="false" />
-                                        <input type="checkbox" name="IsPopular" value="true" @(pkg.IsPopular ? "checked" : "") class="form-check-input" />
-                                    </div>
-                                    <div class="col-1 text-center">
-                                        <input type="hidden" name="IsActive" value="false" />
-                                        <input type="checkbox" name="IsActive" value="true" @(pkg.IsActive ? "checked" : "") class="form-check-input" />
-                                    </div>
-                                    <div class="col-1 text-center">
-                                        <button type="submit" class="btn btn-sm btn-outline-primary" title="ذخیره پکیج"><i class="bi bi-check-lg"></i></button>
-                                    </div>
-                                </form>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="8" class="pt-0">
-                                <div class="d-flex flex-wrap gap-2 align-items-start">
-                                    @* ردیف‌های ویژگی پکیج *@
-                                    @foreach (var item in pkg.Items.OrderBy(i => i.DisplayOrder))
-                                    {
-                                        <form asp-action="EditItem" method="post" class="d-flex align-items-center gap-1 border rounded-pill px-2 py-1 bg-light" style="font-size:.8rem">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <input name="title" value="@item.Title" class="form-control form-control-sm border-0 bg-transparent px-1" style="width:180px;box-shadow:none" />
-                                            <button type="submit" class="btn btn-sm btn-link p-0 text-primary" title="ذخیره"><i class="bi bi-check2"></i></button>
-                                        </form>
-                                        <form method="post" action="/Admin/Tariffs/DeleteItem/@item.Id" class="d-flex align-items-center">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-link p-0 text-danger" title="حذف ردیف" data-swal-confirm="حذف شود؟"><i class="bi bi-x"></i></button>
-                                        </form>
-                                    }
-                                    <form asp-action="AddItem" method="post" class="d-flex align-items-center gap-1">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="packageId" value="@pkg.Id" />
-                                        <input name="title" class="form-control form-control-sm" placeholder="ویژگی جدید…" style="width:170px" />
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="افزودن"><i class="bi bi-plus-lg"></i></button>
-                                    </form>
+        <div class="sn-tariff-package-list">
+            @foreach (var pkg in sec.Packages.OrderBy(p => p.DisplayOrder))
+            {
+                <div class="sn-tariff-package">
+                    <form asp-action="EditPackage" method="post" class="sn-tariff-package-editor">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" value="@pkg.Id" />
+                        <input type="hidden" name="TariffSectionId" value="@pkg.TariffSectionId" />
+                        <div class="sn-tariff-editor-fields">
+                            <div class="sn-tariff-field sn-tariff-field-title">
+                                <label for="title-@pkg.Id">عنوان پکیج</label>
+                                <input id="title-@pkg.Id" name="Title" value="@pkg.Title" class="form-control form-control-sm" />
+                                <div class="sn-tariff-order">
+                                    <label for="order-@pkg.Id">ترتیب نمایش</label>
+                                    <input id="order-@pkg.Id" name="DisplayOrder" value="@pkg.DisplayOrder" class="form-control form-control-sm" type="number" />
                                 </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                            </div>
+                            <div class="sn-tariff-field">
+                                <label for="price-@pkg.Id">قیمت (تومان)</label>
+                                <input id="price-@pkg.Id" name="Price" value="@pkg.Price" class="form-control form-control-sm" type="number" />
+                            </div>
+                            <div class="sn-tariff-field">
+                                <label for="price-note-@pkg.Id">یادداشت جای قیمت</label>
+                                <input id="price-note-@pkg.Id" name="PriceNote" value="@pkg.PriceNote" class="form-control form-control-sm" />
+                            </div>
+                            <div class="sn-tariff-field">
+                                <label for="price-suffix-@pkg.Id">پسوند قیمت</label>
+                                <input id="price-suffix-@pkg.Id" name="PriceSuffix" value="@pkg.PriceSuffix" class="form-control form-control-sm" />
+                            </div>
+                            <div class="sn-tariff-field">
+                                <label for="duration-@pkg.Id">مدت زمان</label>
+                                <input id="duration-@pkg.Id" name="Duration" value="@pkg.Duration" class="form-control form-control-sm" />
+                            </div>
+                        </div>
+                        <div class="sn-tariff-editor-flags">
+                            <label class="sn-tariff-check" for="installment-@pkg.Id">
+                                <input id="installment-@pkg.Id" type="checkbox" name="IsInstallmentAvailable" value="true" @(pkg.IsInstallmentAvailable ? "checked" : "") class="form-check-input" />
+                                <span>امکان اقساط</span>
+                            </label>
+                            <input type="hidden" name="IsInstallmentAvailable" value="false" />
+                            <label class="sn-tariff-check" for="support-@pkg.Id">
+                                <input id="support-@pkg.Id" type="checkbox" name="HasFreeSupport" value="true" @(pkg.HasFreeSupport ? "checked" : "") class="form-check-input" />
+                                <span>پشتیبانی رایگان</span>
+                            </label>
+                            <input type="hidden" name="HasFreeSupport" value="false" />
+                            <label class="sn-tariff-check" for="popular-@pkg.Id">
+                                <input id="popular-@pkg.Id" type="checkbox" name="IsPopular" value="true" @(pkg.IsPopular ? "checked" : "") class="form-check-input" />
+                                <span>محبوب‌ترین</span>
+                            </label>
+                            <input type="hidden" name="IsPopular" value="false" />
+                            <label class="sn-tariff-check" for="active-@pkg.Id">
+                                <input id="active-@pkg.Id" type="checkbox" name="IsActive" value="true" @(pkg.IsActive ? "checked" : "") class="form-check-input" />
+                                <span>فعال</span>
+                            </label>
+                            <input type="hidden" name="IsActive" value="false" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary sn-tariff-save"><i class="bi bi-check-lg me-1"></i>ذخیره پکیج</button>
+                        </div>
+                    </form>
+                    <div class="sn-tariff-items">
+                        <strong>ویژگی‌های این پکیج</strong>
+                        <div class="d-flex flex-wrap gap-2 align-items-start mt-2">
+                            @foreach (var item in pkg.Items.OrderBy(i => i.DisplayOrder))
+                            {
+                                <form asp-action="EditItem" method="post" class="sn-tariff-item-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input name="title" value="@item.Title" class="form-control form-control-sm" aria-label="عنوان ویژگی" />
+                                    <button type="submit" class="btn btn-sm btn-link p-0 text-primary" title="ذخیره ویژگی"><i class="bi bi-check2"></i></button>
+                                </form>
+                                <form method="post" action="/Admin/Tariffs/DeleteItem/@item.Id" class="d-flex align-items-center">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-link p-0 text-danger" title="حذف ویژگی" data-swal-confirm="این ویژگی حذف شود؟"><i class="bi bi-x"></i></button>
+                                </form>
+                            }
+                            <form asp-action="AddItem" method="post" class="sn-tariff-item-form sn-tariff-item-add">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="packageId" value="@pkg.Id" />
+                                <input name="title" class="form-control form-control-sm" placeholder="عنوان ویژگی جدید" aria-label="عنوان ویژگی جدید" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="افزودن ویژگی"><i class="bi bi-plus-lg"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
         @if (!sec.Packages.Any())
         {
