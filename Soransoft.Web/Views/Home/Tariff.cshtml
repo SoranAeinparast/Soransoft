@@ -2,11 +2,12 @@
 @model Soransoft.Application.ViewModels.HomeViewModel
 @{
     ViewData["Title"] = "تعرفه";
+    string S(string key, string def = "") => Model.Settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
 }
 <section class="sn-page-hero">
     <div class="container text-center">
-        <h1 class="sn-hero-title">تعرفه‌های خدمات</h1>
-        <p class="sn-hero-text">تعرفه ها حدودی هستند و طبیعتا بنا بر نیاز شما تغییر می کنند</p>
+        <h1 class="sn-hero-title">@S("TariffHeroTitle", "تعرفه‌های خدمات")</h1>
+        <p class="sn-hero-text">@S("TariffHeroText", "تعرفه ها حدودی هستند و طبیعتا بنا بر نیاز شما تغییر می کنند")</p>
     </div>
 </section>
 
@@ -15,7 +16,6 @@
         <partial name="_TariffTabs" model="Model.TariffSections" />
 
         <div class="sn-consultation mt-5">
-            <h4 class="sn-consultation-title">جهت دریافت مشاوره رایگان و قیمت دقیق اطلاعات زیر را پر کنید</h4>
             <partial name="_ConsultationForm" model="new Soransoft.Application.ViewModels.ConsultationRequestViewModel()" />
         </div>
     </div>

@@ -1,17 +1,12 @@
 @model Soransoft.Web.Models.OurServicesViewModel
 @{
     ViewData["Title"] = "خدمات ما";
-    static string ServiceUrl(string slug) => slug.ToLowerInvariant() switch
-    {
-        "site-project" => "/SiteProject",
-        "seo" => "/SeoProject",
-        "content" => "/ContentProject",
-        _ => "/OurServices",
-    };
+    string S(string key, string def = "") => Model.Settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
+    static string ServiceUrl(string slug) => string.IsNullOrWhiteSpace(slug) ? "/OurServices" : "/Service/" + Uri.EscapeDataString(slug);
 }
 <section class="sn-page-hero">
     <div class="container text-center">
-        <h1 class="sn-hero-title">خدمات سایت سوران سافت</h1>
+        <h1 class="sn-hero-title">@S("OurServicesTitle", "خدمات سایت سوران سافت")</h1>
     </div>
 </section>
 
@@ -26,6 +21,10 @@
                             <div class="sn-service-icon"><i class="bi @service.Icon"></i></div>
                             <h2 class="mb-0">@service.Title</h2>
                         </div>
+                        @if (!string.IsNullOrWhiteSpace(service.Image))
+                        {
+                            <img src="~/@service.Image.TrimStart('~', '/')" alt="@service.Title" class="img-fluid rounded mb-3" style="max-height:180px;object-fit:cover" />
+                        }
                         <p class="sn-service-desc">@service.ShortDescription</p>
                         @if (service.ComingSoon)
                         {

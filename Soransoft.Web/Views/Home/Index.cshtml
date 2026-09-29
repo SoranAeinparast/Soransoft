@@ -7,26 +7,16 @@
 @{
     ViewData["Title"] = null;
     string S(string key, string def = "") => Model.Settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : def;
-    static string KindTitle(ServiceKind kind) => kind switch
-    {
-        ServiceKind.Site => "طراحــی سایــت",
-        ServiceKind.Seo => "ســـئو",
-        ServiceKind.Application => "طراحــی اپلیکیشن",
-        _ => "تولید محتوا",
-    };
-    static string ServiceUrl(string slug) => slug.ToLowerInvariant() switch
-    {
-        "site-project" => "/SiteProject",
-        "seo" => "/SeoProject",
-        "content" => "/ContentProject",
-        _ => "/OurServices",
-    };
+    static string ServiceUrl(string slug) => string.IsNullOrWhiteSpace(slug) ? "/OurServices" : "/Service/" + Uri.EscapeDataString(slug);
     var sliders = await Site.GetSlidersAsync();
     var hasSlider = sliders.Any();
+    bool F(string key) => !Model.Features.TryGetValue(key, out var enabled) || enabled;
+    var logoPath = S("LogoImage", "images/soransoft-logo.png");
+    static string ArticleUrl(string slug, int id) => string.IsNullOrWhiteSpace(slug) ? $"/Article/{id}" : $"/Article/{Uri.EscapeDataString(slug)}";
 }
 
 <!-- هیرو / اسلایدر -->
-@if (hasSlider)
+@if (F(SiteFeatures.HomeHero) && hasSlider)
 {
     <section class="sn-hero p-0">
         @* کمان‌های تزئینی و عناصر شناور روی اسلایدر — مانند مرجع *@
@@ -71,7 +61,7 @@
         </div>
     </section>
 }
-else
+else if (F(SiteFeatures.HomeHero))
 {
     <section class="sn-hero">
         @* کمان‌های تزئینی گوشه — مانند top_arc1/top_arc2 مرجع *@
@@ -86,27 +76,35 @@ else
         <i class="bi bi-star sn-float-icon sn-f5"></i>
 
         <div class="container text-center">
-            <div class="sn-hero-badge mx-auto"><img src="~/images/soransoft-logo.png" class="sn-hero-brand-logo" alt="سوران‌سافت" /></div>
+            <div class="sn-hero-badge mx-auto"><img src="~/@logoPath.TrimStart('~', '/')" class="sn-hero-brand-logo" alt="سوران‌سافت" /></div>
             <h1 class="sn-hero-title">@S("SiteTagline", "هر چه در فکر شماست، ما می‌سازیم")</h1>
-            <a href="#services" class="btn sn-btn-primary btn-lg mt-2">مشاهده خدمات</a>
+            @if (F(SiteFeatures.HomeServices) && F(SiteFeatures.Services))
+            {
+                <a href="#services" class="btn sn-btn-primary btn-lg mt-2">@S("HomeHeroCta", "مشاهده خدمات")</a>
+            }
         </div>
     </section>
 
     @* نوار سبز سرویس‌ها — مانند btnSection مرجع *@
-    <div class="sn-btn-section" id="services">
-        <h2 class="sn-hero-subtitle text-center pt-3 mb-0" style="color:#fff">خدمــــات ما</h2>
-        <p class="text-center text-white mb-2">برآوردن سخت‌ترین انتظارات مشتری تخصص ماست! در تک تک مراحل کنار شما هستیم</p>
-        <div class="clearfix">
-            @foreach (var service in Model.Services)
-            {
-                <a href="@(service.ComingSoon ? "#services" : ServiceUrl(service.Slug))" class="sn-btn-item d-block">
-                    <i class="bi @service.Icon"></i>@service.Title
-                </a>
-            }
+    @if (F(SiteFeatures.HomeServices) && F(SiteFeatures.Services))
+    {
+        <div class="sn-btn-section" id="services">
+            <h2 class="sn-hero-subtitle text-center pt-3 mb-0" style="color:#fff">@S("HomeServicesTitle", "خدمات ما")</h2>
+            <p class="text-center text-white mb-2">@S("HomeServicesSubtitle")</p>
+            <div class="clearfix">
+                @foreach (var service in Model.Services)
+                {
+                    <a href="@(service.ComingSoon ? "#services" : ServiceUrl(service.Slug))" class="sn-btn-item d-block">
+                        <i class="bi @service.Icon"></i>@service.Title
+                    </a>
+                }
+            </div>
         </div>
-    </div>
+    }
 }
 
+@if (F(SiteFeatures.HomeServices) && F(SiteFeatures.Services))
+{
 <!-- سرویس‌ها -->
 <section class="sn-section">
     <div class="container">
@@ -116,6 +114,10 @@ else
                 <div class="col-12 col-md-6 col-lg-3">
                     <div class="sn-service-card @(service.ComingSoon ? "sn-soon" : "")">
                         <div class="sn-service-icon"><i class="bi @service.Icon"></i></div>
+                        @if (!string.IsNullOrWhiteSpace(service.Image))
+                        {
+                            <img src="~/@service.Image.TrimStart('~', '/')" alt="@service.Title" class="img-fluid rounded mb-3" style="max-height:120px;object-fit:cover" />
+                        }
                         <h3 class="sn-service-title">@service.Title</h3>
                         <p class="sn-service-desc">@service.ShortDescription</p>
                         @if (service.ComingSoon)
@@ -132,12 +134,15 @@ else
         </div>
     </div>
 </section>
+}
 
+@if (F(SiteFeatures.HomeTimeline) && F(SiteFeatures.Services))
+{
 <!-- هوشمندانه انتخاب کن -->
 <section class="sn-section sn-section-alt">
     <div class="container">
-        <h2 class="sn-section-title">هوشمندانه انتخاب کن</h2>
-        <p class="sn-section-subtitle">مراحل تکمیل پروژه خود را رصد کنید</p>
+        <h2 class="sn-section-title">@S("HomeTimelineTitle", "هوشمندانه انتخاب کن")</h2>
+        <p class="sn-section-subtitle">@S("HomeTimelineSubtitle", "مراحل تکمیل پروژه خود را رصد کنید")</p>
 
         <ul class="nav sn-tabs justify-content-center mb-4" role="tablist">
             @foreach (var tl in Model.Timelines)
@@ -145,7 +150,7 @@ else
                 <li class="nav-item" role="presentation">
                     <button class="nav-link @(tl == Model.Timelines.First() ? "active" : "")" data-bs-toggle="tab"
                             data-bs-target="#timeline-@((int)tl.Kind)" type="button" role="tab">
-                        @(KindTitle(tl.Kind))
+                        @tl.ServiceTitle
                     </button>
                 </li>
             }
@@ -155,7 +160,7 @@ else
             @foreach (var tl in Model.Timelines)
             {
                 <div class="tab-pane fade @(tl == Model.Timelines.First() ? "show active" : "")" id="timeline-@((int)tl.Kind)" role="tabpanel">
-                    <p class="text-center sn-timeline-label">زمــــــــان تقریبـــــی</p>
+                    <p class="text-center sn-timeline-label">@S("HomeTimelineLabel", "زمان تقریبی")</p>
                     <div class="sn-timeline">
                         @for (int i = 0; i < tl.Steps.Count; i++)
                         {
@@ -179,12 +184,15 @@ else
         </div>
     </div>
 </section>
+}
 
+@if (F(SiteFeatures.HomePortfolio) && F(SiteFeatures.Portfolio))
+{
 <!-- نمونه کارها -->
 <section class="sn-section">
     <div class="container">
-        <h2 class="sn-section-title">نمونه کارهای ما</h2>
-        <p class="sn-section-subtitle">تمام نمونه کارها دارای دموی آنلاین هستند</p>
+        <h2 class="sn-section-title">@S("HomePortfolioTitle", "نمونه کارهای ما")</h2>
+        <p class="sn-section-subtitle">@S("HomePortfolioSubtitle", "تمام نمونه کارها دارای دموی آنلاین هستند")</p>
 
         <div id="portfolioCarousel" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
@@ -237,30 +245,42 @@ else
         </div>
 
         <div class="text-center mt-4">
-            <a href="/Portfolio" class="btn sn-btn-primary px-5">همه نمونه کارها</a>
+            @if (F(SiteFeatures.Portfolio))
+            {
+                <a href="/Portfolio" class="btn sn-btn-primary px-5">@S("HomePortfolioAllCta", "همه نمونه کارها")</a>
+            }
         </div>
     </div>
 </section>
+}
 
+@if (F(SiteFeatures.HomePricing) && F(SiteFeatures.Pricing))
+{
 <!-- تعرفه‌ها -->
 <section class="sn-section sn-section-alt">
     <div class="container">
-        <h2 class="sn-section-title">تعرفه‌های خدمات</h2>
-        <p class="sn-section-subtitle">تعرفه ها حدودی هستند و طبیعتا بنا بر نیاز شما تغییر می کنند</p>
+        <h2 class="sn-section-title">@S("HomePricingTitle", "تعرفه‌های خدمات")</h2>
+        <p class="sn-section-subtitle">@S("HomePricingSubtitle", "تعرفه ها حدودی هستند و طبیعتا بنا بر نیاز شما تغییر می کنند")</p>
 
         <partial name="_TariffTabs" model="Model.TariffSections" />
 
-        <div class="sn-consultation mt-5">
-            <h4 class="sn-consultation-title">@S("ConsultationNote")</h4>
-            <partial name="_ConsultationForm" model="new Soransoft.Application.ViewModels.ConsultationRequestViewModel()" />
-        </div>
+        @if (F(SiteFeatures.HomeConsultation) && F(SiteFeatures.Consultation))
+        {
+            <div class="sn-consultation mt-5">
+                <h4 class="sn-consultation-title">@S("ConsultationNote")</h4>
+                <partial name="_ConsultationForm" model="new Soransoft.Application.ViewModels.ConsultationRequestViewModel()" />
+            </div>
+        }
     </div>
 </section>
+}
 
+@if (F(SiteFeatures.HomeArticles) && F(SiteFeatures.Blog))
+{
 <!-- آخرین مقالات -->
 <section class="sn-section">
     <div class="container">
-        <h2 class="sn-section-title">آخرین مقالات</h2>
+        <h2 class="sn-section-title">@S("HomeArticlesTitle", "آخرین مقالات")</h2>
         <div class="row g-4">
             @foreach (var article in Model.LatestArticles)
             {
@@ -277,14 +297,18 @@ else
                             }
                         </div>
                         <div class="sn-article-body">
+                            @if (article.IsFeatured)
+                            {
+                                <span class="sn-badge">ویژه</span>
+                            }
                             <span class="sn-badge">@article.CategoryTitle</span>
-                            <h3><a href="/Article/@article.Slug">@article.Title</a></h3>
+                            <h3><a href="@ArticleUrl(article.Slug, article.Id)">@article.Title</a></h3>
                             <p>@(article.Summary.Length > 180 ? article.Summary[..180] + "…" : article.Summary)</p>
                             <div class="sn-article-meta">
                                 <span><i class="bi bi-person me-1"></i>@article.AuthorName</span>
                                 <span><i class="bi bi-calendar3 me-1"></i>@PersianDisplay.Date(article.PublishedAt)</span>
                             </div>
-                            <a href="/Article/@article.Slug" class="sn-readmore">مطالعه <i class="bi bi-arrow-left"></i></a>
+                            <a href="@ArticleUrl(article.Slug, article.Id)" class="sn-readmore">مطالعه <i class="bi bi-arrow-left"></i></a>
                         </div>
                     </article>
                 </div>
@@ -292,3 +316,4 @@ else
         </div>
     </div>
 </section>
+}

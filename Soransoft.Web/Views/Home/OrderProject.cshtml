@@ -1,11 +1,16 @@
 @model Soransoft.Application.ViewModels.OrderProjectViewModel
+@inject Soransoft.Application.Interfaces.ISiteSettingService Settings
+@inject Soransoft.Application.Interfaces.ISiteService Site
 @{
     ViewData["Title"] = "سفارش پروژه";
+    var settings = await Settings.GetAllAsync();
+    string S(string key, string def = "") => settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
+    var services = (await Site.GetServiceCardsAsync()).Where(service => !service.ComingSoon).ToList();
 }
 <section class="sn-page-hero">
     <div class="container text-center">
-        <h1 class="sn-hero-title">سفــارش پروژه</h1>
-        <p class="sn-hero-text">فرم زیر را پر کنید تا کارشناسان ما در اسرع وقت با شما تماس بگیرند</p>
+        <h1 class="sn-hero-title">@S("OrderHeroTitle", "سفــارش پروژه")</h1>
+        <p class="sn-hero-text">@S("OrderHeroText", "فرم زیر را پر کنید تا کارشناسان ما در اسرع وقت با شما تماس بگیرند")</p>
     </div>
 </section>
 
@@ -39,8 +44,12 @@
                         </div>
                         <div class="mb-3">
                             <label asp-for="ProjectType" class="form-label"></label>
-                            <select asp-for="ProjectType" class="form-select sn-input" asp-items="Html.GetEnumSelectList<Soransoft.Domain.Enums.ServiceKind>()">
+                            <select asp-for="ProjectType" class="form-select sn-input">
                                 <option value="">انتخاب کنید…</option>
+                                @foreach (var service in services)
+                                {
+                                    <option value="@((int)service.Kind)">@service.Title</option>
+                                }
                             </select>
                             <span asp-validation-for="ProjectType" class="text-danger small"></span>
                         </div>
@@ -54,7 +63,7 @@
                             <textarea asp-for="Description" class="form-control sn-input" rows="5"></textarea>
                             <span asp-validation-for="Description" class="text-danger small"></span>
                         </div>
-                        <button type="submit" class="btn sn-btn-primary btn-lg w-100">ارسال سفارش</button>
+                        <button type="submit" class="btn sn-btn-primary btn-lg w-100">@S("OrderSubmitText", "ارسال سفارش")</button>
                     </form>
                 </div>
             </div>

@@ -1,6 +1,11 @@
 @model Soransoft.Domain.Entities.Service
+@using Soransoft.Application.Interfaces
+@inject ISiteFeatureService Features
+@inject Soransoft.Application.Interfaces.ISiteSettingService Settings
 @{
     ViewData["Title"] = Model.Title;
+    var settings = await Settings.GetAllAsync();
+    string S(string key, string def = "") => settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
 }
 <section class="sn-page-hero">
     <div class="container text-center">
@@ -9,19 +14,23 @@
         {
             <p class="sn-hero-subtitle">@Model.Slogan</p>
         }
+        @if (!string.IsNullOrWhiteSpace(Model.Image))
+        {
+            <img src="~/@Model.Image.TrimStart('~', '/')" alt="@Model.Title" class="img-fluid rounded shadow-sm mt-3" style="max-height:240px;object-fit:cover" />
+        }
     </div>
 </section>
 
 <section class="sn-section">
     <div class="container">
-        <h2 class="sn-section-title">خدمات @Model.Title</h2>
+        <h2 class="sn-section-title">@S("ServiceIntroHeading", "معرفی") @Model.Title</h2>
         <div class="sn-article-body-content">
             @Html.Raw(SafeHtml.Sanitize(Model.FullDescription))
         </div>
 
         @if (Model.Features.Any())
         {
-            <h3 class="mt-5 mb-4">مزایای @Model.Title با سوران سافت</h3>
+            <h3 class="mt-5 mb-4">@S("ServiceFeaturesHeading", "مزایا با سوران سافت") @Model.Title</h3>
             <div class="row g-4">
                 @foreach (var feature in Model.Features)
                 {
@@ -40,7 +49,7 @@
 
         @if (Model.Steps.Any())
         {
-            <h3 class="mt-5 mb-4">مراحل انجام @Model.Title</h3>
+            <h3 class="mt-5 mb-4">@S("ServiceStepsHeading", "مراحل انجام") @Model.Title</h3>
             <div class="sn-timeline">
                 @{ var steps = Model.Steps.OrderBy(s => s.DisplayOrder).ToList(); }
                 @for (int i = 0; i < steps.Count; i++)
@@ -53,8 +62,11 @@
             </div>
         }
 
-        <div class="text-center mt-5">
-            <a href="/OrderProject" class="btn sn-btn-primary btn-lg px-5">ثبت سفارش @Model.Title</a>
-        </div>
+        @if (await Features.IsEnabledAsync(SiteFeatures.ProjectOrder) && !Model.ComingSoon)
+        {
+            <div class="text-center mt-5">
+                <a href="/OrderProject" class="btn sn-btn-primary btn-lg px-5">@S("ServiceOrderCta", "ثبت سفارش") @Model.Title</a>
+            </div>
+        }
     </div>
 </section>

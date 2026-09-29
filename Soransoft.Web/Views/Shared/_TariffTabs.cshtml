@@ -1,5 +1,8 @@
 @using Soransoft.Domain.Enums
+@using Soransoft.Application.Interfaces
 @model List<Soransoft.Application.ViewModels.TariffSectionViewModel>
+@inject ISiteSettingService Settings
+@inject ISiteFeatureService Features
 @{
     static string KindTitle(ServiceKind kind) => kind switch
     {
@@ -8,6 +11,9 @@
         ServiceKind.Application => "اپلیکیشن",
         _ => "تولید محتوا",
     };
+    var settings = await Settings.GetAllAsync();
+    string S(string key, string def = "") => settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
+    var orderEnabled = await Features.IsEnabledAsync(SiteFeatures.ProjectOrder);
 }
 <ul class="nav sn-tabs justify-content-center mb-4" role="tablist">
     @foreach (var tabSection in Model)
@@ -15,7 +21,7 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link @(tabSection == Model.First() ? "active" : "")" data-bs-toggle="tab"
                     data-bs-target="#tariff-@((int)tabSection.Kind)" type="button" role="tab">
-                @(KindTitle(tabSection.Kind))
+                @(string.IsNullOrWhiteSpace(tabSection.Title) ? KindTitle(tabSection.Kind) : tabSection.Title)
             </button>
         </li>
     }
@@ -32,7 +38,7 @@
                         <div class="sn-price-card @(package.IsPopular ? "sn-popular" : "")">
                             @if (package.IsPopular)
                             {
-                                <span class="sn-popular-badge">محبوب</span>
+                                <span class="sn-popular-badge">@S("TariffPopularLabel", "محبوب")</span>
                             }
                             <h3>@package.Title</h3>
                             @if (!string.IsNullOrWhiteSpace(package.Duration))
@@ -42,11 +48,11 @@
                             <ul class="sn-price-features list-unstyled">
                                 @if (package.IsInstallmentAvailable)
                                 {
-                                    <li><i class="bi bi-check2"></i> امکان اقساط</li>
+                                    <li><i class="bi bi-check2"></i> @S("TariffInstallmentLabel", "امکان اقساط")</li>
                                 }
                                 @if (package.HasFreeSupport)
                                 {
-                                    <li><i class="bi bi-check2"></i> 1 سال پشتیبانی رایگان</li>
+                                    <li><i class="bi bi-check2"></i> @S("TariffSupportLabel", "1 سال پشتیبانی رایگان")</li>
                                 }
                                 @foreach (var item in package.Items)
                                 {
@@ -68,14 +74,17 @@
                                     <span class="sn-price-note">@package.PriceSuffix</span>
                                 }
                             </div>
-                            <a href="/OrderProject" class="btn sn-btn-primary w-100">سفـــارش</a>
+                            @if (orderEnabled)
+                            {
+                                <a href="/OrderProject" class="btn sn-btn-primary w-100">@S("TariffOrderCta", "سفارش")</a>
+                            }
                         </div>
                     </div>
                 }
             </div>
             @if (tabSection.Kind == ServiceKind.Content)
             {
-                <p class="text-center text-muted mt-3 small">برای سایت دو زبانه 20 درصد به مبالغ فوق اضافه می شود</p>
+                <p class="text-center text-muted mt-3 small">@S("TariffContentNote", "برای سایت دو زبانه 20 درصد به مبالغ فوق اضافه می شود")</p>
             }
         </div>
     }
