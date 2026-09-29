@@ -142,13 +142,13 @@ namespace Soransoft.Infrastructure.Storage
 
             try
             {
-                var relativePath = normalized["uploads/".Length..];
-                var persistent = PersistentPublicMediaStorage.ResolveUnderRoot(_persistentMediaRoot, relativePath);
+                var publicRelativePath = normalized["uploads/".Length..];
+                var persistent = PersistentPublicMediaStorage.ResolveUnderRoot(_persistentMediaRoot, publicRelativePath);
                 if (File.Exists(persistent)) return persistent;
 
                 return ResolveUnderRoot(
                     Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "uploads"),
-                    relativePath);
+                    publicRelativePath);
             }
             catch (SecurityException)
             {
