@@ -1,7 +1,10 @@
 @model Soransoft.Web.Controllers.PanelViewModel
+@using Soransoft.Application.Interfaces
+@inject ISiteFeatureService Features
 @{
     ViewData["Title"] = "پنل کاربری";
     var user = Model.User!;
+    var orderEnabled = await Features.IsEnabledAsync(SiteFeatures.ProjectOrder);
 }
 <section class="sn-page-hero">
     <div class="container text-center">
@@ -24,7 +27,10 @@
                         <li class="active"><a href="/Panel"><i class="bi bi-bag-check me-2"></i>سفارش‌های من</a></li>
                         <li><a href="/Panel/Profile"><i class="bi bi-person me-2"></i>پروفایل</a></li>
                         <li><a href="/Panel/ChangePassword"><i class="bi bi-shield-lock me-2"></i>تغییر رمز عبور</a></li>
-                        <li><a href="/OrderProject"><i class="bi bi-plus-circle me-2"></i>ثبت سفارش جدید</a></li>
+                        @if (orderEnabled)
+                        {
+                            <li><a href="/OrderProject"><i class="bi bi-plus-circle me-2"></i>ثبت سفارش جدید</a></li>
+                        }
                         <li>
                             <form method="post" action="/Account/Logout">
                                 @Html.AntiForgeryToken()
@@ -38,7 +44,10 @@
                 <div class="sn-form-card">
                     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h5 class="mb-0 fw-bold">سفارش‌های من (@Model.Orders.Count)</h5>
-                        <a href="/OrderProject" class="btn sn-btn-primary btn-sm">سفارش جدید</a>
+                        @if (orderEnabled)
+                        {
+                            <a href="/OrderProject" class="btn sn-btn-primary btn-sm">سفارش جدید</a>
+                        }
                     </div>
 
                     @if (!Model.Orders.Any())
@@ -46,7 +55,10 @@
                         <div class="text-center py-5">
                             <i class="bi bi-inbox" style="font-size:3rem;color:var(--sn-primary)"></i>
                             <p class="text-muted mt-3 mb-3">هنوز سفارشی ثبت نکرده‌اید.</p>
-                            <a href="/OrderProject" class="btn sn-btn-primary">ثبت اولین سفارش</a>
+                            @if (orderEnabled)
+                            {
+                                <a href="/OrderProject" class="btn sn-btn-primary">ثبت اولین سفارش</a>
+                            }
                         </div>
                     }
                     else

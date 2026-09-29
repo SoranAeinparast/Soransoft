@@ -1,12 +1,14 @@
 @model List<Soransoft.Application.ViewModels.PortfolioCardViewModel>
 @{
     ViewData["Title"] = "نمونه کارها";
+    var settings = (IDictionary<string, string>)ViewBag.Settings;
+    string S(string key, string def = "") => settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
 }
 <section class="sn-page-hero">
     <div class="container text-center">
-        <h1 class="sn-hero-title">مهمان های کهکشان سوران سافت</h1>
-        <h2 class="sn-hero-subtitle">نمونه کارهای ما</h2>
-        <p class="sn-hero-text">مجموعه ای بی نظیر از مهمان های سوران سافت</p>
+        <h1 class="sn-hero-title">@S("PortfolioHeroTitle", "مهمان های کهکشان سوران سافت")</h1>
+        <h2 class="sn-hero-subtitle">@S("PortfolioHeroSubtitle", "نمونه کارهای ما")</h2>
+        <p class="sn-hero-text">@S("PortfolioHeroText", "مجموعه ای بی نظیر از مهمان های سوران سافت")</p>
     </div>
 </section>
 

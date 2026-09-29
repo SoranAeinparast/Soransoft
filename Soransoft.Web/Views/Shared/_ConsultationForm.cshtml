@@ -1,10 +1,18 @@
 @model Soransoft.Application.ViewModels.ConsultationRequestViewModel
+@using Soransoft.Application.Interfaces
+@inject ISiteFeatureService Features
+@inject ISiteSettingService Settings
+@inject ISiteService Site
 @{
-    var note = "جهت دریافت مشاوره رایگان و قیمت دقیق اطلاعات زیر را پر کنید";
+    var settings = await Settings.GetAllAsync();
+    var services = (await Site.GetServiceCardsAsync()).Where(service => !service.ComingSoon).ToList();
+    string S(string key, string def = "") => settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
 }
+@if (await Features.IsEnabledAsync(SiteFeatures.Consultation))
+{
 <div class="sn-consultation">
-    <h4 class="sn-consultation-title">به مشاوره رایگان نیاز دارید؟</h4>
-    <p class="text-muted">@note</p>
+    <h4 class="sn-consultation-title">@S("ConsultationTitle", "به مشاوره رایگان نیاز دارید؟")</h4>
+    <p class="text-muted">@S("ConsultationNote", "جهت دریافت مشاوره رایگان و قیمت دقیق اطلاعات زیر را پر کنید")</p>
     <form id="consultationForm" asp-controller="Home" asp-action="SubmitConsultation" method="post">
         @Html.AntiForgeryToken()
         <div class="row g-3">
@@ -17,8 +25,12 @@
                 <span asp-validation-for="Mobile" class="text-danger small"></span>
             </div>
             <div class="col-12">
-                <select asp-for="ServiceKind" class="form-select sn-input" asp-items="Html.GetEnumSelectList<Soransoft.Domain.Enums.ServiceKind>()">
+                <select asp-for="ServiceKind" class="form-select sn-input">
                     <option value="">سرویس موردنظر را انتخاب کنید</option>
+                    @foreach (var service in services)
+                    {
+                        <option value="@((int)service.Kind)">@service.Title</option>
+                    }
                 </select>
                 <span asp-validation-for="ServiceKind" class="text-danger small"></span>
             </div>
@@ -27,9 +39,10 @@
                 <span asp-validation-for="Description" class="text-danger small"></span>
             </div>
             <div class="col-12">
-                <button type="submit" class="btn sn-btn-primary px-5">ارسال درخواست</button>
+                <button type="submit" class="btn sn-btn-primary px-5">@S("ConsultationSubmitText", "ارسال درخواست")</button>
             </div>
         </div>
         <div class="sn-form-result mt-3" id="consultationResult"></div>
     </form>
 </div>
+}

@@ -3,8 +3,10 @@
 @using System.Security.Claims
 @inject ISiteService Site
 @inject ISiteSettingService Settings
+@inject ISiteFeatureService Features
 @{
     var mainMenu = await Site.GetMenuAsync(Soransoft.Domain.Enums.MenuPosition.Main);
+    var mobileMenu = await Site.GetMenuAsync(Soransoft.Domain.Enums.MenuPosition.Mobile);
     var footerMenu = await Site.GetMenuAsync(Soransoft.Domain.Enums.MenuPosition.Footer);
     var siteSettings = await Settings.GetAllAsync();
     string S(string key, string def = "") => siteSettings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : def;
@@ -16,6 +18,10 @@
     // همکار واردشده (اسکیم PartnerAuth) — ورود فقط از پرتال همکاران ممکن است
     var isPartner = User.Identity?.IsAuthenticated == true && User.HasClaim("UserType", "Partner");
     var partnerName = User.FindFirstValue(ClaimTypes.Name);
+    var siteAccountEnabled = await Features.IsEnabledAsync(SiteFeatures.SiteAccount);
+    var partnerPortalEnabled = await Features.IsEnabledAsync(SiteFeatures.PartnerPortal);
+    var consultationEnabled = await Features.IsEnabledAsync(SiteFeatures.Consultation);
+    var contactEnabled = await Features.IsEnabledAsync(SiteFeatures.Contact);
 
     // ---------- سئو: Open Graph / Twitter Card / Canonical ----------
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host.Value}".TrimEnd('/');
@@ -29,6 +35,7 @@
         var configured = S("OgImage");
         ogImage = string.IsNullOrWhiteSpace(configured) ? null : (configured.StartsWith("http") ? configured : baseUrl + "/" + configured.TrimStart('~', '/'));
     }
+    var logoPath = S("LogoImage", "images/soransoft-logo.png");
 }
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -73,11 +80,12 @@
         <div class="container">
             <nav class="sn-nav d-none d-lg-flex align-items-center justify-content-between">
                 <a asp-controller="Home" asp-action="Index" class="sn-brand-link" aria-label="سوران‌سافت">
-                    <img src="~/images/soransoft-logo.png" class="sn-brand-logo" alt="سوران‌سافت" />
+                    <img src="~/@logoPath.TrimStart('~', '/')" class="sn-brand-logo" alt="سوران‌سافت" />
                 </a>
                 <ul class="sn-menu list-unstyled d-flex align-items-center gap-4 mb-0">
                     @foreach (var item in mainMenu)
                     {
+                        if (item.FeatureKey is not null && !await Features.IsEnabledAsync(item.FeatureKey)) continue;
                         <li><a href="@item.Url" class="sn-menu-link">@item.Title</a></li>
                     }
                 </ul>
@@ -86,19 +94,19 @@
                         <i class="bi bi-sun"></i>
                         <i class="bi bi-moon-stars"></i>
                     </button>
-                    @if (isPartner)
+                    @if (partnerPortalEnabled && isPartner)
                     {
                         <a href="/Partner/Dashboard" class="btn btn-sm sn-btn-primary"><i class="bi bi-briefcase me-1"></i> پرتال (@partnerName)</a>
                     }
-                    else
+                    else if (partnerPortalEnabled)
                     {
                         <a href="/Partner/Account/Login" class="btn btn-sm sn-btn-portal"><i class="bi bi-briefcase me-1"></i> پرتال همکاران</a>
                     }
-                    @if (isSiteUser)
+                    @if (siteAccountEnabled && isSiteUser)
                     {
                         <a href="/Panel" class="btn btn-sm sn-btn-primary"><i class="bi bi-person-circle me-1"></i> @siteUserName</a>
                     }
-                    else
+                    else if (siteAccountEnabled)
                     {
                         <a href="/Account/Login" class="btn btn-sm sn-btn-outline">ورود / عضویت</a>
                     }
@@ -106,7 +114,7 @@
             </nav>
             <nav class="sn-nav-mobile d-flex d-lg-none align-items-center justify-content-between">
                 <a asp-controller="Home" asp-action="Index" class="sn-brand-link" aria-label="سوران‌سافت">
-                    <img src="~/images/soransoft-logo.png" class="sn-brand-logo" alt="سوران‌سافت" />
+                    <img src="~/@logoPath.TrimStart('~', '/')" class="sn-brand-logo" alt="سوران‌سافت" />
                 </a>
                 <div class="d-flex align-items-center gap-2">
                     <button type="button" class="sn-theme-toggle" id="snThemeToggleM" aria-label="تغییر حالت روز/شب">
@@ -125,18 +133,22 @@
     <div class="offcanvas offcanvas-start sn-mobile-menu" tabindex="-1" id="mobileMenu">
         <div class="offcanvas-header">
             <span class="sn-brand-link" aria-label="سوران‌سافت">
-                <img src="~/images/soransoft-logo.png" class="sn-brand-logo" alt="سوران‌سافت" />
+                <img src="~/@logoPath.TrimStart('~', '/')" class="sn-brand-logo" alt="سوران‌سافت" />
             </span>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="بستن"></button>
         </div>
         <div class="offcanvas-body">
             <ul class="list-unstyled">
-                @foreach (var item in mainMenu)
+                @foreach (var item in mobileMenu)
                 {
+                    if (item.FeatureKey is not null && !await Features.IsEnabledAsync(item.FeatureKey)) continue;
                     <li><a href="@item.Url" class="sn-mobile-link">@item.Title</a></li>
                 }
-                <li><a href="/Partner/Account/Login" class="sn-mobile-link"><i class="bi bi-briefcase me-2"></i>پرتال همکاران</a></li>
-                @if (isSiteUser)
+                @if (partnerPortalEnabled)
+                {
+                    <li><a href="/Partner/Account/Login" class="sn-mobile-link"><i class="bi bi-briefcase me-2"></i>پرتال همکاران</a></li>
+                }
+                @if (siteAccountEnabled && isSiteUser)
                 {
                     <li>
                         <form method="post" action="/Account/Logout">
@@ -146,11 +158,11 @@
                     </li>
                 }
             </ul>
-            @if (isSiteUser)
+            @if (siteAccountEnabled && isSiteUser)
             {
                 <a href="/Panel" class="btn sn-btn-primary w-100 mt-3"><i class="bi bi-person-circle me-1"></i> پنل کاربری (@siteUserName)</a>
             }
-            else
+            else if (siteAccountEnabled)
             {
                 <a href="/Account/Login" class="btn sn-btn-primary w-100 mt-3">ورود / عضویت</a>
             }
@@ -163,7 +175,7 @@
 
     <footer class="sn-footer">
         <div class="container">
-            <h6 class="sn-footer-title">ما را دنــــــــــــــــــــــــبال کنید</h6>
+            <h6 class="sn-footer-title">@S("FooterSocialTitle", "ما را دنبال کنید")</h6>
             <div class="d-flex justify-content-center gap-3 mb-5">
                 @if (!string.IsNullOrWhiteSpace(S("InstagramUrl")))
                 {
@@ -183,6 +195,7 @@
                     <ul class="list-unstyled d-flex flex-column gap-2">
                         @foreach (var item in footerMenu)
                         {
+                            if (item.FeatureKey is not null && !await Features.IsEnabledAsync(item.FeatureKey)) continue;
                             <li><a href="@item.Url" class="sn-footer-link">@item.Title</a></li>
                         }
                     </ul>
@@ -194,7 +207,7 @@
                 </div>
                 <div class="col-12 col-md-4 text-center text-md-start">
                     <a asp-controller="Home" asp-action="Index" class="sn-brand-link" aria-label="سوران‌سافت">
-                        <img src="~/images/soransoft-logo.png" class="sn-brand-logo" alt="سوران‌سافت" />
+                        <img src="~/@logoPath.TrimStart('~', '/')" class="sn-brand-logo" alt="سوران‌سافت" />
                     </a>
                 </div>
             </div>
@@ -204,10 +217,12 @@
         </div>
     </footer>
 
-    @* نوار سبز چسبان مشاوره — مشابه stick_message مرجع *@
-    <div class="sn-stick-message" id="snStickMessage">
-        <p>جهت دریافت مشاوره رایگان <a href="/ContactUs">اینجا کلیک کنید</a> یا با ما تماس بگیرید</p>
-    </div>
+    @if (consultationEnabled && contactEnabled)
+    {
+        <div class="sn-stick-message" id="snStickMessage">
+            <p>@S("StickyConsultationText", "جهت دریافت مشاوره رایگان") <a href="/ContactUs">@S("StickyConsultationLinkText", "اینجا کلیک کنید")</a> یا با ما تماس بگیرید</p>
+        </div>
+    }
 
     @if (TempData["Success"] is string success)
     {
