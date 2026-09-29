@@ -1,0 +1,43 @@
+@model SitePage
+<div class="mb-3">
+    <label asp-for="Title" class="form-label">عنوان صفحه</label>
+    <input asp-for="Title" class="form-control" />
+    <span asp-validation-for="Title" class="text-danger small"></span>
+</div>
+<div class="row g-3">
+    <div class="col-md-8 mb-3">
+        <label asp-for="Slug" class="form-label">اسلاگ</label>
+        <input asp-for="Slug" class="form-control" dir="ltr" placeholder="about-us" />
+        <small class="text-muted">در صورت خالی‌بودن، از عنوان ساخته می‌شود.</small>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label asp-for="DisplayOrder" class="form-label">ترتیب نمایش</label>
+        <input asp-for="DisplayOrder" class="form-control" type="number" />
+    </div>
+</div>
+<div class="mb-3">
+    <label asp-for="Summary" class="form-label">خلاصه صفحه</label>
+    <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
+</div>
+<div class="mb-3">
+    <label asp-for="Body" class="form-label">محتوای صفحه (HTML)</label>
+    <partial name="_RichTextEditor" for="Body" view-data="@(new ViewDataDictionary(ViewData) { ["EditorHeight"] = 520 })" />
+</div>
+<div class="mb-3">
+    <label class="form-label">تصویر شاخص</label>
+    <partial name="_MediaImagePicker" model="Model.Image" view-data="@(new ViewDataDictionary(ViewData) { ["MediaInputName"] = "Image", ["MediaInputId"] = "site-page-image-input", ["MediaPreviewId"] = "site-page-image-preview" })" />
+</div>
+<div class="row g-3">
+    <div class="col-md-6 mb-3">
+        <label asp-for="SeoTitle" class="form-label">عنوان SEO</label>
+        <input asp-for="SeoTitle" class="form-control" />
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="SeoDescription" class="form-label">توضیح SEO</label>
+        <textarea asp-for="SeoDescription" class="form-control" rows="2"></textarea>
+    </div>
+</div>
+<div class="form-check form-switch mb-3">
+    <input asp-for="IsPublished" class="form-check-input" />
+    <label asp-for="IsPublished" class="form-check-label">صفحه منتشر شود</label>
+</div>
