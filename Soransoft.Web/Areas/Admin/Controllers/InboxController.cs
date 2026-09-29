@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Soransoft.Domain.Enums;
 using Soransoft.Infrastructure.Persistence;
+using Soransoft.Application.Interfaces;
 
 namespace Soransoft.Web.Areas.Admin.Controllers
 {
@@ -126,7 +127,14 @@ namespace Soransoft.Web.Areas.Admin.Controllers
     public class SiteSettingsController : AdminBaseController
     {
         private readonly SoransoftDbContext _db;
-        public SiteSettingsController(SoransoftDbContext db) => _db = db;
+        private readonly ISiteSettingService _settings;
+        private readonly IFileStorage _storage;
+        public SiteSettingsController(SoransoftDbContext db, ISiteSettingService settings, IFileStorage storage)
+        {
+            _db = db;
+            _settings = settings;
+            _storage = storage;
+        }
 
         public async Task<IActionResult> Index(CancellationToken ct)
         {
@@ -140,6 +148,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Save(List<Soransoft.Domain.Entities.SiteSetting> settings, CancellationToken ct)
         {
+            var form = await Request.ReadFormAsync(ct);
             var rejected = false;
             foreach (var input in settings)
             {
@@ -152,10 +161,18 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                     TempData["Error"] = $"مقدار تنظیم «{entity.Title}» باید یک لینک امن http/https یا مسیر داخلی باشد.";
                     continue;
                 }
+                var oldValue = entity.Value;
                 entity.Value = value;
+                var image = form.Files.GetFile($"settingFile_{entity.Id}");
+                if (entity.Type.Equals("image", StringComparison.OrdinalIgnoreCase) && image is not null && image.Length > 0)
+                {
+                    entity.Value = await _storage.SaveImageAsync(image, "site-settings", ct);
+                    await _storage.DeleteAsync(oldValue, ct);
+                }
                 entity.UpdatedAt = DateTime.Now;
             }
             await _db.SaveChangesAsync(ct);
+            await _settings.InvalidateCacheAsync();
             if (!rejected) TempData["Success"] = "تنظیمات ذخیره شد";
             return RedirectToAction(nameof(Index));
         }
@@ -163,7 +180,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         /// <summary>افزودن تنظیم جدید (کلید/مقدار) به گروه دلخواه</summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string key, string title, string value, string group, string type, CancellationToken ct)
+        public async Task<IActionResult> Create(string key, string title, string value, string group, string type, IFormFile? imageFile, CancellationToken ct)
         {
             key = key?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(title))
@@ -177,6 +194,8 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Index));
             }
             value = value?.Trim() ?? string.Empty;
+            if (string.Equals(type, "image", StringComparison.OrdinalIgnoreCase) && imageFile is not null && imageFile.Length > 0)
+                value = await _storage.SaveImageAsync(imageFile, "site-settings", ct);
             if (key.EndsWith("Url", StringComparison.OrdinalIgnoreCase) && !IsSafeLink(value))
             {
                 TempData["Error"] = "لینک تنظیم باید http/https یا مسیر داخلی باشد.";
@@ -193,6 +212,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 DisplayOrder = order + 1,
             });
             await _db.SaveChangesAsync(ct);
+            await _settings.InvalidateCacheAsync();
             TempData["Success"] = $"تنظیم «{title}» اضافه شد";
             return RedirectToAction(nameof(Index));
         }
@@ -207,6 +227,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             {
                 _db.SiteSettings.Remove(item);
                 await _db.SaveChangesAsync(ct);
+                await _settings.InvalidateCacheAsync();
                 TempData["Success"] = $"تنظیم «{item.Title}» حذف شد";
             }
             return RedirectToAction(nameof(Index));

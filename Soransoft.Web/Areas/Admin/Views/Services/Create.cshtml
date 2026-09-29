@@ -5,7 +5,7 @@
 }
 <h5 class="mb-4">سرویس جدید</h5>
 <div class="sn-admin-card">
-    <form asp-action="Create" method="post">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <partial name="FormFields" model="Model" />
         <button type="submit" class="btn sn-btn-primary">ذخیره</button>
