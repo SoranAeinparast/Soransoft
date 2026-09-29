@@ -50,7 +50,7 @@
 
                 @if (isSalesSide)
                 {
-                    <div class="sn-admin-nav-group">پنل فروش</div>
+                    <div class="sn-admin-nav-group sn-nav-group-sales">پنل فروش</div>
                     <a href="/Partner/Sales" class="@(controller == "Sales" && action == "Index" ? "active" : "")"><i class="bi bi-funnel"></i><span>لیدها</span></a>
                     <a href="/Partner/Sales/Commissions" class="@(controller == "Sales" && action == "Commissions" ? "active" : "")"><i class="bi bi-cash-stack"></i><span>عملکرد و کمیسیون</span></a>
                     <a href="/Partner/Sales/Catalog" class="@(controller == "Sales" && (action == "Catalog" || action == "Project") ? "active" : "")"><i class="bi bi-briefcase"></i><span>مستندات پروژه‌های قابل فروش</span></a>
@@ -59,21 +59,21 @@
 
                 @if (isDevSide)
                 {
-                    <div class="sn-admin-nav-group">پنل فنی</div>
+                    <div class="sn-admin-nav-group sn-nav-group-dev">پنل فنی</div>
                     <a href="/Partner/Dev" class="@(controller == "Dev" && action == "Index" ? "active" : "")"><i class="bi bi-kanban"></i><span>برد تسک‌ها</span></a>
                     <a href="/Partner/Dev/TimeLogs" class="@(controller == "Dev" && action == "TimeLogs" ? "active" : "")"><i class="bi bi-stopwatch"></i><span>ثبت زمان</span></a>
                     <a href="/Partner/Dev/Documents" class="@(controller == "Dev" && action == "Documents" ? "active" : "")"><i class="bi bi-journal-code"></i><span>مستندات فنی</span></a>
                     <a href="/Partner/Dev/Profile" class="@(controller == "Dev" && action == "Profile" ? "active" : "")"><i class="bi bi-person-vcard"></i><span>پروفایل فنی</span></a>
                 }
 
-                <div class="sn-admin-nav-group">مالی</div>
+                <div class="sn-admin-nav-group sn-nav-group-finance">مالی</div>
                 <a href="/Partner/Agreement" class="@(controller == "Agreement" ? "active" : "")"><i class="bi bi-journal-bookmark"></i><span>قرارداد همکاری من</span></a>
                 <a href="/Partner/Wallet" class="@(controller == "Wallet" ? "active" : "")"><i class="bi bi-wallet2"></i><span>کیف پول من</span></a>
 
-                <div class="sn-admin-nav-group">پیام‌ها</div>
+                <div class="sn-admin-nav-group sn-nav-group-messages">پیام‌ها</div>
                 <a href="/Partner/Dev/Notifications" class="@(controller == "Dev" && action == "Notifications" ? "active" : "")"><i class="bi bi-megaphone"></i><span>اطلاعیه‌ها</span></a>
 
-                <div class="sn-admin-nav-group">حساب</div>
+                <div class="sn-admin-nav-group sn-nav-group-account">حساب</div>
                 <a href="/Partner/PersonalProfile" class="@(controller == "PersonalProfile" ? "active" : "")"><i class="bi bi-person-vcard"></i><span>پروفایل شخصی</span></a>
                 <form method="post" action="/Partner/Account/Logout" class="sn-admin-logout-form">
                     @Html.AntiForgeryToken()

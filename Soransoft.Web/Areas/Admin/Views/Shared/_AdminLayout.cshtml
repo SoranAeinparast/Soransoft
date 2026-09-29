@@ -39,7 +39,7 @@
             <nav class="sn-admin-nav">
                 <a href="/Admin/Dashboard" class="@(controller == "Dashboard" ? "active" : "")"><i class="bi bi-speedometer2"></i> داشبورد</a>
 
-                <div class="sn-admin-nav-group">مدیریت محتوا</div>
+                <div class="sn-admin-nav-group sn-nav-group-content">مدیریت محتوا</div>
                 <a href="/Admin/Sliders" class="@(controller == "Sliders" ? "active" : "")"><i class="bi bi-images"></i> اسلایدر صفحه اصلی</a>
                 <a href="/Admin/Services" class="@(controller == "Services" ? "active" : "")"><i class="bi bi-gear"></i> سرویس‌ها</a>
                 <a href="/Admin/Portfolios" class="@(controller == "Portfolios" ? "active" : "")"><i class="bi bi-collection"></i> نمونه‌کارها</a>
@@ -50,13 +50,13 @@
                 <a href="/Admin/MediaLibrary" class="@(controller == "MediaLibrary" ? "active" : "")"><i class="bi bi-folder2-open"></i> کتابخانه رسانه</a>
                 <a href="/Admin/MediaLibrary/Storage" class="@(action == "Storage" ? "active" : "")"><i class="bi bi-pie-chart"></i> مصرف فضا</a>
 
-                <div class="sn-admin-nav-group">صندوق ورودی</div>
+                <div class="sn-admin-nav-group sn-nav-group-inbox">صندوق ورودی</div>
                 <a href="/Admin/ProjectOrders" class="@(controller == "ProjectOrders" ? "active" : "")"><i class="bi bi-bag-check"></i> سفارش‌های پروژه</a>
                 <a href="/Admin/SiteUsers" class="@(controller == "SiteUsers" ? "active" : "")"><i class="bi bi-person-badge"></i> کاربران سایت</a>
                 <a href="/Admin/ContactMessages" class="@(controller == "ContactMessages" ? "active" : "")"><i class="bi bi-envelope"></i> پیام‌های تماس</a>
                 <a href="/Admin/ConsultationRequests" class="@(controller == "ConsultationRequests" ? "active" : "")"><i class="bi bi-chat-dots"></i> درخواست‌های مشاوره</a>
 
-                <div class="sn-admin-nav-group">پرتال همکاران</div>
+                <div class="sn-admin-nav-group sn-nav-group-portal">پرتال همکاران</div>
                 <a href="/Admin/PortalPartners" class="@(controller == "PortalPartners" ? "active" : "")"><i class="bi bi-briefcase"></i> همکاران پرتال</a>
                 <a href="/Admin/PortalLeads" class="@(controller == "PortalLeads" ? "active" : "")"><i class="bi bi-funnel"></i> لیدهای همکاران</a>
                 <a href="/Admin/PortalLeads/Contracts" class="@(controller == "PortalLeads" && (action == "Contracts" || action == "Manage") ? "active" : "")"><i class="bi bi-file-earmark-text"></i> قراردادها و پورسانت</a>
@@ -77,7 +77,7 @@
                     }
                 </a>
 
-                <div class="sn-admin-nav-group">سیستم</div>
+                <div class="sn-admin-nav-group sn-nav-group-system">سیستم</div>
                 <a href="/Admin/MenuItems" class="@(controller == "MenuItems" ? "active" : "")"><i class="bi bi-list"></i> منوها</a>
                 <a href="/Admin/Account/ChangePassword" class="@(action == "ChangePassword" ? "active" : "")"><i class="bi bi-key"></i> تغییر رمز عبور</a>
                 <a href="/Admin/SiteSettings" class="@(controller == "SiteSettings" ? "active" : "")"><i class="bi bi-sliders"></i> تنظیمات سایت</a>
