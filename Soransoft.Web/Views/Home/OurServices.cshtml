@@ -3,39 +3,81 @@
     ViewData["Title"] = "خدمات ما";
     string S(string key, string def = "") => Model.Settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : def;
     static string ServiceUrl(string slug) => string.IsNullOrWhiteSpace(slug) ? "/OurServices" : "/Service/" + Uri.EscapeDataString(slug);
+    var serviceCount = Model.Services.Count;
+    var availableCount = Model.Services.Count(service => !service.ComingSoon);
 }
-<section class="sn-page-hero">
-    <div class="container text-center">
-        <h1 class="sn-hero-title">@S("OurServicesTitle", "خدمات سایت سوران سافت")</h1>
+<section class="sn-services-hero">
+    <div class="container">
+        <div class="sn-services-hero-grid">
+            <div class="sn-services-hero-copy">
+                <span class="sn-section-kicker"><i class="bi bi-stars"></i> راهکارهای دیجیتال سوران‌سافت</span>
+                <h1>@S("OurServicesTitle", "خدماتی برای رشد هوشمند کسب‌وکار شما")</h1>
+                <p>@S("OurServicesIntro", S("SiteDescription", "از ایده تا اجرا، کنار شما هستیم تا تجربه‌ای سریع، حرفه‌ای و ماندگار بسازیم."))</p>
+                <div class="sn-services-hero-meta">
+                    <span><strong>@serviceCount</strong> خدمت تخصصی</span>
+                    <span><strong>@availableCount</strong> خدمت آماده ارائه</span>
+                </div>
+                <a href="#service-list" class="btn sn-btn-primary sn-services-hero-action"><i class="bi bi-arrow-down-left me-1"></i> مشاهده خدمات</a>
+            </div>
+            <div class="sn-services-hero-art" aria-hidden="true">
+                <div class="sn-services-orbit sn-services-orbit-one"></div>
+                <div class="sn-services-orbit sn-services-orbit-two"></div>
+                <div class="sn-services-hero-card sn-services-hero-card-main"><i class="bi bi-command"></i><span>راهکار یکپارچه</span><strong>برای آینده‌ی دیجیتال</strong></div>
+                <div class="sn-services-hero-card sn-services-hero-card-float"><i class="bi bi-lightning-charge-fill"></i><span>سریع و دقیق</span></div>
+            </div>
+        </div>
     </div>
 </section>
 
-<section class="sn-section">
+<section class="sn-services-section" id="service-list">
     <div class="container">
-        @foreach (var service in Model.Services)
+        <div class="sn-services-section-head">
+            <div>
+                <span class="sn-section-kicker">توانمندی‌های ما</span>
+                <h2>هر قدم، یک راهکار دقیق‌تر</h2>
+            </div>
+            <p>خدمات ما با نگاه به نیاز واقعی کسب‌وکار شما طراحی شده‌اند؛ ساده، قابل توسعه و نتیجه‌محور.</p>
+        </div>
+        @if (!Model.Services.Any())
         {
-            <div class="row g-4 align-items-center mb-5 pb-4">
-                <div class="col-12">
-                    <div class="sn-service-wide @(service.ComingSoon ? "sn-soon" : "")">
-                        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="sn-services-empty"><i class="bi bi-box-seam"></i><strong>خدمتی برای نمایش ثبت نشده است.</strong><span>به‌زودی اطلاعات این بخش تکمیل می‌شود.</span></div>
+        }
+        else
+        {
+            <div class="sn-services-grid">
+                @{ var serviceIndex = 0; }
+                @foreach (var service in Model.Services)
+                {
+                    serviceIndex++;
+                    <article class="sn-services-card @(service.ComingSoon ? "is-coming-soon" : "")">
+                        <div class="sn-service-card-top">
+                            <span class="sn-service-number">@serviceIndex.ToString("00")</span>
                             <div class="sn-service-icon"><i class="bi @service.Icon"></i></div>
-                            <h2 class="mb-0">@service.Title</h2>
                         </div>
                         @if (!string.IsNullOrWhiteSpace(service.Image))
                         {
-                            <img src="~/@service.Image.TrimStart('~', '/')" alt="@service.Title" class="img-fluid rounded mb-3" style="max-height:180px;object-fit:cover" />
+                            <div class="sn-service-card-media"><img src="~/@service.Image.TrimStart('~', '/')" alt="@service.Title" loading="lazy" onerror="this.parentElement.remove()" /></div>
                         }
-                        <p class="sn-service-desc">@service.ShortDescription</p>
-                        @if (service.ComingSoon)
-                        {
-                            <span class="btn sn-btn-outline disabled">به زودی</span>
-                        }
-                        else
-                        {
-                            <a href="@ServiceUrl(service.Slug)" class="btn sn-btn-primary">بیشتر بدانید</a>
-                        }
-                    </div>
-                </div>
+                        <div class="sn-service-card-body">
+                            <div class="sn-service-title-row">
+                                <h3>@service.Title</h3>
+                                @if (service.ComingSoon)
+                                {
+                                    <span class="sn-service-badge">به‌زودی</span>
+                                }
+                            </div>
+                            <p>@service.ShortDescription</p>
+                            @if (service.ComingSoon)
+                            {
+                                <span class="sn-service-link is-disabled">در حال آماده‌سازی <i class="bi bi-hourglass-split"></i></span>
+                            }
+                            else
+                            {
+                                <a href="@ServiceUrl(service.Slug)" class="sn-service-link">مشاهده جزئیات <i class="bi bi-arrow-left"></i></a>
+                            }
+                        </div>
+                    </article>
+                }
             </div>
         }
     </div>

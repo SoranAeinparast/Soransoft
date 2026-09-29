@@ -8,8 +8,26 @@
     var mainMenu = await Site.GetMenuAsync(Soransoft.Domain.Enums.MenuPosition.Main);
     var mobileMenu = await Site.GetMenuAsync(Soransoft.Domain.Enums.MenuPosition.Mobile);
     var footerMenu = await Site.GetMenuAsync(Soransoft.Domain.Enums.MenuPosition.Footer);
+    var visibleFooterMenu = new List<MenuItemViewModel>();
+    foreach (var item in footerMenu)
+    {
+        if (string.IsNullOrWhiteSpace(item.Title) || string.IsNullOrWhiteSpace(item.Url)) continue;
+        if (item.FeatureKey is not null && !await Features.IsEnabledAsync(item.FeatureKey)) continue;
+        visibleFooterMenu.Add(item);
+    }
     var siteSettings = await Settings.GetAllAsync();
     string S(string key, string def = "") => siteSettings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : def;
+    var footerDescription = S("AboutText", S("SiteDescription"));
+    var footerAddress = S("Address");
+    var footerPhone = S("Phone");
+    var footerMobile = S("Mobile");
+    var footerWorkingHours = S("WorkingHours");
+    var footerEmail = S("Email");
+    var hasFooterContact = new[] { footerAddress, footerPhone, footerMobile, footerWorkingHours, footerEmail }.Any(value => !string.IsNullOrWhiteSpace(value));
+    var instagramUrl = S("InstagramUrl");
+    var telegramUrl = S("TelegramUrl");
+    var whatsappUrl = S("WhatsappUrl");
+    var hasFooterSocials = new[] { instagramUrl, telegramUrl, whatsappUrl }.Any(value => !string.IsNullOrWhiteSpace(value));
 
     // کاربر عادی واردشده (اسکیم UserAuth)
     var isSiteUser = User.Identity?.IsAuthenticated == true && User.HasClaim("UserType", "SiteUser");
@@ -178,44 +196,89 @@
 
     <footer class="sn-footer">
         <div class="container">
-            <h6 class="sn-footer-title">@S("FooterSocialTitle", "ما را دنبال کنید")</h6>
-            <div class="d-flex justify-content-center gap-3 mb-5">
-                @if (!string.IsNullOrWhiteSpace(S("InstagramUrl")))
-                {
-                    <a href="@S("InstagramUrl")" target="_blank" rel="noopener" class="sn-social"><i class="bi bi-instagram"></i></a>
-                }
-                @if (!string.IsNullOrWhiteSpace(S("TelegramUrl")))
-                {
-                    <a href="@S("TelegramUrl")" target="_blank" rel="noopener" class="sn-social"><i class="bi bi-telegram"></i></a>
-                }
-                @if (!string.IsNullOrWhiteSpace(S("WhatsappUrl")))
-                {
-                    <a href="@S("WhatsappUrl")" target="_blank" rel="noopener" class="sn-social"><i class="bi bi-whatsapp"></i></a>
-                }
-            </div>
-            <div class="row g-4 align-items-start">
-                <div class="col-12 col-md-4">
-                    <ul class="list-unstyled d-flex flex-column gap-2">
-                        @foreach (var item in footerMenu)
-                        {
-                            if (item.FeatureKey is not null && !await Features.IsEnabledAsync(item.FeatureKey)) continue;
-                            <li><a href="@item.Url" class="sn-footer-link">@item.Title</a></li>
-                        }
-                    </ul>
-                </div>
-                <div class="col-12 col-md-4">
-                    <p class="mb-2"><i class="bi bi-geo-alt me-2"></i>@S("Address")</p>
-                    <p class="mb-2"><i class="bi bi-telephone me-2"></i><span dir="ltr">@S("Phone")</span></p>
-                    <p class="mb-0"><i class="bi bi-envelope me-2"></i><span dir="ltr">@S("Email")</span></p>
-                </div>
-                <div class="col-12 col-md-4 text-center text-md-start">
-                    <a asp-controller="Home" asp-action="Index" class="sn-brand-link" aria-label="سوران‌سافت">
-                        <img src="~/@logoPath.TrimStart('~', '/')" class="sn-brand-logo" alt="سوران‌سافت" />
+            <div class="sn-footer-grid">
+                <div class="sn-footer-brand">
+                    <a asp-controller="Home" asp-action="Index" class="sn-brand-link" aria-label="@S("SiteName", "سوران‌سافت")">
+                        <img src="~/@logoPath.TrimStart('~', '/')" class="sn-brand-logo" alt="@S("SiteName", "سوران‌سافت")" />
                     </a>
+                    @if (!string.IsNullOrWhiteSpace(S("SiteName")))
+                    {
+                        <strong>@S("SiteName")</strong>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(footerDescription))
+                    {
+                        <p>@footerDescription</p>
+                    }
                 </div>
+
+                @if (visibleFooterMenu.Any())
+                {
+                    <div class="sn-footer-column">
+                        <h6>دسترسی سریع</h6>
+                        <ul class="list-unstyled">
+                            @foreach (var item in visibleFooterMenu)
+                            {
+                                <li><a href="@item.Url" class="sn-footer-link">@item.Title <i class="bi bi-arrow-left"></i></a></li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                @if (hasFooterContact)
+                {
+                    <div class="sn-footer-column sn-footer-contact">
+                        <h6>ارتباط با ما</h6>
+                        @if (!string.IsNullOrWhiteSpace(footerAddress))
+                        {
+                            <p><i class="bi bi-geo-alt"></i><span>@footerAddress</span></p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(footerPhone))
+                        {
+                            <p><i class="bi bi-telephone"></i><a href="tel:@footerPhone" dir="ltr">@footerPhone</a></p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(footerMobile))
+                        {
+                            <p><i class="bi bi-phone"></i><a href="tel:@footerMobile" dir="ltr">@footerMobile</a></p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(footerEmail))
+                        {
+                            <p><i class="bi bi-envelope"></i><a href="mailto:@footerEmail" dir="ltr">@footerEmail</a></p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(footerWorkingHours))
+                        {
+                            <p><i class="bi bi-clock"></i><span>@footerWorkingHours</span></p>
+                        }
+                    </div>
+                }
             </div>
-            <div class="sn-footer-bottom text-center mt-4 pt-3">
-                @S("FooterNote", "Designed with ❤️ by Soransoft team")
+
+            @if (hasFooterSocials)
+            {
+                <div class="sn-footer-social-row">
+                    <h6 class="sn-footer-title">@S("FooterSocialTitle", "ما را دنبال کنید")</h6>
+                    <div class="d-flex justify-content-center gap-3">
+                        @if (!string.IsNullOrWhiteSpace(instagramUrl))
+                        {
+                            <a href="@instagramUrl" target="_blank" rel="noopener" class="sn-social" aria-label="اینستاگرام"><i class="bi bi-instagram"></i></a>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(telegramUrl))
+                        {
+                            <a href="@telegramUrl" target="_blank" rel="noopener" class="sn-social" aria-label="تلگرام"><i class="bi bi-telegram"></i></a>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(whatsappUrl))
+                        {
+                            <a href="@whatsappUrl" target="_blank" rel="noopener" class="sn-social" aria-label="واتساپ"><i class="bi bi-whatsapp"></i></a>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="sn-footer-bottom">
+                <span>© @DateTime.Now.Year @S("SiteName", "سوران‌سافت"). تمامی حقوق محفوظ است.</span>
+                @if (!string.IsNullOrWhiteSpace(S("FooterNote")))
+                {
+                    <span>@S("FooterNote")</span>
+                }
             </div>
         </div>
     </footer>
