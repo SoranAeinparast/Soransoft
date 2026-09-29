@@ -139,6 +139,28 @@ a .sn-stat-card { color: inherit; }
 .sn-tariff-item-form .form-control { width: 190px; border: 0; box-shadow: none; background: transparent; }
 .sn-tariff-item-add { background: #f6fafb; border-style: dashed; }
 
+/* پروژه‌های تیم فنی */
+.sn-dev-project-card { height: auto; }
+.sn-dev-project-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.sn-dev-project-head h6 { font-size: 1rem; font-weight: 800; }
+.sn-dev-project-stats { display: flex; flex-wrap: wrap; gap: .45rem 1rem; margin-top: 1rem; padding-top: .75rem; border-top: 1px solid #edf2f3; color: #687b85; font-size: .78rem; }
+.sn-dev-project-stats span { display: inline-flex; align-items: center; gap: .3rem; }
+.sn-dev-project-stats i { color: #00a496; }
+.sn-dev-progress { margin-top: .8rem; }
+.sn-dev-project-editor { display: grid; grid-template-columns: 1.25fr 1.5fr 1fr auto auto; align-items: end; gap: .65rem; padding: .9rem; background: #f6fafb; border: 1px solid #dce9eb; border-radius: 10px; }
+.sn-dev-field label, .sn-dev-add-member > label { display: block; margin-bottom: .3rem; color: #526771; font-size: .74rem; font-weight: 800; }
+.sn-dev-active-check { display: inline-flex; align-items: center; gap: .35rem; min-height: 32px; padding: .35rem .55rem; color: #405563; background: #fff; border: 1px solid #dbe7ea; border-radius: 7px; font-size: .75rem; font-weight: 700; cursor: pointer; }
+.sn-dev-active-check .form-check-input { float: none; margin: 0; }
+.sn-dev-editor-actions { display: flex; gap: .35rem; }
+.sn-dev-members { margin-top: 1rem; padding-top: .9rem; border-top: 1px solid #edf2f3; }
+.sn-dev-subheading { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; color: #405563; font-size: .8rem; }
+.sn-dev-subheading span { color: #8a9aa4; font-size: .72rem; }
+.sn-dev-member-row { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem; margin-bottom: .4rem; }
+.sn-dev-member-form { display: inline-flex; align-items: center; gap: .3rem; flex: 1; min-width: 180px; }
+.sn-dev-member-form .form-control { max-width: 190px; }
+.sn-dev-add-member { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(100px, .75fr) auto; align-items: end; gap: .5rem; margin-top: .8rem; padding-top: .8rem; border-top: 1px dashed #dfe9ec; }
+.sn-dev-add-member > label { grid-column: 1 / -1; margin: 0; }
+
 /* ---------- Forms ---------- */
 .sn-admin-card .form-label { font-weight: 600; font-size: .85rem; }
 
@@ -487,6 +509,10 @@ a .sn-stat-card { color: inherit; }
     .sn-tariff-editor-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .sn-tariff-field-title { grid-column: 1 / -1; }
     .sn-tariff-save { margin-inline-start: 0; }
+    .sn-dev-project-head { align-items: stretch; flex-direction: column; }
+    .sn-dev-project-editor { grid-template-columns: 1fr; }
+    .sn-dev-editor-actions { justify-content: flex-start; }
+    .sn-dev-add-member { grid-template-columns: 1fr; }
     .sn-profile-hero { align-items: flex-start; flex-direction: column; padding: 1.35rem; border-radius: 16px; }
     .sn-profile-hero-actions { width: 100%; }
     .sn-profile-hero-actions .btn { flex: 1; }
