@@ -10,7 +10,17 @@
 </div>
 <div class="mb-3">
     <label class="form-label">لینک (اختیاری)</label>
-    <input asp-for="Link" class="form-control" dir="ltr" placeholder="/OrderProject" />
+    <input asp-for="Link" class="form-control" dir="ltr" list="site-page-links" placeholder="/OrderProject" />
+    <datalist id="site-page-links">
+        @if (ViewBag.Pages is List<SitePage> pages)
+        {
+            @foreach (var page in pages)
+            {
+                <option value="/Page/@Uri.EscapeDataString(page.Slug)">@page.Title</option>
+            }
+        }
+    </datalist>
+    <small class="text-muted">برای اتصال به صفحه پویا، عنوان صفحه را از پیشنهادها انتخاب کنید.</small>
 </div>
 <div class="mb-3">
     <label class="form-label">تصویر پس‌زمینه</label>

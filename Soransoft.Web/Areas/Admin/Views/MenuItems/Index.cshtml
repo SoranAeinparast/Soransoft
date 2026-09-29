@@ -16,7 +16,8 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">آدرس (URL)</label>
-                    <input name="Url" class="form-control" dir="ltr" required />
+                    <input name="Url" class="form-control" dir="ltr" list="site-page-links" required />
+                    <small class="text-muted">صفحات منتشرشده در پیشنهادها قرار دارند.</small>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">موقعیت</label>
@@ -30,6 +31,15 @@
             </form>
         </div>
     </div>
+    <datalist id="site-page-links">
+        @if (ViewBag.Pages is List<SitePage> pages)
+        {
+            @foreach (var page in pages)
+            {
+                <option value="/Page/@Uri.EscapeDataString(page.Slug)">@page.Title</option>
+            }
+        }
+    </datalist>
     <div class="col-12 col-lg-8">
         <div class="sn-admin-card">
             <div class="table-responsive">
@@ -48,7 +58,7 @@
                                         <input type="hidden" name="Id" value="@item.Id" />
                                         <input type="hidden" name="IsActive" value="@item.IsActive" />
                                         <div class="col-4"><input name="Title" value="@item.Title" class="form-control form-control-sm" /></div>
-                                        <div class="col-4"><input name="Url" value="@item.Url" class="form-control form-control-sm" dir="ltr" /></div>
+                                        <div class="col-4"><input name="Url" value="@item.Url" class="form-control form-control-sm" dir="ltr" list="site-page-links" /></div>
                                         <div class="col-2">
                                             <select name="Position" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<MenuPosition>()"></select>
                                         </div>
