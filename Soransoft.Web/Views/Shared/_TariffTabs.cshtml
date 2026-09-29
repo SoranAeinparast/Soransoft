@@ -18,9 +18,10 @@
 <ul class="nav sn-tabs justify-content-center mb-4" role="tablist">
     @foreach (var tabSection in Model)
     {
+        var isFirstTab = tabSection.Id == Model.First().Id;
         <li class="nav-item" role="presentation">
-            <button class="nav-link @(tabSection == Model.First() ? "active" : "")" data-bs-toggle="tab"
-                    data-bs-target="#tariff-@((int)tabSection.Kind)" type="button" role="tab">
+            <button class="nav-link @(isFirstTab ? "active" : "")" data-bs-toggle="tab"
+                    data-bs-target="#tariff-section-@tabSection.Id" aria-controls="tariff-section-@tabSection.Id" aria-selected="@(isFirstTab ? "true" : "false")" type="button" role="tab">
                 @(string.IsNullOrWhiteSpace(tabSection.Title) ? KindTitle(tabSection.Kind) : tabSection.Title)
             </button>
         </li>
@@ -30,7 +31,8 @@
 <div class="tab-content">
     @foreach (var tabSection in Model)
     {
-        <div class="tab-pane fade @(tabSection == Model.First() ? "show active" : "")" id="tariff-@((int)tabSection.Kind)" role="tabpanel">
+        var isFirstPanel = tabSection.Id == Model.First().Id;
+        <div class="tab-pane fade @(isFirstPanel ? "show active" : "")" id="tariff-section-@tabSection.Id" role="tabpanel" tabindex="0">
             <div class="row g-4 justify-content-center">
                 @foreach (var package in tabSection.Packages)
                 {
