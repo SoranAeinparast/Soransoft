@@ -61,6 +61,20 @@ namespace Soransoft.Web.Models.Admin
         public int TotalMediaFiles { get; set; }
     }
 
+    public class SlidersIndexViewModel
+    {
+        public List<Slider> Sliders { get; set; } = new();
+        public SliderSettingsViewModel Settings { get; set; } = new();
+    }
+
+    public class SliderSettingsViewModel
+    {
+        public string TransitionEffect { get; set; } = "fade";
+        public int Height { get; set; } = 560;
+        public decimal OverlayOpacity { get; set; } = .25m;
+        public int Interval { get; set; } = 5000;
+    }
+
     /// <summary>یک نقطه نمودار فروش ماهانه</summary>
     public class MonthlySalesPoint
     {
