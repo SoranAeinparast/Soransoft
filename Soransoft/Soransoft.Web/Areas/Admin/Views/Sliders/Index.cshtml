@@ -1,0 +1,82 @@
+@model SlidersIndexViewModel
+@{
+    ViewData["Title"] = "مدیریت اسلایدر";
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0">اسلایدر صفحه اصلی</h5>
+    <a href="/Admin/Sliders/Create" class="btn sn-btn-primary"><i class="bi bi-plus-lg me-1"></i> اسلاید جدید</a>
+</div>
+
+<div class="sn-admin-card mb-4">
+    <h6 class="fw-bold mb-3"><i class="bi bi-sliders me-1"></i> تنظیمات سراسری اسلایدها</h6>
+    <form asp-action="SaveSettings" method="post" class="row g-3 align-items-end">
+        @Html.AntiForgeryToken()
+        <div class="col-12 col-md-3">
+            <label asp-for="Settings.TransitionEffect" class="form-label">افکت انتقال</label>
+            <select asp-for="Settings.TransitionEffect" class="form-select">
+                <option value="fade">محو شدن (Fade)</option>
+                <option value="slide">حرکت افقی (Slide)</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label asp-for="Settings.Height" class="form-label">ارتفاع (پیکسل)</label>
+            <input asp-for="Settings.Height" class="form-control" type="number" min="300" max="800" />
+        </div>
+        <div class="col-6 col-md-3">
+            <label asp-for="Settings.OverlayOpacity" class="form-label">شفافیت لایه روی تصویر</label>
+            <input asp-for="Settings.OverlayOpacity" class="form-control" type="number" min="0" max="1" step="0.05" />
+        </div>
+        <div class="col-6 col-md-3">
+            <label asp-for="Settings.Interval" class="form-label">زمان هر اسلاید (میلی‌ثانیه)</label>
+            <input asp-for="Settings.Interval" class="form-control" type="number" min="2000" max="30000" step="500" />
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn sn-btn-primary">ذخیره تنظیمات اسلایدر</button>
+        </div>
+    </form>
+</div>
+
+<div class="sn-admin-card">
+    @if (!Model.Sliders.Any())
+    {
+        <p class="text-muted text-center my-4">اسلایدی ثبت نشده است.</p>
+    }
+    <div class="table-responsive">
+        <table class="table sn-admin-table align-middle">
+            <thead>
+                <tr><th>#</th><th>عنوان</th><th>زیرعنوان</th><th>تصویر</th><th>لینک</th><th>فعال</th><th>ترتیب</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Sliders)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Title</td>
+                        <td class="small text-muted">@item.SubTitle</td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(item.Image))
+                            {
+                                <img src="@item.Image" alt="" style="max-height:40px" class="rounded" />
+                            }
+                            else
+                            {
+                                <span class="text-muted small">—</span>
+                            }
+                        </td>
+                        <td dir="ltr" class="small">@(item.Link ?? "—")</td>
+                        <td>@(item.IsActive ? "بله" : "خیر")</td>
+                        <td>@item.DisplayOrder</td>
+                        <td class="text-nowrap">
+                            <a href="/Admin/Sliders/Edit/@item.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                            <form method="post" action="/Admin/Sliders/Delete/@item.Id" class="d-inline"
+                                  onsubmit="return confirm('حذف شود؟')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

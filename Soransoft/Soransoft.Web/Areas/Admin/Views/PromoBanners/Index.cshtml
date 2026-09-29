@@ -1,0 +1,61 @@
+@model List<PromoBanner>
+@{
+    ViewData["Title"] = "بنرهای پرومو";
+    string TypeTitle(PromoBannerType type) => type switch
+    {
+        PromoBannerType.ScrollingText => "متن اسکرولی",
+        PromoBannerType.FixedAd => "بنر ثابت",
+        _ => "کارت ویژه"
+    };
+    string PlacementTitle(PromoBannerPlacement placement) => placement switch
+    {
+        PromoBannerPlacement.SiteWide => "همه صفحات",
+        PromoBannerPlacement.HomeBeforeFooter => "پیش از فوتر خانه",
+        _ => "پس از هیرو خانه"
+    };
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="mb-1">بنرهای پرومو</h5>
+        <small class="text-muted">متن اسکرولی، کارت ویژه و تبلیغ ثابت را مدیریت کنید.</small>
+    </div>
+    <a href="/Admin/PromoBanners/Create" class="btn sn-btn-primary"><i class="bi bi-plus-lg me-1"></i> بنر جدید</a>
+</div>
+
+<div class="sn-admin-card">
+    @if (!Model.Any())
+    {
+        <p class="text-muted text-center my-4">بنری ثبت نشده است.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table sn-admin-table align-middle">
+                <thead><tr><th>عنوان</th><th>نوع</th><th>محل نمایش</th><th>تصویر</th><th>وضعیت</th><th>ترتیب</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><strong>@item.Title</strong><small class="d-block text-muted">@item.Text</small></td>
+                            <td>@TypeTitle(item.Type)</td>
+                            <td>@PlacementTitle(item.Placement)</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(item.Image)) { <img src="@item.Image" alt="" style="max-height:40px;max-width:90px" class="rounded" /> }
+                                else { <span class="text-muted">—</span> }
+                            </td>
+                            <td><span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")">@(item.IsActive ? "فعال" : "غیرفعال")</span></td>
+                            <td>@item.DisplayOrder</td>
+                            <td class="text-nowrap">
+                                <a href="/Admin/PromoBanners/Edit/@item.Id" class="btn btn-sm btn-outline-primary">ویرایش</a>
+                                <form method="post" action="/Admin/PromoBanners/Delete/@item.Id" class="d-inline" onsubmit="return confirm('حذف شود؟')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

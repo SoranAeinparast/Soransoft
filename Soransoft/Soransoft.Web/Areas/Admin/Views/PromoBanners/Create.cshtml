@@ -1,0 +1,13 @@
+@model PromoBanner
+@{
+    ViewData["Title"] = "بنر پرومو جدید";
+}
+<h5 class="mb-4">بنر پرومو جدید</h5>
+<div class="sn-admin-card">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <partial name="FormFields" model="Model" />
+        <button type="submit" class="btn sn-btn-primary mt-3">ذخیره</button>
+        <a href="/Admin/PromoBanners" class="btn btn-outline-secondary mt-3">انصراف</a>
+    </form>
+</div>
