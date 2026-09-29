@@ -10,129 +10,163 @@
     string Money(long v) => v.ToString("N0");
 }
 
-<div class="sn-dashboard-profile mb-4">
-    <div class="sn-dashboard-profile-avatar @(partnerPhotoUrl is null ? "is-empty" : "")">
-        @if (partnerPhotoUrl is not null)
-        {
-            <img src="@partnerPhotoUrl" alt="عکس @partnerFullName" />
-        }
-        else
-        {
-            <i class="bi bi-person"></i>
-        }
-    </div>
-    <div class="sn-dashboard-profile-copy">
-        <span class="sn-eyebrow">پرتال همکاران</span>
+<section class="sn-dashboard-hero @(isSales ? "is-sales" : "is-dev")">
+    <div class="sn-dashboard-hero-copy">
+        <div class="sn-dashboard-hero-kicker"><i class="bi bi-stars"></i> پرتال همکاران</div>
         <h2>سلام، @partnerFullName</h2>
-        <p>از اینجا می‌توانید وضعیت فعالیت، اطلاعیه‌ها و اطلاعات شخصی خود را مدیریت کنید.</p>
+        <p>مرکز مدیریت فعالیت‌های شما در سوران‌سافت؛ ساده، سریع و همیشه در دسترس.</p>
+        <div class="sn-dashboard-hero-meta">
+            <span><i class="bi bi-person-badge"></i>@roleTitle</span>
+            <span><i class="bi bi-shield-check"></i>حساب تاییدشده</span>
+        </div>
     </div>
-    <a href="/Partner/PersonalProfile" class="btn btn-outline-primary"><i class="bi bi-person-vcard me-1"></i>ویرایش پروفایل</a>
-</div>
+    <div class="sn-dashboard-hero-visual">
+        <span class="sn-dashboard-orbit sn-dashboard-orbit-one"></span>
+        <span class="sn-dashboard-orbit sn-dashboard-orbit-two"></span>
+        <div class="sn-dashboard-profile-avatar @(partnerPhotoUrl is null ? "is-empty" : "")">
+            @if (partnerPhotoUrl is not null)
+            {
+                <img src="@partnerPhotoUrl" alt="عکس @partnerFullName" />
+            }
+            else
+            {
+                <i class="bi bi-person"></i>
+            }
+        </div>
+        <span class="sn-dashboard-hero-status"><i class="bi bi-check2"></i></span>
+    </div>
+    <a href="/Partner/PersonalProfile" class="sn-dashboard-profile-link"><i class="bi bi-person-vcard"></i><span>ویرایش پروفایل</span></a>
+</section>
 
-<div class="row g-3 mb-4">
+<section class="sn-dashboard-stats mb-4">
+    <div class="sn-dashboard-section-heading">
+        <div>
+            <span class="sn-dashboard-section-kicker">نمای کلی</span>
+            <h3>تصویر امروز شما</h3>
+        </div>
+        <span class="sn-dashboard-live-label"><i class="bi bi-activity"></i> اطلاعات جاری</span>
+    </div>
+    <div class="row g-3">
     @if (isSales)
     {
         <div class="col-6 col-md-3">
-            <div class="sn-stat-card sn-stat-primary">
-                <i class="bi bi-funnel"></i>
-                <div><span class="sn-stat-value">@ViewBag.LeadCount</span><span class="sn-stat-label">لید ثبت‌شده</span></div>
+            <div class="sn-stat-card sn-stat-primary sn-dashboard-stat">
+                <span class="sn-dashboard-stat-icon"><i class="bi bi-funnel"></i></span>
+                <div><span class="sn-stat-value">@ViewBag.LeadCount</span><span class="sn-stat-label">لید ثبت‌شده</span><small>فرصت‌های فعال فروش</small></div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="sn-stat-card sn-stat-warning">
-                <i class="bi bi-hourglass-split"></i>
-                <div><span class="sn-stat-value">@ViewBag.OpenLeadCount</span><span class="sn-stat-label">در جریان مذاکره</span></div>
+            <div class="sn-stat-card sn-stat-warning sn-dashboard-stat">
+                <span class="sn-dashboard-stat-icon"><i class="bi bi-hourglass-split"></i></span>
+                <div><span class="sn-stat-value">@ViewBag.OpenLeadCount</span><span class="sn-stat-label">در جریان مذاکره</span><small>نیازمند پیگیری</small></div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="sn-stat-card sn-stat-info">
-                <i class="bi bi-file-earmark-text"></i>
-                <div><span class="sn-stat-value">@ViewBag.ContractCount</span><span class="sn-stat-label">قرارداد</span></div>
+            <div class="sn-stat-card sn-stat-info sn-dashboard-stat">
+                <span class="sn-dashboard-stat-icon"><i class="bi bi-file-earmark-text"></i></span>
+                <div><span class="sn-stat-value">@ViewBag.ContractCount</span><span class="sn-stat-label">قرارداد</span><small>همکاری‌های ثبت‌شده</small></div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="sn-stat-card sn-stat-success">
-                <i class="bi bi-cash-coin"></i>
-                <div><span class="sn-stat-value">@Money((long)ViewBag.PaidAmount)</span><span class="sn-stat-label">فروش محقق (تومان)</span></div>
+            <div class="sn-stat-card sn-stat-success sn-dashboard-stat">
+                <span class="sn-dashboard-stat-icon"><i class="bi bi-cash-coin"></i></span>
+                <div><span class="sn-stat-value">@Money((long)ViewBag.PaidAmount)</span><span class="sn-stat-label">فروش محقق (تومان)</span><small>مبلغ پرداخت‌شده</small></div>
             </div>
         </div>
     }
     else
     {
         <div class="col-6 col-md-3">
-            <div class="sn-stat-card sn-stat-warning">
-                <i class="bi bi-kanban"></i>
-                <div><span class="sn-stat-value">@ViewBag.MyTaskCount</span><span class="sn-stat-label">تسک باز من</span></div>
+            <div class="sn-stat-card sn-stat-warning sn-dashboard-stat">
+                <span class="sn-dashboard-stat-icon"><i class="bi bi-kanban"></i></span>
+                <div><span class="sn-stat-value">@ViewBag.MyTaskCount</span><span class="sn-stat-label">تسک باز من</span><small>در صف انجام</small></div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="sn-stat-card sn-stat-success">
-                <i class="bi bi-check2-circle"></i>
-                <div><span class="sn-stat-value">@ViewBag.DoneTaskCount</span><span class="sn-stat-label">تسک انجام‌شده</span></div>
+            <div class="sn-stat-card sn-stat-success sn-dashboard-stat">
+                <span class="sn-dashboard-stat-icon"><i class="bi bi-check2-circle"></i></span>
+                <div><span class="sn-stat-value">@ViewBag.DoneTaskCount</span><span class="sn-stat-label">تسک انجام‌شده</span><small>تحویل‌های موفق</small></div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="sn-stat-card sn-stat-info">
-                <i class="bi bi-stopwatch"></i>
-                <div><span class="sn-stat-value">@(((int)ViewBag.WeekMinutes) / 60) ساعت</span><span class="sn-stat-label">کار این هفته</span></div>
+            <div class="sn-stat-card sn-stat-info sn-dashboard-stat">
+                <span class="sn-dashboard-stat-icon"><i class="bi bi-stopwatch"></i></span>
+                <div><span class="sn-stat-value">@(((int)ViewBag.WeekMinutes) / 60) ساعت</span><span class="sn-stat-label">کار این هفته</span><small>زمان ثبت‌شده</small></div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="sn-stat-card sn-stat-primary">
-                <i class="bi bi-diagram-3"></i>
-                <div><span class="sn-stat-value">@ViewBag.ProjectCount</span><span class="sn-stat-label">پروژه فعال من</span></div>
+            <div class="sn-stat-card sn-stat-primary sn-dashboard-stat">
+                <span class="sn-dashboard-stat-icon"><i class="bi bi-diagram-3"></i></span>
+                <div><span class="sn-stat-value">@ViewBag.ProjectCount</span><span class="sn-stat-label">پروژه فعال من</span><small>در حال توسعه</small></div>
             </div>
         </div>
     }
-</div>
-
-<div class="row g-3">
-    <div class="col-12 col-lg-8">
-        <div class="sn-admin-card h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0"><i class="bi bi-megaphone me-2 text-warning"></i>اطلاعیه‌های مدیر</h5>
-            </div>
-            @if (!announcements.Any())
-            {
-                <p class="text-muted mb-0">اطلاعیه‌ای وجود ندارد.</p>
-            }
-            @foreach (var a in announcements)
-            {
-                <div class="border rounded-3 p-3 mb-2 @(a.IsImportant ? "border-warning bg-warning bg-opacity-10" : "")">
-                    <div class="d-flex justify-content-between align-items-start gap-2">
-                        <strong>@a.Title</strong>
-                        @if (a.IsImportant)
-                        {
-                            <span class="badge bg-warning text-dark">مهم</span>
-                        }
-                    </div>
-                    <p class="mb-0 mt-1 small text-muted">@a.Body</p>
-                </div>
-            }
-        </div>
     </div>
-    <div class="col-12 col-lg-4">
-        <div class="sn-admin-card h-100">
-            <h5 class="mb-3"><i class="bi bi-lightning me-2 text-success"></i>دسترسی سریع</h5>
-            @if (isSales)
-            {
-                <a href="/Partner/Sales/Create" class="btn btn-outline-primary w-100 mb-2 text-start"><i class="bi bi-plus-lg me-2"></i>ثبت لید جدید</a>
-                 <a href="/Partner/Sales/Contracts" class="btn btn-outline-secondary w-100 mb-2 text-start"><i class="bi bi-file-earmark-text me-2"></i>وضعیت قراردادها و اقساط</a>
-                 <a href="/Partner/Sales/Catalog" class="btn btn-outline-secondary w-100 mb-2 text-start"><i class="bi bi-briefcase me-2"></i>مستندات پروژه‌های قابل فروش</a>
-                 <a href="/Partner/Sales/Commissions" class="btn btn-outline-secondary w-100 mb-2 text-start"><i class="bi bi-cash-stack me-2"></i>پورسانت من</a>
-                 <a href="/Partner/Sales/Tickets" class="btn btn-outline-secondary w-100 text-start"><i class="bi bi-life-preserver me-2"></i>ثبت درخواست بررسی فنی</a>
-                <a href="/Partner/PersonalProfile" class="btn btn-outline-secondary w-100 text-start"><i class="bi bi-person-vcard me-2"></i>پروفایل شخصی</a>
-                <a href="/Partner/IdentityCard/Download" class="btn btn-outline-success w-100 text-start"><i class="bi bi-person-badge me-2"></i>صدور کارت شناسایی</a>
-            }
-            else
-            {
-                <a href="/Partner/Dev" class="btn btn-outline-primary w-100 mb-2 text-start"><i class="bi bi-kanban me-2"></i>برد تسک‌های من</a>
-                <a href="/Partner/Dev/TimeLogs" class="btn btn-outline-secondary w-100 mb-2 text-start"><i class="bi bi-stopwatch me-2"></i>ثبت زمان کار</a>
-                <a href="/Partner/Dev/Documents" class="btn btn-outline-secondary w-100 mb-2 text-start"><i class="bi bi-journal-code me-2"></i>مستندات فنی پروژه‌ها</a>
-                 <a href="/Partner/Dev/Profile" class="btn btn-outline-secondary w-100 text-start"><i class="bi bi-person-vcard me-2"></i>پروفایل فنی</a>
-                <a href="/Partner/PersonalProfile" class="btn btn-outline-secondary w-100 text-start"><i class="bi bi-person-vcard me-2"></i>پروفایل شخصی</a>
-                <a href="/Partner/IdentityCard/Download" class="btn btn-outline-success w-100 text-start"><i class="bi bi-person-badge me-2"></i>صدور کارت شناسایی</a>
-            }
-        </div>
+</section>
+
+<div class="row g-3 sn-dashboard-lower">
+    <div class="col-12 col-xl-7">
+        <section class="sn-dashboard-panel sn-dashboard-announcements h-100">
+            <div class="sn-dashboard-panel-heading">
+                <div class="sn-dashboard-panel-title">
+                    <span class="sn-dashboard-panel-icon is-amber"><i class="bi bi-megaphone"></i></span>
+                    <div><span class="sn-dashboard-section-kicker">از طرف مدیریت</span><h3>اطلاعیه‌های مدیر</h3></div>
+                </div>
+                <span class="sn-dashboard-panel-mark"><i class="bi bi-bell"></i></span>
+            </div>
+            <div class="sn-dashboard-announcement-list">
+                @if (!announcements.Any())
+                {
+                    <div class="sn-dashboard-empty"><span><i class="bi bi-inbox"></i></span><div><strong>اطلاعیه‌ای وجود ندارد</strong><small>پیام‌های مهم اینجا نمایش داده می‌شوند.</small></div></div>
+                }
+                @foreach (var a in announcements)
+                {
+                    <article class="sn-dashboard-announcement @(a.IsImportant ? "is-important" : "")">
+                        <span class="sn-dashboard-announcement-icon"><i class="bi @(a.IsImportant ? "bi-exclamation-lg" : "bi-chat-left-text")"></i></span>
+                        <div class="sn-dashboard-announcement-body">
+                            <div class="sn-dashboard-announcement-heading">
+                                <strong>@a.Title</strong>
+                                @if (a.IsImportant)
+                                {
+                                    <span class="sn-dashboard-important-badge">مهم</span>
+                                }
+                            </div>
+                            <p>@a.Body</p>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    </div>
+    <div class="col-12 col-xl-5">
+        <section class="sn-dashboard-panel sn-dashboard-actions h-100">
+            <div class="sn-dashboard-panel-heading">
+                <div class="sn-dashboard-panel-title">
+                    <span class="sn-dashboard-panel-icon is-green"><i class="bi bi-lightning-charge"></i></span>
+                    <div><span class="sn-dashboard-section-kicker">میانبرهای کاربردی</span><h3>دسترسی سریع</h3></div>
+                </div>
+            </div>
+            <div class="sn-dashboard-action-list">
+                @if (isSales)
+                {
+                    <a href="/Partner/Sales/Create" class="sn-dashboard-action is-primary"><span class="sn-dashboard-action-icon"><i class="bi bi-plus-lg"></i></span><span><strong>ثبت لید جدید</strong><small>فرصت فروش تازه را ثبت کنید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/Sales/Contracts" class="sn-dashboard-action"><span class="sn-dashboard-action-icon"><i class="bi bi-file-earmark-text"></i></span><span><strong>وضعیت قراردادها و اقساط</strong><small>مراحل همکاری را دنبال کنید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/Sales/Catalog" class="sn-dashboard-action"><span class="sn-dashboard-action-icon"><i class="bi bi-briefcase"></i></span><span><strong>مستندات پروژه‌های قابل فروش</strong><small>کاتالوگ خدمات را ببینید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/Sales/Commissions" class="sn-dashboard-action"><span class="sn-dashboard-action-icon"><i class="bi bi-cash-stack"></i></span><span><strong>پورسانت من</strong><small>عملکرد و پرداخت‌ها</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/Sales/Tickets" class="sn-dashboard-action"><span class="sn-dashboard-action-icon"><i class="bi bi-life-preserver"></i></span><span><strong>درخواست بررسی فنی</strong><small>با تیم فنی در ارتباط باشید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/PersonalProfile" class="sn-dashboard-action"><span class="sn-dashboard-action-icon"><i class="bi bi-person-vcard"></i></span><span><strong>پروفایل شخصی</strong><small>اطلاعات خود را مدیریت کنید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/IdentityCard/Download" class="sn-dashboard-action is-success"><span class="sn-dashboard-action-icon"><i class="bi bi-person-badge"></i></span><span><strong>صدور کارت شناسایی</strong><small>کارت همکاری خود را دریافت کنید</small></span><i class="bi bi-arrow-left"></i></a>
+                }
+                else
+                {
+                    <a href="/Partner/Dev" class="sn-dashboard-action is-primary"><span class="sn-dashboard-action-icon"><i class="bi bi-kanban"></i></span><span><strong>برد تسک‌های من</strong><small>وضعیت کارهای جاری را ببینید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/Dev/TimeLogs" class="sn-dashboard-action"><span class="sn-dashboard-action-icon"><i class="bi bi-stopwatch"></i></span><span><strong>ثبت زمان کار</strong><small>زمان فعالیت خود را ثبت کنید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/Dev/Documents" class="sn-dashboard-action"><span class="sn-dashboard-action-icon"><i class="bi bi-journal-code"></i></span><span><strong>مستندات فنی پروژه‌ها</strong><small>دانش پروژه را مرور کنید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/Dev/Profile" class="sn-dashboard-action"><span class="sn-dashboard-action-icon"><i class="bi bi-person-vcard"></i></span><span><strong>پروفایل فنی</strong><small>مهارت‌ها و تخصص خود را مدیریت کنید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/PersonalProfile" class="sn-dashboard-action"><span class="sn-dashboard-action-icon"><i class="bi bi-person-vcard"></i></span><span><strong>پروفایل شخصی</strong><small>اطلاعات خود را مدیریت کنید</small></span><i class="bi bi-arrow-left"></i></a>
+                    <a href="/Partner/IdentityCard/Download" class="sn-dashboard-action is-success"><span class="sn-dashboard-action-icon"><i class="bi bi-person-badge"></i></span><span><strong>صدور کارت شناسایی</strong><small>کارت همکاری خود را دریافت کنید</small></span><i class="bi bi-arrow-left"></i></a>
+                }
+            </div>
+        </section>
     </div>
 </div>

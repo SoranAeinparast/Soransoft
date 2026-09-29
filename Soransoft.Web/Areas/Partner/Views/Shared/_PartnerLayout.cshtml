@@ -29,56 +29,73 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.3/dist/sweetalert2.min.css" />
 </head>
 <body class="sn-admin sn-portal">
-    <div class="sn-admin-wrapper">
-        <aside class="sn-admin-sidebar">
-            <div class="sn-admin-brand">
-                <span class="sn-logo">SORANSOFT</span>
-                <small>پرتال همکاران</small>
-            </div>
-            <nav class="sn-admin-nav">
-                <a href="/Partner/Dashboard" class="@(controller == "Dashboard" ? "active" : "")"><i class="bi bi-speedometer2"></i> داشبورد</a>
+    <div class="sn-admin-wrapper sn-portal-shell">
+        <aside class="sn-admin-sidebar sn-portal-sidebar">
+            <div class="sn-portal-sidebar-inner">
+                <div class="sn-admin-brand sn-portal-brand">
+                    <div class="sn-portal-brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+                    <div>
+                        <span class="sn-logo">SORANSOFT</span>
+                        <small>پرتال همکاران</small>
+                    </div>
+                </div>
+                <div class="sn-portal-user-chip">
+                    <span class="sn-portal-user-avatar"><i class="bi bi-person"></i></span>
+                    <span class="sn-portal-user-copy"><strong>@partnerName</strong><small>@roleTitle</small></span>
+                    <span class="sn-portal-online-dot" title="حساب فعال"></span>
+                </div>
+                <nav class="sn-admin-nav sn-portal-nav" aria-label="ناوبری پرتال همکاران">
+                    <a href="/Partner/Dashboard" class="@(controller == "Dashboard" ? "active" : "")"><i class="bi bi-grid-1x2-fill"></i><span>داشبورد</span></a>
 
                 @if (isSalesSide)
                 {
                     <div class="sn-admin-nav-group">پنل فروش</div>
-                     <a href="/Partner/Sales" class="@(controller == "Sales" && action == "Index" ? "active" : "")"><i class="bi bi-funnel"></i> لیدها</a>
-                     <a href="/Partner/Sales/Commissions" class="@(controller == "Sales" && action == "Commissions" ? "active" : "")"><i class="bi bi-cash-stack"></i> عملکرد و کمیسیون</a>
-                     <a href="/Partner/Sales/Catalog" class="@(controller == "Sales" && (action == "Catalog" || action == "Project") ? "active" : "")"><i class="bi bi-briefcase"></i> مستندات پروژه‌های قابل فروش</a>
-                 <a href="/Partner/Sales/Tickets" class="@(controller == "Sales" && action == "Tickets" ? "active" : "")"><i class="bi bi-life-preserver"></i> درخواست بررسی فنی</a>
+                    <a href="/Partner/Sales" class="@(controller == "Sales" && action == "Index" ? "active" : "")"><i class="bi bi-funnel"></i><span>لیدها</span></a>
+                    <a href="/Partner/Sales/Commissions" class="@(controller == "Sales" && action == "Commissions" ? "active" : "")"><i class="bi bi-cash-stack"></i><span>عملکرد و کمیسیون</span></a>
+                    <a href="/Partner/Sales/Catalog" class="@(controller == "Sales" && (action == "Catalog" || action == "Project") ? "active" : "")"><i class="bi bi-briefcase"></i><span>مستندات پروژه‌های قابل فروش</span></a>
+                    <a href="/Partner/Sales/Tickets" class="@(controller == "Sales" && action == "Tickets" ? "active" : "")"><i class="bi bi-life-preserver"></i><span>درخواست بررسی فنی</span></a>
                 }
 
                 @if (isDevSide)
                 {
                     <div class="sn-admin-nav-group">پنل فنی</div>
-                    <a href="/Partner/Dev" class="@(controller == "Dev" && action == "Index" ? "active" : "")"><i class="bi bi-kanban"></i> برد تسک‌ها</a>
-                    <a href="/Partner/Dev/TimeLogs" class="@(controller == "Dev" && action == "TimeLogs" ? "active" : "")"><i class="bi bi-stopwatch"></i> ثبت زمان</a>
-                    <a href="/Partner/Dev/Documents" class="@(controller == "Dev" && action == "Documents" ? "active" : "")"><i class="bi bi-journal-code"></i> مستندات فنی</a>
-                     <a href="/Partner/Dev/Profile" class="@(controller == "Dev" && action == "Profile" ? "active" : "")"><i class="bi bi-person-vcard"></i> پروفایل فنی</a>
+                    <a href="/Partner/Dev" class="@(controller == "Dev" && action == "Index" ? "active" : "")"><i class="bi bi-kanban"></i><span>برد تسک‌ها</span></a>
+                    <a href="/Partner/Dev/TimeLogs" class="@(controller == "Dev" && action == "TimeLogs" ? "active" : "")"><i class="bi bi-stopwatch"></i><span>ثبت زمان</span></a>
+                    <a href="/Partner/Dev/Documents" class="@(controller == "Dev" && action == "Documents" ? "active" : "")"><i class="bi bi-journal-code"></i><span>مستندات فنی</span></a>
+                    <a href="/Partner/Dev/Profile" class="@(controller == "Dev" && action == "Profile" ? "active" : "")"><i class="bi bi-person-vcard"></i><span>پروفایل فنی</span></a>
                 }
 
                 <div class="sn-admin-nav-group">مالی</div>
-                <a href="/Partner/Agreement" class="@(controller == "Agreement" ? "active" : "")"><i class="bi bi-journal-bookmark"></i> قرارداد همکاری من</a>
-                <a href="/Partner/Wallet" class="@(controller == "Wallet" ? "active" : "")"><i class="bi bi-wallet2"></i> کیف پول من</a>
+                <a href="/Partner/Agreement" class="@(controller == "Agreement" ? "active" : "")"><i class="bi bi-journal-bookmark"></i><span>قرارداد همکاری من</span></a>
+                <a href="/Partner/Wallet" class="@(controller == "Wallet" ? "active" : "")"><i class="bi bi-wallet2"></i><span>کیف پول من</span></a>
 
                 <div class="sn-admin-nav-group">پیام‌ها</div>
-                <a href="/Partner/Dev/Notifications" class="@(controller == "Dev" && action == "Notifications" ? "active" : "")"><i class="bi bi-megaphone"></i> اطلاعیه‌ها</a>
+                <a href="/Partner/Dev/Notifications" class="@(controller == "Dev" && action == "Notifications" ? "active" : "")"><i class="bi bi-megaphone"></i><span>اطلاعیه‌ها</span></a>
 
                 <div class="sn-admin-nav-group">حساب</div>
-                <a href="/Partner/PersonalProfile" class="@(controller == "PersonalProfile" ? "active" : "")"><i class="bi bi-person-vcard"></i> پروفایل شخصی</a>
+                <a href="/Partner/PersonalProfile" class="@(controller == "PersonalProfile" ? "active" : "")"><i class="bi bi-person-vcard"></i><span>پروفایل شخصی</span></a>
                 <form method="post" action="/Partner/Account/Logout" class="sn-admin-logout-form">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="sn-admin-nav-button"><i class="bi bi-box-arrow-right"></i> خروج (@partnerName)</button>
+                    <button type="submit" class="sn-admin-nav-button"><i class="bi bi-box-arrow-right"></i><span>خروج از حساب</span></button>
                 </form>
-            </nav>
+                </nav>
+                <div class="sn-portal-sidebar-footer"><i class="bi bi-shield-check"></i><span>محیط امن همکاری</span></div>
+            </div>
         </aside>
 
         <main class="sn-admin-main">
-            <header class="sn-admin-topbar">
-                <button class="sn-admin-burger d-lg-none" type="button" id="adminBurger"><i class="bi bi-list"></i></button>
-                <h1 class="sn-admin-page-title">@ViewData["Title"]</h1>
-                <div class="ms-auto d-flex align-items-center gap-2">
-                    <a href="/Partner/Dashboard" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex"><i class="bi bi-house me-1"></i>داشبورد</a>
-                    <span class="badge sn-badge-admin">@roleTitle</span>
+            <header class="sn-admin-topbar sn-portal-topbar">
+                <div class="sn-portal-topbar-heading">
+                    <button class="sn-admin-burger d-lg-none" type="button" id="adminBurger" aria-label="باز کردن منو"><i class="bi bi-list"></i></button>
+                    <div>
+                        <span class="sn-portal-topbar-kicker">فضای کاری سوران‌سافت</span>
+                        <h1 class="sn-admin-page-title">@ViewData["Title"]</h1>
+                    </div>
+                </div>
+                <div class="sn-portal-topbar-actions">
+                    <span class="sn-portal-status d-none d-sm-inline-flex"><i class="bi bi-broadcast-pin"></i> آنلاین</span>
+                    <a href="/Partner/Dashboard" class="sn-portal-home-button d-none d-md-inline-flex"><i class="bi bi-house"></i><span>داشبورد</span></a>
+                    <span class="badge sn-badge-admin"><i class="bi bi-person-check me-1"></i>@roleTitle</span>
                 </div>
             </header>
             <div class="sn-admin-content">
