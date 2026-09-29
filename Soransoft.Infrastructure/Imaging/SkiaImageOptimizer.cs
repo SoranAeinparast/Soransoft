@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using Soransoft.Application.Interfaces;
+using Soransoft.Infrastructure.Storage;
 
 namespace Soransoft.Infrastructure.Imaging
 {
@@ -27,11 +29,13 @@ namespace Soransoft.Infrastructure.Imaging
             { ".jpg", ".jpeg", ".png", ".webp", ".bmp" };
 
         private readonly IWebHostEnvironment _env;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<SkiaImageOptimizer> _logger;
 
-        public SkiaImageOptimizer(IWebHostEnvironment env, ILogger<SkiaImageOptimizer> logger)
+        public SkiaImageOptimizer(IWebHostEnvironment env, IConfiguration configuration, ILogger<SkiaImageOptimizer> logger)
         {
             _env = env;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -101,7 +105,7 @@ namespace Soransoft.Infrastructure.Imaging
                     throw new InvalidOperationException("انکود تصویر ناموفق بود.");
 
                 var fileName = $"{Guid.NewGuid():N}.webp";
-                var folderPath = Path.Combine(WebRoot, "uploads", safeFolder);
+                 var folderPath = Path.Combine(PersistentPublicMediaStorage.ResolveRoot(_env, _configuration), safeFolder);
                 Directory.CreateDirectory(folderPath);
 
                 await using var output = File.Create(Path.Combine(folderPath, fileName));
@@ -149,7 +153,7 @@ namespace Soransoft.Infrastructure.Imaging
             Stream source, string safeFolder, string ext, CancellationToken ct)
         {
             var fileName = $"{Guid.NewGuid():N}{ext}";
-            var folderPath = Path.Combine(WebRoot, "uploads", safeFolder);
+             var folderPath = Path.Combine(PersistentPublicMediaStorage.ResolveRoot(_env, _configuration), safeFolder);
             Directory.CreateDirectory(folderPath);
 
             await using var output = File.Create(Path.Combine(folderPath, fileName));
@@ -158,6 +162,5 @@ namespace Soransoft.Infrastructure.Imaging
             return new ImageOptimizeResult($"/uploads/{safeFolder}/{fileName}", output.Length);
         }
 
-        private string WebRoot => _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
     }
 }

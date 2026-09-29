@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Soransoft.Application.Interfaces;
 using Soransoft.Application.ViewModels;
 using Soransoft.Domain.Entities;
@@ -14,51 +15,51 @@ namespace Soransoft.Infrastructure.Storage
 
         private readonly IWebHostEnvironment _env;
         private readonly SoransoftDbContext _db;
+        private readonly IConfiguration _configuration;
 
-        public LocalMediaLibraryService(IWebHostEnvironment env, SoransoftDbContext db)
+        public LocalMediaLibraryService(IWebHostEnvironment env, SoransoftDbContext db, IConfiguration configuration)
         {
             _env = env;
             _db = db;
+            _configuration = configuration;
         }
 
-        private string UploadsRoot => Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "uploads");
+        private string LegacyUploadsRoot => Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "uploads");
+        private string PersistentUploadsRoot => PersistentPublicMediaStorage.ResolveRoot(_env, _configuration);
 
         public Task<IReadOnlyList<MediaFileItem>> GetFilesAsync(string? folder = null, CancellationToken ct = default)
         {
-            var root = UploadsRoot;
             var result = new List<MediaFileItem>();
-
-            // پوشه‌های مجاز: فقط زیر uploads و بدون escape (نرمال‌سازی قبل از مقایسه)
-            var normalizedRoot = Path.GetFullPath(root);
-            var searchDir = string.IsNullOrWhiteSpace(folder)
-                ? normalizedRoot
-                : Path.GetFullPath(Path.Combine(normalizedRoot, folder.Trim('/').Replace('\\', '/')));
-
-            if (!searchDir.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase) || !Directory.Exists(searchDir))
-                return Task.FromResult<IReadOnlyList<MediaFileItem>>(result);
-
-            // بدون پوشه = همه فایل‌ها (بازگشتی در همه زیرپوشه‌ها)
-            var recursive = string.IsNullOrWhiteSpace(folder);
-            var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-
-            foreach (var file in Directory.EnumerateFiles(searchDir, "*", option))
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var root in new[] { PersistentUploadsRoot, LegacyUploadsRoot }.Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                ct.ThrowIfCancellationRequested();
+                var normalizedRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                    + Path.DirectorySeparatorChar;
+                var searchDir = string.IsNullOrWhiteSpace(folder)
+                    ? normalizedRoot
+                    : Path.GetFullPath(Path.Combine(normalizedRoot, folder.Trim('/').Replace('\\', '/')));
+                if (!searchDir.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase) || !Directory.Exists(searchDir))
+                    continue;
 
-                var fi = new FileInfo(file);
-                var ext = fi.Extension.ToLowerInvariant();
-                var relative = $"/uploads/{Path.GetRelativePath(root, file).Replace('\\', '/')}";
-                var relativeDir = Path.GetRelativePath(root, Path.GetDirectoryName(file)!).Replace('\\', '/');
-
-                result.Add(new MediaFileItem
+                var option = string.IsNullOrWhiteSpace(folder) ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                foreach (var file in Directory.EnumerateFiles(searchDir, "*", option))
                 {
-                    Url = relative,
-                    Folder = relativeDir == "." ? "(root)" : relativeDir,
-                    FileName = fi.Name,
-                    SizeBytes = fi.Length,
-                    ModifiedAt = fi.LastWriteTime,
-                    IsImage = AllowedImageExt.Contains(ext)
-                });
+                    ct.ThrowIfCancellationRequested();
+                    var fi = new FileInfo(file);
+                    var ext = fi.Extension.ToLowerInvariant();
+                    var relative = $"/uploads/{Path.GetRelativePath(root, file).Replace('\\', '/')}";
+                    if (!seen.Add(relative)) continue;
+                    var relativeDir = Path.GetRelativePath(root, Path.GetDirectoryName(file)!).Replace('\\', '/');
+                    result.Add(new MediaFileItem
+                    {
+                        Url = relative,
+                        Folder = relativeDir == "." ? "(root)" : relativeDir,
+                        FileName = fi.Name,
+                        SizeBytes = fi.Length,
+                        ModifiedAt = fi.LastWriteTime,
+                        IsImage = AllowedImageExt.Contains(ext)
+                    });
+                }
             }
 
             // جدیدترین اول
@@ -66,26 +67,15 @@ namespace Soransoft.Infrastructure.Storage
             return Task.FromResult<IReadOnlyList<MediaFileItem>>(result);
         }
 
-        public Task<IReadOnlyList<MediaFolder>> GetFoldersAsync(CancellationToken ct = default)
+        public async Task<IReadOnlyList<MediaFolder>> GetFoldersAsync(CancellationToken ct = default)
         {
-            var root = UploadsRoot;
-            var result = new List<MediaFolder>();
-
-            if (Directory.Exists(root))
-            {
-                foreach (var dir in Directory.EnumerateDirectories(root))
-                {
-                    var count = Directory.EnumerateFiles(dir).Count();
-                    if (count == 0) continue; // پوشه‌های خالی نمایش داده نشوند
-                    result.Add(new MediaFolder
-                    {
-                        Name = Path.GetFileName(dir),
-                        FileCount = count
-                    });
-                }
-            }
-
-            return Task.FromResult<IReadOnlyList<MediaFolder>>(result);
+            var files = await GetFilesAsync(null, ct);
+            return files
+                .Where(file => file.Folder != "(root)")
+                .GroupBy(file => file.Folder.Split('/', StringSplitOptions.RemoveEmptyEntries)[0], StringComparer.OrdinalIgnoreCase)
+                .Select(group => new MediaFolder { Name = group.Key, FileCount = group.Count() })
+                .OrderBy(folder => folder.Name)
+                .ToList();
         }
 
         public Task DeleteAsync(string relativePath, CancellationToken ct = default)
@@ -93,20 +83,16 @@ namespace Soransoft.Infrastructure.Storage
             if (string.IsNullOrWhiteSpace(relativePath))
                 throw new ArgumentException("مسیر فایل نامعتبر است.");
 
-            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-            var root = UploadsRoot;
-
             // کلاینت مسیر نسبی سایت (مثل /uploads/editor/x.png) می‌فرستد
             var cleaned = relativePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-            var full = Path.Combine(webRoot, cleaned);
-
-            // جلوگیری از path traversal — مسیر نرمال‌شده باید داخل uploads بماند
-            var normalizedRoot = Path.GetFullPath(root);
-            var normalizedFull = Path.GetFullPath(full);
-            if (!normalizedFull.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
+            if (!cleaned.StartsWith("uploads" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("مسیر فایل مجاز نیست.");
-
-            if (File.Exists(normalizedFull)) File.Delete(normalizedFull);
+            var relative = cleaned["uploads".Length..].TrimStart(Path.DirectorySeparatorChar);
+            foreach (var root in new[] { PersistentUploadsRoot, LegacyUploadsRoot }.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                var full = PersistentPublicMediaStorage.ResolveUnderRoot(root, relative);
+                if (File.Exists(full)) File.Delete(full);
+            }
             return Task.CompletedTask;
         }
 
@@ -196,6 +182,14 @@ namespace Soransoft.Infrastructure.Storage
                 Match(project.Description, "پروژه قابل ارائه", project.Title, "Description", "/Admin/PortalProjects");
             }
 
+            // صفحات پویا — تصویر شاخص و تصاویر داخل متن
+            foreach (var page in await _db.SitePages.AsNoTracking()
+                .Select(p => new { p.Id, p.Title, p.Image, p.Body }).ToListAsync(ct))
+            {
+                Match(page.Image, "صفحه پویا", page.Title, "Image", $"/Admin/Pages/Edit/{page.Id}");
+                Match(page.Body, "صفحه پویا", page.Title, "Body", $"/Admin/Pages/Edit/{page.Id}");
+            }
+
             // اعضای تیم — تصویر
             foreach (var t in await _db.TeamMembers.AsNoTracking()
                 .Select(t => new { t.Id, t.FullName, t.Image }).ToListAsync(ct))
@@ -257,7 +251,7 @@ namespace Soransoft.Infrastructure.Storage
 
             try
             {
-                var drive = new DriveInfo(Path.GetPathRoot(UploadsRoot)!);
+                var drive = new DriveInfo(Path.GetPathRoot(PersistentUploadsRoot)!);
                 overview.DriveFreeBytes = drive.AvailableFreeSpace;
                 overview.DriveTotalBytes = drive.TotalSize;
             }

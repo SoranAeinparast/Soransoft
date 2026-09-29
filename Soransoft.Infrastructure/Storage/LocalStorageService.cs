@@ -16,6 +16,7 @@ namespace Soransoft.Infrastructure.Storage
         private readonly string[] _allowedDocExt = { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".zip", ".rar", ".mp4", ".webm", ".mov", ".png", ".jpg", ".jpeg", ".webp" };
         private readonly string _privateDocumentsRoot;
         private readonly string _persistentProfileRoot;
+        private readonly string _persistentMediaRoot;
         private const long MaxImageSize = 20 * 1024 * 1024; // 20MB قبل از بهینه‌سازی
         private const long MaxDocSize = 20 * 1024 * 1024;   // 20MB
 
@@ -25,6 +26,7 @@ namespace Soransoft.Infrastructure.Storage
             _optimizer = optimizer;
             _privateDocumentsRoot = Path.GetFullPath(Path.Combine(_env.ContentRootPath, "App_Data", "PrivateDocuments"));
             _persistentProfileRoot = PersistentProfileStorage.ResolveRoot(_env, configuration);
+            _persistentMediaRoot = PersistentPublicMediaStorage.ResolveRoot(_env, configuration);
         }
 
         public async Task<string> SaveImageAsync(IFormFile file, string folder, CancellationToken ct = default)
@@ -140,9 +142,13 @@ namespace Soransoft.Infrastructure.Storage
 
             try
             {
+                var relativePath = normalized["uploads/".Length..];
+                var persistent = PersistentPublicMediaStorage.ResolveUnderRoot(_persistentMediaRoot, relativePath);
+                if (File.Exists(persistent)) return persistent;
+
                 return ResolveUnderRoot(
                     Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "uploads"),
-                    normalized["uploads/".Length..]);
+                    relativePath);
             }
             catch (SecurityException)
             {
