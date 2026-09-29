@@ -10,7 +10,12 @@ namespace Soransoft.Web.Areas.Admin.Controllers
     public class ServicesController : AdminBaseController
     {
         private readonly SoransoftDbContext _db;
-        public ServicesController(SoransoftDbContext db) => _db = db;
+        private readonly IFileStorage _storage;
+        public ServicesController(SoransoftDbContext db, IFileStorage storage)
+        {
+            _db = db;
+            _storage = storage;
+        }
 
         public async Task<IActionResult> Index(CancellationToken ct) =>
             View(await _db.Services
@@ -23,14 +28,20 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Soransoft.Domain.Entities.Service model, CancellationToken ct)
+        public async Task<IActionResult> Create(Soransoft.Domain.Entities.Service model, IFormFile? imageFile, CancellationToken ct)
         {
+            model.Slug = string.IsNullOrWhiteSpace(model.Slug)
+                ? SlugGenerator.Generate(model.Title)
+                : SlugGenerator.Generate(model.Slug, transliterate: false);
+            model.Slug = await EnsureUniqueServiceSlugAsync(model.Slug, null, ct);
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
                 return View(model);
             }
             model.CreatedAt = DateTime.Now;
+            if (imageFile is not null && imageFile.Length > 0)
+                model.Image = await _storage.SaveImageAsync(imageFile, "services", ct);
             _db.Services.Add(model);
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "سرویس با موفقیت ایجاد شد";
@@ -46,7 +57,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Soransoft.Domain.Entities.Service model, CancellationToken ct)
+        public async Task<IActionResult> Edit(Soransoft.Domain.Entities.Service model, IFormFile? imageFile, CancellationToken ct)
         {
             if (!ModelState.IsValid)
             {
@@ -54,24 +65,44 @@ namespace Soransoft.Web.Areas.Admin.Controllers
                 return View(model);
             }
 
-            // فقط فیلدهای فرم کپی می‌شود؛ Image و تاریخ‌های سیستمی حفظ می‌شوند
+            // فقط فیلدهای فرم روی موجودیت فعلی کپی می‌شوند تا تاریخ‌های سیستمی حفظ شوند.
             var item = await _db.Services.FirstOrDefaultAsync(s => s.Id == model.Id, ct);
             if (item is null) return NotFound();
+
+            var slug = string.IsNullOrWhiteSpace(model.Slug)
+                ? SlugGenerator.Generate(model.Title)
+                : SlugGenerator.Generate(model.Slug, transliterate: false);
+            item.Slug = await EnsureUniqueServiceSlugAsync(slug, model.Id, ct);
 
             item.Kind = model.Kind;
             item.Title = model.Title;
             item.ShortDescription = model.ShortDescription;
             item.FullDescription = model.FullDescription;
-            item.Slug = model.Slug;
             item.Icon = model.Icon;
             item.Slogan = model.Slogan;
             item.ComingSoon = model.ComingSoon;
             item.IsActive = model.IsActive;
             item.DisplayOrder = model.DisplayOrder;
 
+            if (imageFile is not null && imageFile.Length > 0)
+            {
+                await _storage.DeleteAsync(item.Image, ct);
+                item.Image = await _storage.SaveImageAsync(imageFile, "services", ct);
+            }
+
             await _db.SaveChangesAsync(ct);
             TempData["Success"] = "سرویس با موفقیت ویرایش شد";
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task<string> EnsureUniqueServiceSlugAsync(string slug, int? excludeId, CancellationToken ct)
+        {
+            var baseSlug = string.IsNullOrWhiteSpace(slug) ? "service" : slug;
+            var candidate = baseSlug;
+            var suffix = 2;
+            while (await _db.Services.AnyAsync(s => s.Slug == candidate && (excludeId == null || s.Id != excludeId), ct))
+                candidate = $"{baseSlug}-{suffix++}";
+            return candidate;
         }
 
         [HttpPost]
@@ -204,6 +235,12 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Soransoft.Domain.Entities.Portfolio model, IFormFile? imageFile, CancellationToken ct)
         {
+            if (!IsSafeExternalUrl(model.Url))
+            {
+                TempData["Error"] = "لینک نمونه‌کار باید http/https باشد.";
+                await FillServicesAsync(ct);
+                return View(model);
+            }
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
@@ -230,6 +267,12 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Soransoft.Domain.Entities.Portfolio model, IFormFile? imageFile, CancellationToken ct)
         {
+            if (!IsSafeExternalUrl(model.Url))
+            {
+                TempData["Error"] = "لینک نمونه‌کار باید http/https باشد.";
+                await FillServicesAsync(ct);
+                return View(model);
+            }
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
@@ -276,6 +319,13 @@ namespace Soransoft.Web.Areas.Admin.Controllers
 
         private async Task FillServicesAsync(CancellationToken ct) =>
             ViewBag.Services = await _db.Services.Where(s => !s.IsDeleted).ToListAsync(ct);
+
+        private static bool IsSafeExternalUrl(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return true;
+            return Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        }
     }
 
     /// <summary>مدیریت مقالات</summary>

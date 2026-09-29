@@ -54,6 +54,36 @@ namespace Soransoft.Infrastructure.Persistence
             await _db.SaveChangesAsync(ct);
             _cache.Remove(CacheKey);
         }
+
+        public async Task SetAsync(string key, string value, CancellationToken ct = default)
+        {
+            var entity = await _db.SiteSettings.FirstOrDefaultAsync(s => s.Key == key, ct);
+            if (entity is null)
+            {
+                _db.SiteSettings.Add(new SiteSetting
+                {
+                    Key = key,
+                    Title = key,
+                    Value = value,
+                    Group = "قابلیت‌ها",
+                    Type = "boolean",
+                    DisplayOrder = 1000,
+                });
+            }
+            else
+            {
+                entity.Value = value;
+            }
+
+            await _db.SaveChangesAsync(ct);
+            _cache.Remove(CacheKey);
+        }
+
+        public Task InvalidateCacheAsync()
+        {
+            _cache.Remove(CacheKey);
+            return Task.CompletedTask;
+        }
     }
 
     /// <summary>زمینه‌ی اجرای سایت (دسترسی سریع به تنظیمات)</summary>

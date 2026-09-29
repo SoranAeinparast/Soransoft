@@ -21,8 +21,8 @@ namespace Soransoft.Infrastructure.Persistence
 
             return services.Select(s => new ServiceCardViewModel
             {
-                Id = s.Id, Title = s.Title, ShortDescription = s.ShortDescription,
-                Slug = s.Slug, Icon = s.Icon, ComingSoon = s.ComingSoon,
+                Id = s.Id, Kind = s.Kind, Title = s.Title, ShortDescription = s.ShortDescription,
+                Slug = s.Slug, Icon = s.Icon, Image = s.Image, ComingSoon = s.ComingSoon,
                 CtaText = s.ComingSoon ? "به زودی" : "بیشتر بدانید"
             }).ToList();
         }
@@ -30,7 +30,7 @@ namespace Soransoft.Infrastructure.Persistence
         public async Task<List<PortfolioCardViewModel>> GetPortfoliosAsync(CancellationToken ct = default)
         {
             return await _db.Portfolios.AsNoTracking()
-                .Where(p => p.IsActive)
+                .Where(p => p.IsActive && (p.ServiceId == null || (p.Service != null && p.Service.IsActive)))
                 .OrderBy(p => p.DisplayOrder)
                 .Select(p => new PortfolioCardViewModel
                 {
@@ -43,19 +43,19 @@ namespace Soransoft.Infrastructure.Persistence
         public async Task<List<ArticleCardViewModel>> GetLatestArticlesAsync(int count, CancellationToken ct = default)
         {
             return await _db.Articles.AsNoTracking()
-                .Where(a => a.Status == PublishStatus.Published)
-                .OrderByDescending(a => a.PublishedAt).Take(count)
+                .Where(a => a.Status == PublishStatus.Published && a.ArticleCategory.IsActive)
+                .OrderByDescending(a => a.IsFeatured).ThenByDescending(a => a.PublishedAt).Take(count)
                 .Select(a => new ArticleCardViewModel
                 {
                     Id = a.Id, Slug = a.Slug, Title = a.Title, Summary = a.Summary, Image = a.Image,
                     AuthorName = a.AuthorName, VisitCount = a.VisitCount,
-                    CategoryTitle = a.ArticleCategory.Title, PublishedAt = a.PublishedAt
+                    CategoryTitle = a.ArticleCategory.Title, PublishedAt = a.PublishedAt, IsFeatured = a.IsFeatured
                 }).ToListAsync(ct);
         }
 
         public Task<List<ArticleCardViewModel>> GetArticlesAsync(int? categoryId, int page, int pageSize, CancellationToken ct = default)
         {
-            var query = _db.Articles.AsNoTracking().Where(a => a.Status == PublishStatus.Published);
+            var query = _db.Articles.AsNoTracking().Where(a => a.Status == PublishStatus.Published && a.ArticleCategory.IsActive);
             if (categoryId.HasValue) query = query.Where(a => a.ArticleCategoryId == categoryId.Value);
             return query.OrderByDescending(a => a.PublishedAt)
                 .Skip((page - 1) * pageSize).Take(pageSize)
@@ -63,13 +63,13 @@ namespace Soransoft.Infrastructure.Persistence
                 {
                     Id = a.Id, Slug = a.Slug, Title = a.Title, Summary = a.Summary, Image = a.Image,
                     AuthorName = a.AuthorName, VisitCount = a.VisitCount,
-                    CategoryTitle = a.ArticleCategory.Title, PublishedAt = a.PublishedAt
+                    CategoryTitle = a.ArticleCategory.Title, PublishedAt = a.PublishedAt, IsFeatured = a.IsFeatured
                 }).ToListAsync(ct);
         }
 
         public Task<int> GetArticlesCountAsync(int? categoryId, CancellationToken ct = default)
         {
-            var query = _db.Articles.AsNoTracking().Where(a => a.Status == PublishStatus.Published);
+            var query = _db.Articles.AsNoTracking().Where(a => a.Status == PublishStatus.Published && a.ArticleCategory.IsActive);
             if (categoryId.HasValue) query = query.Where(a => a.ArticleCategoryId == categoryId.Value);
             return query.CountAsync(ct);
         }
@@ -78,7 +78,7 @@ namespace Soransoft.Infrastructure.Persistence
         {
             var article = await _db.Articles
                 .Include(a => a.ArticleCategory)
-                .FirstOrDefaultAsync(a => a.Id == id && a.Status == PublishStatus.Published, ct);
+                .FirstOrDefaultAsync(a => a.Id == id && a.Status == PublishStatus.Published && a.ArticleCategory.IsActive, ct);
             if (article is null) return null;
             return article;
         }
@@ -86,7 +86,7 @@ namespace Soransoft.Infrastructure.Persistence
         public Task<Article?> GetArticleBySlugAsync(string slug, CancellationToken ct = default) =>
             _db.Articles.AsNoTracking()
                 .Include(a => a.ArticleCategory)
-                .FirstOrDefaultAsync(a => a.Slug == slug && a.Status == PublishStatus.Published, ct);
+                .FirstOrDefaultAsync(a => a.Slug == slug && a.Status == PublishStatus.Published && a.ArticleCategory.IsActive, ct);
 
         public async Task IncrementArticleVisitAsync(int id, CancellationToken ct = default)
         {
@@ -97,7 +97,7 @@ namespace Soransoft.Infrastructure.Persistence
         public async Task<List<ArticleSitemapItem>> GetPublishedArticleSitemapItemsAsync(CancellationToken ct = default)
         {
             var rows = await _db.Articles.AsNoTracking()
-                .Where(a => a.Status == PublishStatus.Published && !a.IsDeleted)
+                .Where(a => a.Status == PublishStatus.Published && !a.IsDeleted && a.ArticleCategory.IsActive)
                 .OrderByDescending(a => a.PublishedAt)
                 .Select(a => new { a.Id, a.Slug, a.PublishedAt, a.UpdatedAt })
                 .ToListAsync(ct);
@@ -117,6 +117,14 @@ namespace Soransoft.Infrastructure.Persistence
                 .FirstOrDefaultAsync(s => s.Slug == slug && s.IsActive, ct);
         }
 
+        public async Task<Service?> GetServiceByKindAsync(ServiceKind kind, CancellationToken ct = default)
+        {
+            return await _db.Services.AsNoTracking()
+                .Include(s => s.Features.OrderBy(f => f.DisplayOrder))
+                .Include(s => s.Steps.OrderBy(s => s.DisplayOrder))
+                .FirstOrDefaultAsync(s => s.Kind == kind && s.IsActive, ct);
+        }
+
     public Task<List<ArticleCategory>> GetArticleCategoriesAsync(CancellationToken ct = default) =>
             _db.ArticleCategories.AsNoTracking().Where(c => c.IsActive).OrderBy(c => c.DisplayOrder).ToListAsync(ct);
 
@@ -125,7 +133,7 @@ namespace Soransoft.Infrastructure.Persistence
 
         public Task<List<TariffSection>> GetTariffSectionsAsync(CancellationToken ct = default) =>
             _db.TariffSections.AsNoTracking()
-                .Where(t => t.IsActive)
+                .Where(t => t.IsActive && _db.Services.Any(s => s.Kind == t.Kind && s.IsActive && !s.ComingSoon))
                 .OrderBy(t => t.DisplayOrder)
                 .Include(t => t.Packages.Where(p => p.IsActive).OrderBy(p => p.DisplayOrder))
                     .ThenInclude(p => p.Items.OrderBy(i => i.DisplayOrder))
@@ -150,7 +158,12 @@ namespace Soransoft.Infrastructure.Persistence
             var items = await _db.MenuItems.AsNoTracking()
                 .Where(m => m.IsActive && m.Position == position)
                 .OrderBy(m => m.DisplayOrder).ToListAsync(ct);
-            return items.Select(m => new MenuItemViewModel { Title = m.Title, Url = m.Url }).ToList();
+            return items.Select(m => new MenuItemViewModel
+            {
+                Title = m.Title,
+                Url = m.Url,
+                FeatureKey = SiteFeatures.FeatureForUrl(m.Url),
+            }).ToList();
         }
 
         public Task<List<Slider>> GetActiveSlidersAsync(CancellationToken ct = default) =>
