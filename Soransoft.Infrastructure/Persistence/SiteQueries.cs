@@ -88,6 +88,10 @@ namespace Soransoft.Infrastructure.Persistence
                 .Include(a => a.ArticleCategory)
                 .FirstOrDefaultAsync(a => a.Slug == slug && a.Status == PublishStatus.Published && a.ArticleCategory.IsActive, ct);
 
+        public Task<SitePage?> GetPageBySlugAsync(string slug, CancellationToken ct = default) =>
+            _db.SitePages.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Slug == slug && p.IsPublished, ct);
+
         public async Task IncrementArticleVisitAsync(int id, CancellationToken ct = default)
         {
             await _db.Articles.Where(a => a.Id == id)

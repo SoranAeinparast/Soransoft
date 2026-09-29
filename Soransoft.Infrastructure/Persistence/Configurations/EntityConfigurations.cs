@@ -94,6 +94,22 @@ namespace Soransoft.Infrastructure.Persistence.Configurations
         }
     }
 
+    internal sealed class SitePageConfig : IEntityTypeConfiguration<SitePage>
+    {
+        public void Configure(EntityTypeBuilder<SitePage> b)
+        {
+            b.ToTable("SitePages");
+            b.Property(x => x.Title).HasMaxLength(250).IsRequired();
+            b.Property(x => x.Slug).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Summary).HasMaxLength(1000);
+            b.Property(x => x.Body).HasColumnType("nvarchar(max)");
+            b.Property(x => x.Image).HasMaxLength(300);
+            b.Property(x => x.SeoTitle).HasMaxLength(250);
+            b.Property(x => x.SeoDescription).HasMaxLength(500);
+            b.HasIndex(x => x.Slug).IsUnique();
+        }
+    }
+
     internal sealed class TariffSectionConfig : IEntityTypeConfiguration<TariffSection>
     {
         public void Configure(EntityTypeBuilder<TariffSection> b)

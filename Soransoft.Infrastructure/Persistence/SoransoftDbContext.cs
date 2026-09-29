@@ -19,6 +19,7 @@ namespace Soransoft.Infrastructure.Persistence
         public DbSet<Portfolio> Portfolios => Set<Portfolio>();
         public DbSet<ArticleCategory> ArticleCategories => Set<ArticleCategory>();
         public DbSet<Article> Articles => Set<Article>();
+        public DbSet<SitePage> SitePages => Set<SitePage>();
         public DbSet<TariffSection> TariffSections => Set<TariffSection>();
         public DbSet<TariffPackage> TariffPackages => Set<TariffPackage>();
         public DbSet<TariffItem> TariffItems => Set<TariffItem>();

@@ -66,6 +66,20 @@ namespace Soransoft.Infrastructure.Persistence
                 ChangeFrequency = "weekly",
             }));
 
+            var pages = await _db.SitePages.AsNoTracking()
+                .Where(p => p.IsPublished && !p.IsDeleted)
+                .OrderBy(p => p.DisplayOrder)
+                .Select(p => new { p.Slug, p.UpdatedAt })
+                .ToListAsync(ct);
+
+            items.AddRange(pages.Select(p => new SitemapItem
+            {
+                Url = $"{baseUrl}/Page/{Uri.EscapeDataString(p.Slug)}",
+                LastModified = p.UpdatedAt,
+                Priority = 0.7,
+                ChangeFrequency = "monthly",
+            }));
+
             return items;
         }
     }

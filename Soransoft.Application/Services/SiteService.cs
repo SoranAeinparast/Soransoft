@@ -80,6 +80,9 @@ namespace Soransoft.Application.Services
         public Task<Article?> GetArticleBySlugAsync(string slug, CancellationToken ct = default) =>
             _queries.GetArticleBySlugAsync(slug, ct);
 
+        public Task<SitePage?> GetPageBySlugAsync(string slug, CancellationToken ct = default) =>
+            _queries.GetPageBySlugAsync(slug, ct);
+
         public Task IncrementArticleVisitAsync(int id, CancellationToken ct = default) =>
             _queries.IncrementArticleVisitAsync(id, ct);
 

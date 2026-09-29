@@ -179,6 +179,23 @@ namespace Soransoft.Web.Controllers
             return View("Article", article);
         }
 
+        // GET /Page/{slug} — صفحه‌ی محتوایی قابل مدیریت
+        [HttpGet("Page/{slug}")]
+        public async Task<IActionResult> PageBySlug(string slug, CancellationToken ct)
+        {
+            var page = await _site.GetPageBySlugAsync(slug.Trim().ToLowerInvariant(), ct);
+            if (page is null) return NotFound();
+
+            ViewData["Title"] = string.IsNullOrWhiteSpace(page.SeoTitle) ? page.Title : page.SeoTitle;
+            ViewData["Description"] = string.IsNullOrWhiteSpace(page.SeoDescription) ? page.Summary : page.SeoDescription;
+            ViewData["OgImage"] = string.IsNullOrWhiteSpace(page.Image)
+                ? null
+                : Url.Content($"~/{page.Image.TrimStart('~', '/')}");
+            ViewData["Canonical"] = Url.ActionLink(
+                nameof(PageBySlug), "Home", new { slug = page.Slug }, protocol: Request.Scheme);
+            return View("SitePage", page);
+        }
+
         // GET /Article/5 → ریدایرکت ۳۰۱ به آدرس اسلاگ‌دار (آدرس‌های قدیمی)
         [HttpGet("Article/{id:int}")]
         public async Task<IActionResult> Article(int id, CancellationToken ct)

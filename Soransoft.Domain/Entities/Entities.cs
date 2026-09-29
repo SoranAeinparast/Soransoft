@@ -106,6 +106,20 @@ namespace Soransoft.Domain.Entities
         public virtual ArticleCategory ArticleCategory { get; set; } = null!;
     }
 
+    /// <summary>صفحه‌ی محتوایی قابل مدیریت با آدرس اسلاگ‌دار</summary>
+    public class SitePage : BaseDeletableEntity
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Summary { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
+        public string Image { get; set; } = string.Empty;
+        public string? SeoTitle { get; set; }
+        public string? SeoDescription { get; set; }
+        public int DisplayOrder { get; set; }
+        public bool IsPublished { get; set; }
+    }
+
     /// <summary>بخش تعرفه (طراحی سایت، سئو، اپلیکیشن، تولید محتوا)</summary>
     public class TariffSection : BaseDeletableEntity
     {

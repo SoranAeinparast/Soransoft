@@ -14,6 +14,7 @@ namespace Soransoft.Application.Interfaces
         Task<int> GetArticlesCountAsync(int? categoryId, CancellationToken ct = default);
         Task<Article?> GetArticleAsync(int id, CancellationToken ct = default);
         Task<Article?> GetArticleBySlugAsync(string slug, CancellationToken ct = default);
+        Task<SitePage?> GetPageBySlugAsync(string slug, CancellationToken ct = default);
         Task IncrementArticleVisitAsync(int id, CancellationToken ct = default);
         Task<Service?> GetServiceBySlugAsync(string slug, CancellationToken ct = default);
         Task<Service?> GetServiceByKindAsync(ServiceKind kind, CancellationToken ct = default);
