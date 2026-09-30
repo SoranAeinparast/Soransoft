@@ -104,6 +104,51 @@ namespace Soransoft.Application.ViewModels
         }
     }
 
+    /// <summary>فرم اعلام آمادگی همکاری در بازاریابی و فروش</summary>
+    public class MarketingInterestViewModel : IValidatableObject
+    {
+        [Required(ErrorMessage = "نام و نام خانوادگی الزامی است")]
+        [StringLength(150)]
+        [Display(Name = "نام و نام خانوادگی")]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "شماره موبایل الزامی است")]
+        [StringLength(20)]
+        [Display(Name = "شماره موبایل")]
+        public string Mobile { get; set; } = string.Empty;
+
+        [EmailAddress(ErrorMessage = "ایمیل معتبر نیست")]
+        [Display(Name = "ایمیل")]
+        public string? Email { get; set; }
+
+        [StringLength(200)]
+        [Display(Name = "نام مجموعه یا برند")]
+        public string? CompanyName { get; set; }
+
+        [StringLength(120)]
+        [Display(Name = "شهر یا محدوده فعالیت")]
+        public string? City { get; set; }
+
+        [Required(ErrorMessage = "زمینه فعالیت یا شبکه مشتریان را وارد کنید")]
+        [StringLength(500)]
+        [Display(Name = "زمینه فعالیت و نوع ارتباطات")]
+        public string ActivityArea { get; set; } = string.Empty;
+
+        [StringLength(1000)]
+        [Display(Name = "سابقه فروش و بازاریابی")]
+        public string? SalesExperience { get; set; }
+
+        [StringLength(2000)]
+        [Display(Name = "توضیحات تکمیلی")]
+        public string? Message { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(Mobile ?? string.Empty, @"^09\d{9}$"))
+                yield return new ValidationResult("شماره موبایل باید با 09 شروع شود و 11 رقم باشد", new[] { nameof(Mobile) });
+        }
+    }
+
     /// <summary>نتیجه‌ی عمومی AJAX</summary>
     public class OperationResult
     {

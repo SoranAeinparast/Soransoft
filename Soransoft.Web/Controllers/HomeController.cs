@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Soransoft.Application.Interfaces;
 using Soransoft.Application.ViewModels;
 using Soransoft.Web.Models;
+using Soransoft.Domain.Entities;
 using Soransoft.Domain.Enums;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -186,6 +187,49 @@ namespace Soransoft.Web.Controllers
             var page = await _site.GetPageBySlugAsync(slug.Trim().ToLowerInvariant(), ct);
             if (page is null) return NotFound();
 
+            return RenderSitePage(page);
+        }
+
+        [HttpPost("Page/incoming/MarketingInterest")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitMarketingInterest(MarketingInterestViewModel model, CancellationToken ct)
+        {
+            var page = await _site.GetPageBySlugAsync("incoming", ct);
+            if (page is null) return NotFound();
+
+            if (!ModelState.IsValid)
+                return RenderSitePage(page, model);
+
+            var details = string.Join(Environment.NewLine, new[]
+            {
+                OptionalLine("نام مجموعه یا برند", model.CompanyName),
+                OptionalLine("شهر یا محدوده فعالیت", model.City),
+                $"زمینه فعالیت و نوع ارتباطات: {model.ActivityArea.Trim()}",
+                OptionalLine("سابقه فروش و بازاریابی", model.SalesExperience),
+                OptionalLine("توضیحات تکمیلی", model.Message),
+            }.Where(line => !string.IsNullOrWhiteSpace(line)));
+
+            var result = await _forms.SubmitContactAsync(new ContactUsViewModel
+            {
+                FullName = model.FullName,
+                Mobile = model.Mobile,
+                Email = model.Email,
+                Subject = "اعلام آمادگی همکاری بازاریابی",
+                Message = details,
+            }, HttpContext.Connection.RemoteIpAddress?.ToString(), ct);
+
+            if (result.Success)
+            {
+                TempData["Success"] = "درخواست همکاری شما ثبت شد. کارشناسان Soransoft با شما تماس می‌گیرند.";
+                return Redirect("/Page/incoming#marketing-interest");
+            }
+
+            ModelState.AddModelError(string.Empty, result.Message);
+            return RenderSitePage(page, model);
+        }
+
+        private IActionResult RenderSitePage(SitePage page, MarketingInterestViewModel? marketingInterest = null)
+        {
             ViewData["Title"] = string.IsNullOrWhiteSpace(page.SeoTitle) ? page.Title : page.SeoTitle;
             ViewData["Description"] = string.IsNullOrWhiteSpace(page.SeoDescription) ? page.Summary : page.SeoDescription;
             ViewData["OgImage"] = string.IsNullOrWhiteSpace(page.Image)
@@ -193,8 +237,13 @@ namespace Soransoft.Web.Controllers
                 : Url.Content($"~/{page.Image.TrimStart('~', '/')}");
             ViewData["Canonical"] = Url.ActionLink(
                 nameof(PageBySlug), "Home", new { slug = page.Slug }, protocol: Request.Scheme);
+            if (string.Equals(page.Slug, "incoming", StringComparison.OrdinalIgnoreCase))
+                ViewData["MarketingInterest"] = marketingInterest ?? new MarketingInterestViewModel();
             return View("SitePage", page);
         }
+
+        private static string? OptionalLine(string label, string? value) =>
+            string.IsNullOrWhiteSpace(value) ? null : $"{label}: {value.Trim()}";
 
         // GET /Article/5 → ریدایرکت ۳۰۱ به آدرس اسلاگ‌دار (آدرس‌های قدیمی)
         [HttpGet("Article/{id:int}")]
