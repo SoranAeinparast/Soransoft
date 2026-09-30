@@ -28,6 +28,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(SitePage model, IFormFile? imageFile, CancellationToken ct)
         {
+            NormalizeModel(model);
             model.Slug = await EnsureUniqueSlugAsync(NormalizeSlug(model.Slug, model.Title), null, ct);
             if (!ModelState.IsValid)
             {
@@ -56,6 +57,7 @@ namespace Soransoft.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(SitePage model, IFormFile? imageFile, CancellationToken ct)
         {
+            NormalizeModel(model);
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "ذخیره نشد: " + string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
@@ -113,5 +115,14 @@ namespace Soransoft.Web.Areas.Admin.Controllers
             string.IsNullOrWhiteSpace(slug)
                 ? SlugGenerator.Generate(title)
                 : SlugGenerator.Generate(slug, transliterate: false);
+
+        private static void NormalizeModel(SitePage model)
+        {
+            model.Title ??= string.Empty;
+            model.Slug ??= string.Empty;
+            model.Summary ??= string.Empty;
+            model.Body ??= string.Empty;
+            model.Image ??= string.Empty;
+        }
     }
 }
