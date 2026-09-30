@@ -7,7 +7,7 @@ public static class ShirinisaraPageContent
     public const string Summary = "شعبه ۲۴ ساعته و هوشمند شیرینی‌سرای شما، در جیب مشتریان شهر";
     public const string SeoTitle = "پلتفرم جامع شیرینی‌سرا | شعبه دیجیتال قنادی شما";
     public const string SeoDescription = "فروش آنلاین شیرینی، سفارش جعبه ترکیبی، کیک سفارشی، وزن‌کشی، پرداخت، پیامک و مدیریت قنادی در یک پلتفرم یکپارچه.";
-    public const string Image = "/uploads/site-pages/shirinisara/hero.png";
+    public const string Image = "/uploads/site-pages/shirinisara/hero.jpg";
 
     public const string Body = """
 <div class="sn-shirini-lead-card">
@@ -45,7 +45,7 @@ public static class ShirinisaraPageContent
         <div class="sn-shirini-capacity"><i class="bi bi-box-seam"></i><div><strong>۱۲۰۰ گرم از ۲۰۰۰ گرم</strong><span>ظرفیت جعبه در لحظه قابل مشاهده است</span></div><div class="sn-shirini-capacity-bar"><span></span></div></div>
         <a class="sn-shirini-warm-link" href="/ContactUs">راه‌اندازی شعبه دیجیتال قنادی من <i class="bi bi-arrow-left"></i></a>
     </div>
-    <figure class="sn-shirini-image-frame"><img src="/uploads/site-pages/shirinisara/box-builder.png" alt="رابط ساخت جعبه شیرینی در موبایل" loading="lazy" /><figcaption>مشتری می‌تواند ردیف‌ها را حذف، جایگزین یا جابه‌جا کند.</figcaption></figure>
+    <figure class="sn-shirini-image-frame"><img src="/uploads/site-pages/shirinisara/box-builder.jpg" alt="رابط ساخت جعبه شیرینی در موبایل" loading="lazy" /><figcaption>مشتری می‌تواند ردیف‌ها را حذف، جایگزین یا جابه‌جا کند.</figcaption></figure>
 </div>
 
 <h2><span class="sn-shirini-section-number">۰۳</span> قیمت‌گذاری واقعی؛ بدون حدس و گمان</h2>
@@ -65,7 +65,7 @@ public static class ShirinisaraPageContent
     <article><span>مرحله سوم</span><i class="bi bi-link-45deg"></i><h3>پرداخت باقی‌مانده</h3><p>مشتری جزئیات وزن و مبلغ را می‌بیند و از طریق لینک امن پرداخت می‌کند.</p></article>
 </div>
 
-<div class="sn-shirini-image-banner"><img src="/uploads/site-pages/shirinisara/app-home.png" alt="تجربه سفارش شیرینی در اپلیکیشن موبایل" loading="lazy" /><div><span class="sn-shirini-eyebrow">فروشگاه شما همیشه در موبایل مشتری</span><h2>یک تجربه ساده، سریع و همیشه در دسترس</h2><p>مشتری می‌تواند از موبایل به فروشگاه شما دسترسی داشته باشد، سفارش‌های خود را ببیند و در هر مرحله از وضعیت آن باخبر شود.</p></div></div>
+<div class="sn-shirini-image-banner"><img src="/uploads/site-pages/shirinisara/app-home.jpg" alt="تجربه سفارش شیرینی در اپلیکیشن موبایل" loading="lazy" /><div><span class="sn-shirini-eyebrow">فروشگاه شما همیشه در موبایل مشتری</span><h2>یک تجربه ساده، سریع و همیشه در دسترس</h2><p>مشتری می‌تواند از موبایل به فروشگاه شما دسترسی داشته باشد، سفارش‌های خود را ببیند و در هر مرحله از وضعیت آن باخبر شود.</p></div></div>
 
 <h2><span class="sn-shirini-section-number">۰۵</span> سفارش کیک سفارشی را هم دیجیتال کنید</h2>
 <p>دیگر لازم نیست جزئیات سفارش کیک سفارشی در تماس تلفنی، پیام‌رسان یا یادداشت‌های پراکنده ثبت شود. مشتری می‌تواند طعم، شکل، مناسبت، تعداد مهمانان، وزن، زمان تحویل، عکس نمونه، تصویر چاپی و درخواست‌های خاص را در سیستم ثبت کند.</p>
@@ -114,7 +114,7 @@ public static class ShirinisaraPageContent
 </div>
 <p class="sn-shirini-chain-caption"><strong>یک سفارش؛ یک زنجیره اطلاعاتی؛ یک سیستم.</strong> مشتری سفارش می‌دهد، سفارش وارد پنل می‌شود، جعبه بررسی می‌شود، قیمت نهایی مشخص می‌شود، کارگاه تولید را انجام می‌دهد و مشتری در جریان قرار می‌گیرد.</p>
 
-<figure class="sn-shirini-full-image"><img src="/uploads/site-pages/shirinisara/before-after.png" alt="تفاوت فروش سنتی و فروش یکپارچه با شیرینی‌سرا" loading="lazy" /><figcaption>شیرینی‌سرا مسیر فروش را از تماس و قیمت‌گذاری دستی به فروش آنلاین، قیمت واقعی، پیامک و فرآیند یکپارچه تبدیل می‌کند.</figcaption></figure>
+<figure class="sn-shirini-full-image"><img src="/uploads/site-pages/shirinisara/before-after.jpg" alt="تفاوت فروش سنتی و فروش یکپارچه با شیرینی‌سرا" loading="lazy" /><figcaption>شیرینی‌سرا مسیر فروش را از تماس و قیمت‌گذاری دستی به فروش آنلاین، قیمت واقعی، پیامک و فرآیند یکپارچه تبدیل می‌کند.</figcaption></figure>
 
 <h2><span class="sn-shirini-section-number">۱۰</span> یک شعبه جدید بدون اجاره یک مغازه جدید</h2>
 <p>این بار شعبه جدید شما در خیابان نیست؛ <strong>در موبایل مشتریان شماست.</strong> شعبه دیجیتال شما ۲۴ ساعته در دسترس است، محصولات را نمایش می‌دهد، سفارش می‌گیرد، پرداخت دریافت می‌کند، سفارش را پیگیری می‌کند، به فرآیند تولید متصل است و اطلاعات فروش را در اختیار مدیریت قرار می‌دهد.</p>
@@ -128,7 +128,7 @@ public static class ShirinisaraPageContent
 <div class="sn-shirini-audience-tags"><span>قنادی</span><span>شیرینی‌فروشی</span><span>فروشگاه کیک و شیرینی</span><span>فروش حضوری و آنلاین</span><span>قنادی دارای کیک سفارشی</span><span>فروشنده شیرینی کیلویی</span></div>
 <p>اگر امروز فقط یک صفحه اینستاگرام، یک شماره تماس یا یک سایت ساده برای دریافت سفارش دارید، سؤال این است: <strong>آیا فرآیند فروش شما هم به اندازه کیفیت شیرینی‌هایتان حرفه‌ای شده است؟</strong></p>
 
-<div class="sn-shirini-image-banner sn-shirini-custom-banner"><img src="/uploads/site-pages/shirinisara/hero.png" alt="شعبه دیجیتال شیرینی‌سرا روی دسکتاپ و موبایل" loading="lazy" /><div><span class="sn-shirini-eyebrow">قابل توسعه برای آینده</span><h2>سیستم می‌تواند متناسب با کسب‌وکار شما تنظیم شود</h2><p>هویت بصری، محصولات، دسته‌بندی‌ها، فرآیندهای فروش، پیامک‌ها، کمپین‌ها، دامنه، سرور و اپلیکیشن قابل شخصی‌سازی هستند.</p></div></div>
+<div class="sn-shirini-image-banner sn-shirini-custom-banner"><img src="/uploads/site-pages/shirinisara/hero.jpg" alt="شعبه دیجیتال شیرینی‌سرا روی دسکتاپ و موبایل" loading="lazy" /><div><span class="sn-shirini-eyebrow">قابل توسعه برای آینده</span><h2>سیستم می‌تواند متناسب با کسب‌وکار شما تنظیم شود</h2><p>هویت بصری، محصولات، دسته‌بندی‌ها، فرآیندهای فروش، پیامک‌ها، کمپین‌ها، دامنه، سرور و اپلیکیشن قابل شخصی‌سازی هستند.</p></div></div>
 
 <h2><span class="sn-shirini-section-number">۱۲</span> راه‌اندازی را به ما بسپارید</h2>
 <p>از آماده‌سازی تا بهره‌برداری، خدمات راه‌اندازی می‌تواند شامل موارد زیر باشد:</p>
