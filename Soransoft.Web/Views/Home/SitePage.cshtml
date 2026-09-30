@@ -2,16 +2,17 @@
 @model Soransoft.Domain.Entities.SitePage
 @{
     var isIncoming = string.Equals(Model.Slug, "incoming", StringComparison.OrdinalIgnoreCase);
+    var isShirinisara = string.Equals(Model.Slug, "shirinisara", StringComparison.OrdinalIgnoreCase);
     var marketing = ViewData["MarketingInterest"] as MarketingInterestViewModel ?? new MarketingInterestViewModel();
     const string marketingFormMarker = "<!-- soransoft-marketing-form -->";
     var sanitizedBody = SafeHtml.Sanitize(Model.Body);
     var markerIndex = isIncoming ? sanitizedBody.IndexOf(marketingFormMarker, StringComparison.Ordinal) : -1;
     var bodyBeforeForm = markerIndex >= 0 ? sanitizedBody[..markerIndex] : sanitizedBody;
     var bodyAfterForm = markerIndex >= 0 ? sanitizedBody[(markerIndex + marketingFormMarker.Length)..] : string.Empty;
-    var pageContainerClass = isIncoming ? "container-fluid sn-incoming-wide-container" : "container";
+    var pageContainerClass = isIncoming || isShirinisara ? "container-fluid sn-feature-wide-container" : "container";
 }
 
-<section class="sn-page-hero @(isIncoming ? "sn-incoming-hero" : "")">
+<section class="sn-page-hero @(isIncoming ? "sn-incoming-hero" : isShirinisara ? "sn-shirinisara-hero" : "")">
     <div class="container text-center">
         @if (isIncoming)
         {
@@ -33,12 +34,19 @@
                 <a href="/Partner/Account/Login" class="btn sn-btn-outline"><i class="bi bi-box-arrow-in-left me-1"></i>ورود همکاران</a>
             </div>
         }
+        @if (isShirinisara)
+        {
+            <div class="sn-shirinisara-hero-actions">
+                <a href="/ContactUs" class="btn sn-btn-warm"><i class="bi bi-chat-heart me-1"></i>درخواست مشاوره و راه‌اندازی</a>
+                <a href="#shirinisara-features" class="btn sn-btn-outline"><i class="bi bi-grid-3x3-gap me-1"></i>مشاهده امکانات پلتفرم</a>
+            </div>
+        }
     </div>
 </section>
 
-<section class="sn-section @(isIncoming ? "sn-incoming-content-section" : "")">
+<section class="sn-section @(isIncoming ? "sn-incoming-content-section" : isShirinisara ? "sn-shirinisara-content-section" : "")">
     <div class="@pageContainerClass">
-        <article class="sn-article-body-content @(isIncoming ? "sn-incoming-content" : "")">
+        <article class="sn-article-body-content @(isIncoming ? "sn-incoming-content" : isShirinisara ? "sn-shirinisara-content" : "")">
             @Html.Raw(bodyBeforeForm)
         </article>
     </div>
