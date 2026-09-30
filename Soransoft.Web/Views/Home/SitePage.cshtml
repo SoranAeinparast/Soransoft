@@ -8,6 +8,7 @@
     var markerIndex = isIncoming ? sanitizedBody.IndexOf(marketingFormMarker, StringComparison.Ordinal) : -1;
     var bodyBeforeForm = markerIndex >= 0 ? sanitizedBody[..markerIndex] : sanitizedBody;
     var bodyAfterForm = markerIndex >= 0 ? sanitizedBody[(markerIndex + marketingFormMarker.Length)..] : string.Empty;
+    var pageContainerClass = isIncoming ? "container-fluid sn-incoming-wide-container" : "container";
 }
 
 <section class="sn-page-hero @(isIncoming ? "sn-incoming-hero" : "")">
@@ -36,7 +37,7 @@
 </section>
 
 <section class="sn-section @(isIncoming ? "sn-incoming-content-section" : "")">
-    <div class="container">
+    <div class="@pageContainerClass">
         <article class="sn-article-body-content @(isIncoming ? "sn-incoming-content" : "")">
             @Html.Raw(bodyBeforeForm)
         </article>
@@ -46,10 +47,9 @@
 @if (isIncoming)
 {
     <section class="sn-section sn-section-alt sn-incoming-form-section" id="marketing-interest">
-        <div class="container">
+        <div class="@pageContainerClass">
             <div class="sn-incoming-form-shell">
                 <div class="sn-form-card sn-incoming-form-card">
-                    <div asp-validation-summary="All" class="alert alert-danger small"></div>
                     <form action="/Page/incoming/MarketingInterest" method="post">
                         @Html.AntiForgeryToken()
                         <div class="row g-3">
@@ -104,7 +104,7 @@
 @if (isIncoming && markerIndex >= 0)
 {
     <section class="sn-section sn-incoming-after-form">
-        <div class="container">
+        <div class="@pageContainerClass">
             <article class="sn-article-body-content sn-incoming-content">
                 @Html.Raw(bodyAfterForm)
             </article>
