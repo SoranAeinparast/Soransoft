@@ -7,8 +7,8 @@ using Soransoft.Infrastructure.Persistence;
 namespace Soransoft.Infrastructure.Persistence.Migrations;
 
 [DbContext(typeof(SoransoftDbContext))]
-[Migration("20260930140000_SeedShirinisaraPage")]
-public partial class SeedShirinisaraPage : Migration
+[Migration("20260930150000_RefreshShirinisaraPage")]
+public sealed class RefreshShirinisaraPage : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {

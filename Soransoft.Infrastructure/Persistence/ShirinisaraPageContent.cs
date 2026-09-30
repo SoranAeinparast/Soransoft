@@ -114,7 +114,7 @@ public static class ShirinisaraPageContent
 </div>
 <p class="sn-shirini-chain-caption"><strong>یک سفارش؛ یک زنجیره اطلاعاتی؛ یک سیستم.</strong> مشتری سفارش می‌دهد، سفارش وارد پنل می‌شود، جعبه بررسی می‌شود، قیمت نهایی مشخص می‌شود، کارگاه تولید را انجام می‌دهد و مشتری در جریان قرار می‌گیرد.</p>
 
-<figure class="sn-shirini-full-image"><img src="/uploads/site-pages/shirinisara/before-after.jpg" alt="تفاوت فروش سنتی و فروش یکپارچه با شیرینی‌سرا" loading="lazy" /><figcaption>شیرینی‌سرا مسیر فروش را از تماس و قیمت‌گذاری دستی به فروش آنلاین، قیمت واقعی، پیامک و فرآیند یکپارچه تبدیل می‌کند.</figcaption></figure>
+<figure class="sn-shirini-full-image"><img src="/uploads/site-pages/shirinisara/before-after.png" alt="مقایسه فروش سنتی قنادی با فروش آنلاین و مدیریت یکپارچه شیرینی‌سرا" loading="lazy" /><figcaption>شیرینی‌سرا مسیر فروش را از تماس و قیمت‌گذاری دستی به فروش آنلاین، قیمت واقعی، پیامک و فرآیند یکپارچه تبدیل می‌کند.</figcaption></figure>
 
 <h2><span class="sn-shirini-section-number">۱۰</span> یک شعبه جدید بدون اجاره یک مغازه جدید</h2>
 <p>این بار شعبه جدید شما در خیابان نیست؛ <strong>در موبایل مشتریان شماست.</strong> شعبه دیجیتال شما ۲۴ ساعته در دسترس است، محصولات را نمایش می‌دهد، سفارش می‌گیرد، پرداخت دریافت می‌کند، سفارش را پیگیری می‌کند، به فرآیند تولید متصل است و اطلاعات فروش را در اختیار مدیریت قرار می‌دهد.</p>
@@ -128,16 +128,20 @@ public static class ShirinisaraPageContent
 <div class="sn-shirini-audience-tags"><span>قنادی</span><span>شیرینی‌فروشی</span><span>فروشگاه کیک و شیرینی</span><span>فروش حضوری و آنلاین</span><span>قنادی دارای کیک سفارشی</span><span>فروشنده شیرینی کیلویی</span></div>
 <p>اگر امروز فقط یک صفحه اینستاگرام، یک شماره تماس یا یک سایت ساده برای دریافت سفارش دارید، سؤال این است: <strong>آیا فرآیند فروش شما هم به اندازه کیفیت شیرینی‌هایتان حرفه‌ای شده است؟</strong></p>
 
-<div class="sn-shirini-image-banner sn-shirini-custom-banner"><img src="/uploads/site-pages/shirinisara/hero.jpg" alt="شعبه دیجیتال شیرینی‌سرا روی دسکتاپ و موبایل" loading="lazy" /><div><span class="sn-shirini-eyebrow">قابل توسعه برای آینده</span><h2>سیستم می‌تواند متناسب با کسب‌وکار شما تنظیم شود</h2><p>هویت بصری، محصولات، دسته‌بندی‌ها، فرآیندهای فروش، پیامک‌ها، کمپین‌ها، دامنه، سرور و اپلیکیشن قابل شخصی‌سازی هستند.</p></div></div>
+<div class="sn-shirini-image-banner sn-shirini-custom-banner"><img src="/uploads/site-pages/shirinisara/customer-home.jpg" alt="مشتری در حال سفارش آنلاین شیرینی با موبایل" loading="lazy" /><div><span class="sn-shirini-eyebrow">قابل توسعه برای آینده</span><h2>سیستم می‌تواند متناسب با کسب‌وکار شما تنظیم شود</h2><p>هویت بصری، محصولات، دسته‌بندی‌ها، فرآیندهای فروش، پیامک‌ها، کمپین‌ها، دامنه، سرور و اپلیکیشن قابل شخصی‌سازی هستند.</p></div></div>
 
 <h2><span class="sn-shirini-section-number">۱۲</span> راه‌اندازی را به ما بسپارید</h2>
 <p>از آماده‌سازی تا بهره‌برداری، خدمات راه‌اندازی می‌تواند شامل موارد زیر باشد:</p>
 <div class="sn-shirini-check-grid"><span><i class="bi bi-check2"></i>استقرار روی سرور</span><span><i class="bi bi-check2"></i>تنظیم دامنه و SSL</span><span><i class="bi bi-check2"></i>اتصال درگاه پرداخت</span><span><i class="bi bi-check2"></i>اتصال سرویس پیامک</span><span><i class="bi bi-check2"></i>ثبت محصولات و شیرینی‌ها</span><span><i class="bi bi-check2"></i>تنظیم دسته‌بندی‌ها</span><span><i class="bi bi-check2"></i>تنظیم هویت بصری</span><span><i class="bi bi-check2"></i>ساخت اپلیکیشن</span><span><i class="bi bi-check2"></i>آموزش مدیر فروشگاه</span><span><i class="bi bi-check2"></i>آموزش مدیر فروش و سرآشپز</span><span><i class="bi bi-check2"></i>تحویل مستندات</span></div>
 
+<h2><span class="sn-shirini-section-number">۱۳</span> چرا شیرینی‌سرا فقط یک قالب آماده نیست؟</h2>
+<p>هدف، ساختن چند صفحه زیبا نیست؛ هدف این است که فروش واقعی قنادی به‌صورت دیجیتال مدیریت شود. بخش‌هایی مثل سفارش‌ساز جعبه، وزن‌کشی، قیمت‌گذاری، پرداخت، برچسب، تولید، صورتحساب، باشگاه مشتریان، پیامک و گزارش در یک جریان به هم متصل‌اند.</p>
+<blockquote class="sn-shirini-quote"><strong>یک سفارش؛ از انتخاب شیرینی تا تحویل، در یک زنجیره اطلاعاتی.</strong><br />سیستم را با هویت بصری، محصولات و فرآیندهای کسب‌وکار خودتان تنظیم کنید؛ لازم نیست قنادی‌تان را با یک قالب ثابت تطبیق دهید.</blockquote>
+
 <div class="sn-shirini-final-cta">
     <span class="sn-shirini-eyebrow"><i class="bi bi-stars"></i> حالا نوبت شماست</span>
     <h2>شعبه دیجیتال شیرینی‌سرای خودتان را راه‌اندازی کنید</h2>
-    <p>مشتری‌های شما همین حالا هم آنلاین هستند. سؤال این نیست که آیا مشتری از موبایل خرید خواهد کرد؛ سؤال این است که وقتی مشتری آماده خرید است، شعبه دیجیتال شما آماده پذیرش سفارش هست؟</p>
+    <p>مشتری‌های شما همین حالا هم آنلاین هستند. اطلاعات قنادی، نوع محصولات و شیوه فروش‌تان را با ما در میان بگذارید تا درباره راه‌اندازی و شخصی‌سازی شعبه دیجیتال متناسب با کسب‌وکارتان گفت‌وگو کنیم.</p>
     <div class="sn-shirini-final-actions"><a href="/ContactUs" class="sn-btn-warm">درخواست مشاوره رایگان <i class="bi bi-arrow-left"></i></a><a href="/OrderProject" class="sn-btn-outline">درخواست راه‌اندازی برای قنادی من <i class="bi bi-arrow-left"></i></a></div>
     <strong>شیرینی‌سرا؛ نه فقط یک وب‌سایت، نه فقط یک اپلیکیشن، نه فقط یک پنل مدیریت؛ یک اکوسیستم یکپارچه برای فروش و مدیریت قنادی.</strong>
 </div>
