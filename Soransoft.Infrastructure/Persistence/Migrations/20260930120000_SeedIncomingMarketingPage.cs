@@ -31,6 +31,6 @@ public partial class SeedIncomingMarketingPage : Migration
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.Sql("DELETE FROM [SitePages] WHERE [Slug] = N'incoming'");
+        migrationBuilder.Sql("DELETE FROM [SitePages] WHERE [Slug] = N'incoming' AND [Body] LIKE N'%soransoft-incoming-v1%'");
     }
 }
