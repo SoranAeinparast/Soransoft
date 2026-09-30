@@ -22,6 +22,12 @@
 <div class="mb-3">
     <label asp-for="Body" class="form-label">محتوای صفحه (HTML)</label>
     <partial name="_RichTextEditor" for="Body" view-data="@(new ViewDataDictionary(ViewData) { ["EditorHeight"] = 520 })" />
+    @if (string.Equals(Model.Slug, "incoming", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="alert alert-info small mt-2 mb-0">
+            تمام تیترها، آیکن‌ها، کارت‌ها، نمودارهای بصری و متن صفحه از همین فیلد مدیریت می‌شوند. فرم عملکردی انتهای صفحه با نشانه‌ی <code>&lt;!-- soransoft-marketing-form --&gt;</code> در همان جایگاه نمایش داده می‌شود؛ حذف نشانه، فرم را به انتهای محتوا منتقل می‌کند.
+        </div>
+    }
 </div>
 <div class="mb-3">
     <label class="form-label">تصویر شاخص</label>

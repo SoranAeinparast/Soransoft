@@ -6,7 +6,8 @@ public static partial class SafeHtml
 {
     private static readonly HashSet<string> AllowedTags = new(StringComparer.OrdinalIgnoreCase)
     {
-        "p", "br", "strong", "b", "em", "i", "u", "s", "h2", "h3", "h4", "ul", "ol", "li", "blockquote", "a"
+        "p", "br", "strong", "b", "em", "i", "u", "s", "h2", "h3", "h4", "ul", "ol", "li", "blockquote", "a",
+        "div", "span", "section", "article", "small", "hr", "figure", "figcaption"
     };
 
     public static string Sanitize(string? html)

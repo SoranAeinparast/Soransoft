@@ -3,6 +3,11 @@
 @{
     var isIncoming = string.Equals(Model.Slug, "incoming", StringComparison.OrdinalIgnoreCase);
     var marketing = ViewData["MarketingInterest"] as MarketingInterestViewModel ?? new MarketingInterestViewModel();
+    const string marketingFormMarker = "<!-- soransoft-marketing-form -->";
+    var sanitizedBody = SafeHtml.Sanitize(Model.Body);
+    var markerIndex = isIncoming ? sanitizedBody.IndexOf(marketingFormMarker, StringComparison.Ordinal) : -1;
+    var bodyBeforeForm = markerIndex >= 0 ? sanitizedBody[..markerIndex] : sanitizedBody;
+    var bodyAfterForm = markerIndex >= 0 ? sanitizedBody[(markerIndex + marketingFormMarker.Length)..] : string.Empty;
 }
 
 <section class="sn-page-hero @(isIncoming ? "sn-incoming-hero" : "")">
@@ -33,80 +38,76 @@
 <section class="sn-section @(isIncoming ? "sn-incoming-content-section" : "")">
     <div class="container">
         <article class="sn-article-body-content @(isIncoming ? "sn-incoming-content" : "")">
-            @Html.Raw(SafeHtml.Sanitize(Model.Body))
+            @Html.Raw(bodyBeforeForm)
         </article>
     </div>
 </section>
 
 @if (isIncoming)
 {
-    <section class="sn-section sn-section-alt" id="marketing-interest">
+    <section class="sn-section sn-section-alt sn-incoming-form-section" id="marketing-interest">
         <div class="container">
-            <div class="row g-4 align-items-start">
-                <div class="col-12 col-lg-5">
-                    <span class="sn-section-kicker"><i class="bi bi-chat-square-heart"></i> شروع یک همکاری حرفه‌ای</span>
-                    <h2 class="sn-section-title text-start">آماده‌اید فرصت‌های فروش را بسازید؟</h2>
-                    <p class="sn-incoming-form-lead">اطلاعات اولیه‌تان را بفرستید تا درباره‌ی تجربه، حوزه‌ی فعالیت و مدل همکاری مناسب با شما گفت‌وگو کنیم.</p>
-                    <div class="sn-incoming-portal-note">
-                        <i class="bi bi-shield-check"></i>
-                        <div>
-                            <strong>دسترسی ویژه همکاران فروش</strong>
-                            <p>همکارانی که همکاری‌شان تأیید شود، با توجه به نقش و سطح دسترسی، از طریق پرتال همکاران به داشبورد اختصاصی، ثبت و پیگیری لیدها، کاتالوگ پروژه‌های قابل فروش، مستندات ارائه، عملکرد و پورسانت، قرارداد، کیف پول، اطلاعیه‌ها و پروفایل شخصی دسترسی خواهند داشت.</p>
-                            <a href="/Partner/Account/Login">ورود به پرتال همکاران <i class="bi bi-arrow-left"></i></a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-7">
-                    <div class="sn-form-card sn-incoming-form-card">
-                        <div asp-validation-summary="All" class="alert alert-danger small"></div>
-                        <form action="/Page/incoming/MarketingInterest" method="post">
-                            @Html.AntiForgeryToken()
-                            <div class="row g-3">
-                                <div class="col-12 col-md-6">
-                                    <label class="form-label" for="marketing-full-name">نام و نام خانوادگی *</label>
-                                    <input id="marketing-full-name" name="FullName" value="@(marketing.FullName)" class="form-control sn-input" required />
-                                    @Html.ValidationMessage("FullName", null, new { @class = "text-danger small" })
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label class="form-label" for="marketing-mobile">شماره موبایل *</label>
-                                    <input id="marketing-mobile" name="Mobile" value="@(marketing.Mobile)" class="form-control sn-input" dir="ltr" inputmode="tel" placeholder="0912xxxxxxx" required />
-                                    @Html.ValidationMessage("Mobile", null, new { @class = "text-danger small" })
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label class="form-label" for="marketing-email">ایمیل</label>
-                                    <input id="marketing-email" name="Email" value="@(marketing.Email)" class="form-control sn-input" dir="ltr" type="email" />
-                                    @Html.ValidationMessage("Email", null, new { @class = "text-danger small" })
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label class="form-label" for="marketing-company">نام مجموعه یا برند</label>
-                                    <input id="marketing-company" name="CompanyName" value="@(marketing.CompanyName)" class="form-control sn-input" />
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label class="form-label" for="marketing-city">شهر یا محدوده فعالیت</label>
-                                    <input id="marketing-city" name="City" value="@(marketing.City)" class="form-control sn-input" />
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label class="form-label" for="marketing-area">زمینه فعالیت و نوع ارتباطات *</label>
-                                    <input id="marketing-area" name="ActivityArea" value="@(marketing.ActivityArea)" class="form-control sn-input" placeholder="مثلاً فروش B2B، مشاوره کسب‌وکار، شبکه مدیران" required />
-                                    @Html.ValidationMessage("ActivityArea", null, new { @class = "text-danger small" })
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label" for="marketing-experience">سابقه فروش و بازاریابی</label>
-                                    <input id="marketing-experience" name="SalesExperience" value="@(marketing.SalesExperience)" class="form-control sn-input" placeholder="سابقه، حوزه تخصصی یا نوع مشتریانی که با آن‌ها در ارتباط هستید" />
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label" for="marketing-message">توضیحات تکمیلی</label>
-                                    <textarea id="marketing-message" name="Message" class="form-control sn-input" rows="4" placeholder="هر نکته‌ای درباره مدل همکاری موردنظر یا فرصت‌های فروش احتمالی...">@marketing.Message</textarea>
-                                </div>
-                                <div class="col-12">
-                                    <button type="submit" class="btn sn-btn-primary btn-lg w-100"><i class="bi bi-send me-2"></i>ثبت درخواست همکاری</button>
-                                    <small class="text-muted d-block text-center mt-2">اطلاعات شما فقط برای بررسی درخواست همکاری استفاده می‌شود.</small>
-                                </div>
+            <div class="sn-incoming-form-shell">
+                <div class="sn-form-card sn-incoming-form-card">
+                    <div asp-validation-summary="All" class="alert alert-danger small"></div>
+                    <form action="/Page/incoming/MarketingInterest" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="marketing-full-name">نام و نام خانوادگی *</label>
+                                <input id="marketing-full-name" name="FullName" value="@(marketing.FullName)" class="form-control sn-input" required />
+                                @Html.ValidationMessage("FullName", null, new { @class = "text-danger small" })
                             </div>
-                        </form>
-                    </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="marketing-mobile">شماره موبایل *</label>
+                                <input id="marketing-mobile" name="Mobile" value="@(marketing.Mobile)" class="form-control sn-input" dir="ltr" inputmode="tel" placeholder="0912xxxxxxx" required />
+                                @Html.ValidationMessage("Mobile", null, new { @class = "text-danger small" })
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="marketing-email">ایمیل</label>
+                                <input id="marketing-email" name="Email" value="@(marketing.Email)" class="form-control sn-input" dir="ltr" type="email" />
+                                @Html.ValidationMessage("Email", null, new { @class = "text-danger small" })
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="marketing-company">نام مجموعه یا برند</label>
+                                <input id="marketing-company" name="CompanyName" value="@(marketing.CompanyName)" class="form-control sn-input" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="marketing-city">شهر یا محدوده فعالیت</label>
+                                <input id="marketing-city" name="City" value="@(marketing.City)" class="form-control sn-input" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="marketing-area">زمینه فعالیت و نوع ارتباطات *</label>
+                                <input id="marketing-area" name="ActivityArea" value="@(marketing.ActivityArea)" class="form-control sn-input" placeholder="مثلاً فروش B2B، مشاوره کسب‌وکار، شبکه مدیران" required />
+                                @Html.ValidationMessage("ActivityArea", null, new { @class = "text-danger small" })
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="marketing-experience">سابقه فروش و بازاریابی</label>
+                                <input id="marketing-experience" name="SalesExperience" value="@(marketing.SalesExperience)" class="form-control sn-input" placeholder="سابقه، حوزه تخصصی یا نوع مشتریانی که با آن‌ها در ارتباط هستید" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="marketing-message">توضیحات تکمیلی</label>
+                                <textarea id="marketing-message" name="Message" class="form-control sn-input" rows="4" placeholder="هر نکته‌ای درباره مدل همکاری موردنظر یا فرصت‌های فروش احتمالی...">@marketing.Message</textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn sn-btn-primary btn-lg w-100"><i class="bi bi-send me-2"></i>ثبت درخواست همکاری</button>
+                                <small class="text-muted d-block text-center mt-2">اطلاعات شما فقط برای بررسی درخواست همکاری استفاده می‌شود.</small>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
+        </div>
+    </section>
+}
+
+@if (isIncoming && markerIndex >= 0)
+{
+    <section class="sn-section sn-incoming-after-form">
+        <div class="container">
+            <article class="sn-article-body-content sn-incoming-content">
+                @Html.Raw(bodyAfterForm)
+            </article>
         </div>
     </section>
 }
